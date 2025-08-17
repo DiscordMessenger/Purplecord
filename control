@@ -1,0 +1,8 @@
+Package: com.iprogramincpp.test
+Name: TestProject
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: An awesome application!
+Maintainer: iprogramincpp
+Author: iprogramincpp
+Section: Utilities
