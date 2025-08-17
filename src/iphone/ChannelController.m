@@ -1,5 +1,4 @@
 #import "ChannelController.h"
-#include "CPPTest.h"
 
 @interface ChannelController () {
 	BOOL useSecondSet;
@@ -79,7 +78,7 @@
 }
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	Stuff();
+	// TODO
 }
 
 - (void)dealloc {

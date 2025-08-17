@@ -21,10 +21,9 @@ Purplecord_FILES = \
 	src/iphone/AppDelegate.m \
 	src/iphone/GuildListController.m \
 	src/iphone/ChannelListController.m \
-	src/iphone/ChannelController.m \
-	src/iphone/CPPTest.cpp
+	src/iphone/ChannelController.m
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics
-Purplecord_CFLAGS = -fno-objc-arc $(HACK)
+Purplecord_CFLAGS = -fno-objc-arc $(INCLUDES) $(HACK)
 
 include $(THEOS_MAKE_PATH)/application.mk
