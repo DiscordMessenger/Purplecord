@@ -7,11 +7,11 @@ include $(THEOS)/makefiles/common.mk
 APPLICATION_NAME = Purplecord
 
 Purplecord_FILES = \
-	src/main.m     \
-	src/AppDelegate.m \
-	src/GuildListController.m \
-	src/ChannelListController.m \
-	src/ChannelController.m
+	src/iphone/main.m \
+	src/iphone/AppDelegate.m \
+	src/iphone/GuildListController.m \
+	src/iphone/ChannelListController.m \
+	src/iphone/ChannelController.m
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics
 Purplecord_CFLAGS = -fno-objc-arc
