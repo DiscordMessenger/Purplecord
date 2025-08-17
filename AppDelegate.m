@@ -1,5 +1,5 @@
 #import "AppDelegate.h"
-#import "MainTableController.h"
+#import "GuildListController.h"
 
 @implementation AppDelegate
 
@@ -7,10 +7,10 @@
     CGRect screenBounds = [[UIScreen mainScreen] bounds];
     window = [[UIWindow alloc] initWithFrame:screenBounds];
 
-    mainVC = [[MainTableController alloc] init];
+    mainVC = [[GuildListController alloc] init];
     navController = [[UINavigationController alloc] initWithRootViewController:mainVC];
 
-    [window addSubview:navController.view];  // iOS 2.0 style
+    [window addSubview:navController.view];
     [window makeKeyAndVisible];
 
     return YES;

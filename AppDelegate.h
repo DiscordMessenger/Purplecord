@@ -1,12 +1,11 @@
 #import <UIKit/UIKit.h>
 
-@class MainTableController;
+@class GuildListController;
 
 @interface AppDelegate : NSObject <UIApplicationDelegate> {
     UIWindow *window;
     UINavigationController *navController;
-    MainTableController *mainVC;
+    GuildListController *mainVC;
 }
-
 
 @end
