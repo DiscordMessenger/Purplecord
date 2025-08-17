@@ -1,13 +1,27 @@
-#import "MainTableController.h"
+#import "ChannelController.h"
 
-@interface MainTableController () {
+@interface ChannelController () {
 	BOOL useSecondSet;
 	NSArray *items1, *items2;
 	NSArray *activeItems;
+	
+	uint64_t guildID;
+	uint64_t channelID;
+	NSString* channelName;
 }
 @end
 
-@implementation MainTableController
+@implementation ChannelController
+
+- (instancetype)initWithChannelID:(uint64_t)_channelID andGuildID:(uint64_t)_guildID andChannelName:(NSString*)_channelName {
+	self = [self init];
+	if (self) {
+		guildID = _guildID;
+		channelID = _channelID;
+		channelName = _channelName;
+	}
+	return self;
+}
 
 - (void)loadView {
     CGRect screenBounds = [[UIScreen mainScreen] bounds];
@@ -35,7 +49,7 @@
 	useSecondSet = NO;
 	activeItems = items1;
 	
-	self.title = @"Channels";
+	self.title = channelName;
 	
 	UIBarButtonItem *toggleButton = [[UIBarButtonItem alloc] initWithTitle:@"Toggle Data Set" style:UIBarButtonItemStylePlain target:self action:@selector(toggleFlag)];
 	self.navigationItem.rightBarButtonItem = toggleButton;
@@ -67,20 +81,7 @@
 }
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *selected = [activeItems objectAtIndex:indexPath.row];
-
-    UIViewController *detailVC = [[UIViewController alloc] init];
-    detailVC.view.backgroundColor = [UIColor whiteColor];
-    detailVC.title = selected;
-
-    UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(20, 100, 280, 40)];
-    label.text = [NSString stringWithFormat:@"You selected %@", selected];
-    label.textAlignment = UITextAlignmentCenter;
-    [detailVC.view addSubview:label];
-    [label release];
-
-    [self.navigationController pushViewController:detailVC animated:YES];
-    [detailVC release];
+	// TODO
 }
 
 - (void)dealloc {

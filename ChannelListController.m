@@ -1,4 +1,5 @@
 #import "ChannelListController.h"
+#import "ChannelController.h"
 
 @interface ChannelListController() {
 	NSArray* items;
@@ -65,7 +66,14 @@
 }
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	// TODO
+    NSString *selected = [items objectAtIndex:indexPath.row];
+
+	ChannelController *channelVC = [[ChannelController alloc] initWithChannelID:indexPath.row andGuildID:guildID andChannelName:selected];
+    channelVC.view.backgroundColor = [UIColor whiteColor];
+    channelVC.title = selected;
+
+    [self.navigationController pushViewController:channelVC animated:YES];
+    [channelVC release];
 }
 
 - (void)dealloc {
