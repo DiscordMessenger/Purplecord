@@ -3,7 +3,7 @@
 # uploads the binary to the iPhone
 IPHONE_IP="192.168.1.133"
 SSH_USER="root"
-APP_NAME="TestProject"
+APP_NAME="Purplecord"
 APP_PATH="./.theos/obj/debug/$APP_NAME.app"
 SSH_OPTS="-o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa"
 

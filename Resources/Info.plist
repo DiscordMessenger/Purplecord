@@ -3,7 +3,18 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleExecutable</key>
-	<string>TestProject</string>
+	<string>Purplecord</string>wh
+	<key>CFBundleIconFiles</key>
+	<array>
+		<string>AppIcon29x29.png</string>
+		<string>AppIcon40x40.png</string>
+		<string>AppIcon57x57.png</string>
+		<string>AppIcon60x60.png</string>
+		<string>AppIcon72x72.png</string>
+		<string>AppIcon76x76.png</string>
+	</array>
+	<key>UIPrerenderedIcon</key>
+	<true/>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundlePrimaryIcon</key>
@@ -38,7 +49,7 @@
 		</dict>
 	</dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.iprogramincpp.test</string>
+	<string>com.iprogramincpp.purplecord</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>

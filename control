@@ -1,8 +1,8 @@
-Package: com.iprogramincpp.test
-Name: TestProject
+Package: com.iprogramincpp.purplecord
+Name: Purplecord
 Version: 0.0.1
 Architecture: iphoneos-arm
-Description: An awesome application!
-Maintainer: iprogramincpp
-Author: iprogramincpp
+Description: A Discord client targeting iOS 2 and 3!
+Maintainer: iProgramInCpp
+Author: iProgramInCpp
 Section: Utilities
