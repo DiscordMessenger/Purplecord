@@ -3,9 +3,9 @@
 @class GuildListController;
 
 @interface AppDelegate : NSObject <UIApplicationDelegate> {
-    UIWindow *window;
-    UINavigationController *navController;
-    GuildListController *mainVC;
+	UIWindow *window;
+	UINavigationController *navController;
+	GuildListController *mainVC;
 }
 
 @end

@@ -6,7 +6,13 @@ include $(THEOS)/makefiles/common.mk
 
 APPLICATION_NAME = Purplecord
 
-Purplecord_FILES = main.m AppDelegate.m GuildListController.m ChannelListController.m ChannelController.m
+Purplecord_FILES = \
+	src/main.m     \
+	src/AppDelegate.m \
+	src/GuildListController.m \
+	src/ChannelListController.m \
+	src/ChannelController.m
+
 Purplecord_FRAMEWORKS = UIKit CoreGraphics
 Purplecord_CFLAGS = -fno-objc-arc
 

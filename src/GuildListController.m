@@ -31,7 +31,7 @@
 	tableView.delegate = self;
 	[self.view addSubview:tableView];
 	
-	items = [[NSArray alloc] initWithObjects:@"Guild 1", @"Guild 2", @"Guild 3", nil];
+	items = [[NSArray alloc] initWithObjects:@"#2 Item 1", @"#2 Item 2", @"#2 Item 3", @"#2 Item 4", @"#2 Item 5", @"#2 Item 6", @"#2 Item 7", @"#2 Item 8", @"#2 Item 9", @"#2 Item 10", @"#2 Item 11", @"#2 Item 12", @"#2 Item 13", @"#2 Item 14", @"#2 Item 15", @"#2 Item 16", nil];
 }
 
 - (void)viewDidLoad {
@@ -60,31 +60,31 @@
 }
 
 - (UITableViewCell*)tableView:(UITableView*)tv cellForRowAtIndexPath:(NSIndexPath*)indexPath {
-    static NSString *cellId = @"Cell";
-    UITableViewCell *cell = [tv dequeueReusableCellWithIdentifier:cellId];
-    if (!cell) {
-        cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0,0,tv.bounds.size.width,44) reuseIdentifier:cellId];
-        cell.selectionStyle = UITableViewCellSelectionStyleBlue;
-    }
-    cell.text = [items objectAtIndex:indexPath.row];
-    return cell;
+	static NSString *cellId = @"Cell";
+	UITableViewCell *cell = [tv dequeueReusableCellWithIdentifier:cellId];
+	if (!cell) {
+		cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0,0,tv.bounds.size.width,44) reuseIdentifier:cellId];
+		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+	}
+	cell.text = [items objectAtIndex:indexPath.row];
+	return cell;
 }
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *selected = [items objectAtIndex:indexPath.row];
+	NSString *selected = [items objectAtIndex:indexPath.row];
 
 	ChannelListController *channelVC = [[ChannelListController alloc] initWithGuildID:indexPath.row andGuildName:selected];
-    channelVC.view.backgroundColor = [UIColor whiteColor];
-    channelVC.title = selected;
+	channelVC.view.backgroundColor = [UIColor whiteColor];
+	channelVC.title = selected;
 
-    [self.navigationController pushViewController:channelVC animated:YES];
-    [channelVC release];
+	[self.navigationController pushViewController:channelVC animated:YES];
+	[channelVC release];
 }
 
 - (void)dealloc {
-    [tableView release];
-    [items release];
-    [super dealloc];
+	[tableView release];
+	[items release];
+	[super dealloc];
 }
 
 @end

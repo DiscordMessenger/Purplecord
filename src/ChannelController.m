@@ -23,28 +23,25 @@
 	return self;
 }
 
-- (void)loadView {
-    CGRect screenBounds = [[UIScreen mainScreen] bounds];
-    UIView *mainView = [[UIView alloc] initWithFrame:screenBounds];
-    mainView.backgroundColor = [UIColor groupTableViewBackgroundColor];
-    self.view = mainView;
-    [mainView release];
+- (void)viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+	CGRect screenBounds = [[UIScreen mainScreen] bounds];
+	UIView *mainView = [[UIView alloc] initWithFrame:screenBounds];
+	mainView.backgroundColor = [UIColor groupTableViewBackgroundColor];
+	self.view = mainView;
+	[mainView release];
 	
 	CGFloat statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
 	CGFloat navBarHeight = self.navigationController.navigationBar.frame.size.height;
 	
 	CGRect frame = CGRectMake(0, 0, screenBounds.size.width, screenBounds.size.height - statusBarHeight - navBarHeight);
-    tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
-    tableView.dataSource = self;
-    tableView.delegate = self;
-    [self.view addSubview:tableView];
+	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
+	tableView.dataSource = self;
+	tableView.delegate = self;
+	[self.view addSubview:tableView];
 
-    items1 = [[NSArray alloc] initWithObjects:@"#1 Item 1", @"#1 Item 2", @"#1 Item 3", @"#1 Item 4", nil];
-    items2 = [[NSArray alloc] initWithObjects:@"#2 Item 1", @"#2 Item 2", @"#2 Item 3", @"#2 Item 4", @"#2 Item 5", @"#2 Item 6", @"#2 Item 7", @"#2 Item 8", @"#2 Item 9", @"#2 Item 10", @"#2 Item 11", @"#2 Item 12", @"#2 Item 13", @"#2 Item 14", @"#2 Item 15", @"#2 Item 16", nil];
-}
-
-- (void)viewDidLoad {
-	[super viewDidLoad];
+	items1 = [[NSArray alloc] initWithObjects:@"#1 Item 1", @"#1 Item 2", @"#1 Item 3", @"#1 Item 4", nil];
+	items2 = [[NSArray alloc] initWithObjects:@"#2 Item 1", @"#2 Item 2", @"#2 Item 3", @"#2 Item 4", @"#2 Item 5", @"#2 Item 6", @"#2 Item 7", @"#2 Item 8", @"#2 Item 9", @"#2 Item 10", @"#2 Item 11", @"#2 Item 12", @"#2 Item 13", @"#2 Item 14", @"#2 Item 15", @"#2 Item 16", nil];
 	
 	useSecondSet = NO;
 	activeItems = items1;
@@ -66,18 +63,18 @@
 #pragma mark - UITableView DataSource / Delegate
 
 - (NSInteger)tableView:(UITableView *)tv numberOfRowsInSection:(NSInteger)section {
-    return [activeItems count];
+	return [activeItems count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tv cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    static NSString *cellId = @"Cell";
-    UITableViewCell *cell = [tv dequeueReusableCellWithIdentifier:cellId];
-    if (!cell) {
-        cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0,0,tv.bounds.size.width,44) reuseIdentifier:cellId];
-        cell.selectionStyle = UITableViewCellSelectionStyleBlue;
-    }
-    cell.text = [activeItems objectAtIndex:indexPath.row];
-    return cell;
+	static NSString *cellId = @"Cell";
+	UITableViewCell *cell = [tv dequeueReusableCellWithIdentifier:cellId];
+	if (!cell) {
+		cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0,0,tv.bounds.size.width,44) reuseIdentifier:cellId];
+		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+	}
+	cell.text = [activeItems objectAtIndex:indexPath.row];
+	return cell;
 }
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -85,10 +82,10 @@
 }
 
 - (void)dealloc {
-    [tableView release];
-    [items1 release];
-    [items2 release];
-    [super dealloc];
+	[tableView release];
+	[items1 release];
+	[items2 release];
+	[super dealloc];
 }
 
 @end
