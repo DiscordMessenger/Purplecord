@@ -1,0 +1,62 @@
+diff --git a/Configurations/10-main.conf b/Configurations/10-main.conf
+index 7e9396868a..007d5aaf5d 100644
+--- a/Configurations/10-main.conf
++++ b/Configurations/10-main.conf
+@@ -1859,6 +1859,22 @@ my %targets = (
+         shared_cflag     => "-fPIC",
+         shared_extension => ".\$(SHLIB_VERSION_NUMBER).dylib",
+     },
++    "darwin-common-custom" => {
++        inherit_from     => [ "BASE_unix" ],
++        template         => 1,
++        CC               => "cc",
++        CFLAGS           => picker(debug   => "-g -O0",
++                                   release => "-O3"),
++        cppflags         => threads("-D_REENTRANT"),
++        sys_id           => "MACOSX",
++        bn_ops           => "BN_LLONG RC4_CHAR",
++        thread_scheme    => "pthreads",
++        perlasm_scheme   => "osx32",
++        ranlib           => "ranlib -c",
++        #shared_target    => "darwin-shared",
++        #shared_cflag     => "-fPIC",
++        #shared_extension => ".\$(SHLIB_VERSION_NUMBER).dylib",
++    },
+     # Option "freeze" such as -std=gnu9x can't negatively interfere
+     # with future defaults for below two targets, because MacOS X
+     # for PPC has no future, it was discontinued by vendor in 2009.
+diff --git a/Configurations/15-ios.conf b/Configurations/15-ios.conf
+index 6f33df381f..fa2d247dbb 100644
+--- a/Configurations/15-ios.conf
++++ b/Configurations/15-ios.conf
+@@ -74,16 +74,27 @@ my %targets = (
+ #
+     "iphoneos-cross" => {
+         inherit_from     => [ "ios-common" ],
+-        cflags           => add("-isysroot \"\$(CROSS_TOP)/SDKs/\$(CROSS_SDK)\" -fno-common"),
++        cflags           => add("-fno-common"),
+     },
+     "ios-cross" => {
+         inherit_from     => [ "ios-xcrun" ],
+         CC               => "cc",
+-        cflags           => add("-isysroot \"\$(CROSS_TOP)/SDKs/\$(CROSS_SDK)\""),
+     },
+     "ios64-cross" => {
+         inherit_from     => [ "ios64-xcrun" ],
+         CC               => "cc",
+-        cflags           => add("-isysroot \"\$(CROSS_TOP)/SDKs/\$(CROSS_SDK)\""),
++    },
++	
++	
++	
++    "ios-common-custom" => {
++        template         => 1,
++        inherit_from     => [ "darwin-common-custom" ],
++        sys_id           => "iOS",
++        disable          => [ "async" ],
++    },
++    "iphoneos-cross-custom" => {
++        inherit_from     => [ "ios-common-custom" ],
++        cflags           => add("-fno-common"),
+     },
+ );
