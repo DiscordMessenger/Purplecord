@@ -55,6 +55,8 @@ SWITCHES = \
 INCLUDES = -Ideps -Ideps/asio
 
 Purplecord_FILES = \
+	deps/asio/src/asio.cpp \
+	deps/asio/src/asio_ssl.cpp \
 	src/discord/Channel.cpp \
 	src/discord/DiscordAPI.cpp \
 	src/discord/DiscordClientConfig.cpp \
@@ -82,8 +84,9 @@ Purplecord_FILES = \
 	src/iphone/GuildListController.m \
 	src/iphone/ChannelListController.m \
 	src/iphone/ChannelController.m \
-	deps/asio/src/asio.cpp \
-	deps/asio/src/asio_ssl.cpp
+	src/iphone/Frontend_iOS.cpp \
+	src/iphone/TextInterface_iOS.cpp \
+	src/iphone/Stuff.cpp
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics
 Purplecord_CFLAGS = -fno-objc-arc $(INCLUDES) $(CPPHACKS) $(WARNINGDISABLES) $(SWITCHES)
