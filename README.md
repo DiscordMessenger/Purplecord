@@ -6,6 +6,10 @@ Support for newer versions of iOS is not guaranteed because I do not own any new
 
 This does nothing currently!
 
+## Attributions
+
+Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on such ancient iOS versions!
+
 ## Building
 
 You must have [Theos](https://theos.dev/docs/installation) installed.  You cannot use any of the
@@ -37,24 +41,15 @@ linking should be done with the linker from Theos.  A temporary fix in `$THEOS/m
 
 ### Fetching the iPhoneOS 3.0 SDK
 
-TBD
+Download this archive:
 
-### Fetching the iPhoneOS 2.0 SDK
+Then extract its contents to `$THEOS/sdks/iPhoneOS3.0.sdk`.
 
-You don't need to use the iPhoneOS 2.0 sdk.  I'll add the iPhoneOS 3.0 SDK soon.
+### Installing the libc++ hack
 
-I used the following archive name, which can be found on the Internet Archive:
-iphone_sdk_for_iphone_os_2.2.19m2621afinal.dmg
+Download this archive:
 
-Extract this image, go to `iPhone SDK/Packages` and extract `iPhoneSDK2_0.pkg` (I used 7-Zip to
-extract), and then extract the `Payload~` into `$THEOS/sdks/` inside with `cpio -i < Payload~`.
-
-Then, in `$THEOS/sdks`, make a symlink to the `iPhoneOS2.0.sdk` folder inside `Platforms/iPhoneOS.platform/Developer/SDKs` like this:
-```
-ln -s Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS2.0.sdk iPhoneOS2.0.sdk
-```
-
-Make sure you are in the `$THEOS/sdks` folder.
+Extract it to `$THEOS/libcxx-hack`.  It should be picked up by the makefile eventually.
 
 ### Making OpenSSL
 
