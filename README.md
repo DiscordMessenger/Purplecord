@@ -72,6 +72,12 @@ perl ./Configure iphoneos-cross-custom no-shared no-asm no-tests --openssldir=./
 make -j$(nproc) build_sw
 ```
 
+### Hack to make the linker use static libc++
+
+This might not be necessary if you know how to make iOS use the required dylibs.
+
+Rename/delete the following files inside `[libcxxpath]/usr/lib`: `libc++.dylib libc++abi.dylib`.
+
 ### Making the Project
 
 You should now be able to make the project. Type `make`.

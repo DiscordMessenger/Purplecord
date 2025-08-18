@@ -29,8 +29,8 @@ CPPHACKS = \
 LDHACKS = \
 	-L$(THEOS)/libcxx-hack/usr/lib \
 	-L$(OPENSSL_LIB_DIR) \
-	-lc++.1.0 \
-	-lc++abi.1.0 \
+	-lc++ \
+	-lc++abi \
 	-lcrypto \
 	-lssl
 
