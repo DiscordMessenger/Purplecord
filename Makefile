@@ -6,8 +6,8 @@ TARGET_LD := $(THEOS)/toolchain/linux/iphone/bin/clang++ -v
 INSTALL_TARGET_PROCESSES = Purplecord
 ARCHS = armv6
 
-OPENSSL_INC_DIR ?= /mnt/c/DiscordMessenger/opensslapple/include
-OPENSSL_LIB_DIR ?= /mnt/c/DiscordMessenger/opensslapple
+OPENSSL_DIR ?= /mnt/c/DiscordMessenger/opensslapple
+LIBCURL_DIR ?= /mnt/c/DiscordMessenger/libcurl-apple
 
 include $(THEOS)/makefiles/common.mk
 
@@ -22,17 +22,20 @@ CPPHACKS = \
 	-I$(THEOS)/sdks/iPhoneOS3.0.sdk/usr/include/c++/4.2.1/$(ARCHS)-apple-darwin9 \
 	-I$(THEOS)/libcxx-hack/usr/include \
 	-I$(THEOS)/libcxx-hack/usr/include/c++/v1 \
-	-I$(OPENSSL_INC_DIR) \
+	-I$(OPENSSL_DIR)/include \
+	-I$(LIBCURL_DIR)/include \
 	-fno-tree-vectorize \
 	-fno-vectorize
 
 LDHACKS = \
 	-L$(THEOS)/libcxx-hack/usr/lib \
-	-L$(OPENSSL_LIB_DIR) \
+	-L$(OPENSSL_DIR) \
+	-L$(LIBCURL_DIR)/lib/.libs \
 	-lc++ \
 	-lc++abi \
 	-lcrypto \
-	-lssl
+	-lssl \
+	-lcurl
 
 WARNINGDISABLES = \
 	-Wno-deprecated-declarations \
@@ -86,6 +89,7 @@ Purplecord_FILES = \
 	src/iphone/ChannelController.m \
 	src/iphone/Frontend_iOS.cpp \
 	src/iphone/TextInterface_iOS.cpp \
+	src/iphone/HTTPClient_iOS.cpp \
 	src/iphone/Stuff.cpp
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics

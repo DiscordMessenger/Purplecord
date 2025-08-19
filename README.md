@@ -51,7 +51,7 @@ Download this archive:
 
 Extract it to `$THEOS/libcxx-hack`.  It should be picked up by the makefile eventually.
 
-### Making OpenSSL
+### Building OpenSSL
 
 Just like [Discord Messenger](https://github.com/DiscordMessenger/dm), you will need to build OpenSSL.
 
@@ -63,8 +63,60 @@ git apply [purplecord repo]/opensslpatch.diff
 
 Then, configure OpenSSL and compile with the following commands:
 ```
-perl ./Configure iphoneos-cross-custom no-shared no-asm no-tests --openssldir=./output/opensslapple/armv6 CROSS_COMPILE=$THEOS/toolchain/linux/iphone/bin/ "CC=clang -target armv6-apple-darwin9 -isysroot $THEOS/sdks/iPhoneOS3.0.sdk" -DBROKEN_CLANG_ATOMICS
+perl ./Configure \
+	iphoneos-cross-custom \
+	no-shared \
+	no-asm \
+	no-tests \
+	--openssldir=./output/opensslapple/armv6 \
+	CROSS_COMPILE=$THEOS/toolchain/linux/iphone/bin/ \
+	"CC=clang -target armv6-apple-darwin9 -isysroot $THEOS/sdks/iPhoneOS3.0.sdk" \
+	-DBROKEN_CLANG_ATOMICS
 make -j$(nproc) build_sw
+```
+
+Finally, define the environment variable:
+```
+OPENSSL_DIR=[your openssl checkout dir]
+```
+
+### Building Libcurl
+
+After building OpenSSL you will need to build libcurl too.
+
+```bash
+./configure \
+	--host=armv6-apple-darwin9 \
+	--disable-shared \
+	--enable-static \
+	--with-openssl \
+	--disable-ftp \
+	--disable-file \
+	--disable-ldap \
+	--disable-ldaps \
+	--disable-rtsp \
+	--disable-dict \
+	--disable-telnet \
+	--disable-tftp \
+	--disable-pop3 \
+	--disable-imap \
+	--disable-smtp \
+	--disable-gopher \
+	--disable-mqtt \
+	--disable-smb \
+	CC="$THEOS/toolchain/linux/iphone/bin/clang" \
+	LD="$THEOS/toolchain/linux/iphone/bin/clang" \
+	AR="$THEOS/toolchain/linux/iphone/bin/ar" \
+	RANLIB="$THEOS/toolchain/linux/iphone/bin/ranlib" \
+	CFLAGS="-target armv6-apple-darwin9 -isysroot $THEOS/sdks/iPhoneOS3.0.sdk -I/mnt/c/DiscordMessenger/opensslapple/include" \
+	LDFLAGS="-L$THEOS/sdks/iPhoneOS3.0.sdk/usr/lib -L/mnt/c/DiscordMessenger/opensslapple"
+
+make -j$(nproc)
+```
+
+Define the environment variables:
+```
+LIBCURL_DIR=[your curl checkout dir]
 ```
 
 ### Hack to make the linker use static libc++
