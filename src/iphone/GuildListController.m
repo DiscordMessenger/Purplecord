@@ -51,8 +51,10 @@
 	[settingsButton release];
 }
 
+void TestFunction();
+
 - (void)onClickedSettingsButton {
-	// TODO
+	TestFunction();
 }
 
 - (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section {

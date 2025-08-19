@@ -9,11 +9,6 @@ Frontend* GetFrontend()
 	return g_pFrontEnd;
 }
 
-HTTPClient* GetHTTPClient()
-{
-	return nullptr; // TODO
-}
-
 DiscordInstance* GetDiscordInstance()
 {
 	return g_pDiscordInstance;

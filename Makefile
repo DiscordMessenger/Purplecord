@@ -92,7 +92,7 @@ Purplecord_FILES = \
 	src/discord/UserGuildSettings.cpp \
 	src/discord/Util.cpp \
 	src/discord/WebsocketClient.cpp \
-	src/iphone/main.m \
+	src/iphone/main.mm \
 	src/iphone/AppDelegate.m \
 	src/iphone/GuildListController.m \
 	src/iphone/ChannelListController.m \

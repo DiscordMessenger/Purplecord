@@ -66,7 +66,6 @@ int HTTPClient_iOS::PutProgress(void* userp, curl_off_t dltotal, curl_off_t dlno
 	return netRequest->m_bCancelOp;
 }
 
-
 size_t HTTPClient_iOS::WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
 {
 	HTTPRequest* request = (HTTPRequest*) userp;
@@ -116,8 +115,8 @@ void HTTPClient_iOS::PerformRequest(
 	
 	// Configure handle
 	curl_easy_setopt(pRequest->easyHandle, CURLOPT_URL, url.c_str());
-	curl_easy_setopt(pRequest->easyHandle, CURLOPT_WRITEDATA, pRequest->netRequest);
-	curl_easy_setopt(pRequest->easyHandle, CURLOPT_READDATA, pRequest->netRequest);
+	curl_easy_setopt(pRequest->easyHandle, CURLOPT_WRITEDATA, pRequest);
+	curl_easy_setopt(pRequest->easyHandle, CURLOPT_READDATA, pRequest);
 	curl_easy_setopt(pRequest->easyHandle, CURLOPT_PRIVATE, pRequest);
 	
 	switch (type)
@@ -262,6 +261,7 @@ void HTTPClient_iOS::WorkerThreadRun()
 			// and then cleanup
 			curl_multi_remove_handle(m_multi, easy);
 			curl_easy_cleanup(easy);
+			request->easyHandle = nullptr;
 			delete request;
 		}
 		
