@@ -44,6 +44,7 @@ WARNINGDISABLES = \
 	-Wno-reorder-ctor \
 	-Wno-unused-variable \
 	-Wno-unused-function \
+	-Wno-deprecated-non-prototype \
 	-Wno-switch
 	
 SWITCHES = \
@@ -55,11 +56,20 @@ SWITCHES = \
 	-DASIO_DISABLE_GETADDRINFO    \
 	-DASIO_SEPARATE_COMPILATION
 
-INCLUDES = -Ideps -Ideps/asio
+INCLUDES = -Ideps -Ideps/asio -Ideps/zlib
 
 Purplecord_FILES = \
 	deps/asio/src/asio.cpp \
 	deps/asio/src/asio_ssl.cpp \
+	deps/zlib/deflate.c \
+	deps/zlib/inflate.c \
+	deps/zlib/compress.c \
+	deps/zlib/zutil.c \
+	deps/zlib/adler32.c \
+	deps/zlib/crc32.c \
+	deps/zlib/trees.c \
+	deps/zlib/inftrees.c \
+	deps/zlib/inffast.c \
 	src/discord/Channel.cpp \
 	src/discord/DiscordAPI.cpp \
 	src/discord/DiscordClientConfig.cpp \

@@ -128,6 +128,9 @@ public:
 
 	// Sends a request via this HTTP client.  If interactive, is prioritized.
 	// Data from stream_bytes is copied if needed.
+	//
+	// Note that pRespFunc is not necessarily called in the context of the thread
+	// that created the request.
 	virtual void PerformRequest(
 		bool interactive,
 		NetRequest::eType type,
