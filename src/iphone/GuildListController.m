@@ -6,9 +6,13 @@
 }
 @end
 
+GuildListController* g_pGuildListController;
+
 @implementation GuildListController
 
 - (void)loadView {
+	g_pGuildListController = self;
+	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	
 	// create a view filling the entire screen boundaries
@@ -87,6 +91,33 @@ void TestFunction();
 	[tableView release];
 	[items release];
 	[super dealloc];
+}
+
+- (void)alertView:(UIAlertView*)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+}
+
+- (void)showModalTest:(NSString*)message
+{
+	UIAlertView* alert = [
+		[UIAlertView alloc]
+		initWithTitle:@"Response!"
+		message:message
+		delegate:self
+		cancelButtonTitle:@"Okay bro"
+		otherButtonTitles:nil
+	];
+	[alert show];
+	[alert release];
+	[message release];
+}
+
+void ShowModalTest(const char* msg)
+{
+	NSString* nsMsg = [NSString stringWithUTF8String:msg];
+	
+	[g_pGuildListController performSelectorOnMainThread:@selector(showModalTest:)
+		withObject:nsMsg
+		waitUntilDone:NO];
 }
 
 @end

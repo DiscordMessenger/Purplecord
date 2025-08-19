@@ -10,13 +10,13 @@ HTTPClient* GetHTTPClient()
 	return g_pHttpClient;
 }
 
+extern "C" void ShowModalTest(const char* msg);
+
 void TestingCallback(NetRequest* pRequest)
 {
 	std::string finalString = "RESULT:" + std::to_string(pRequest->result) + "\nRESPONSE:" + pRequest->response;
 	
-	FILE* f = fopen("/var/mobile/Media/yousuck.txt", "w");
-	fprintf(f, "%s", finalString.c_str());
-	fclose(f);
+	ShowModalTest(finalString.c_str());
 }
 
 extern "C" void TestFunction()
