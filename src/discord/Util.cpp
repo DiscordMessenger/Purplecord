@@ -9,28 +9,22 @@
 #include "Frontend.hpp"
 
 std::string g_BasePath = "";
-std::string g_ProgramNamePath = "";
-
-void SetProgramNamePath(const std::string& programName)
-{
-	g_ProgramNamePath = programName;
-}
 
 void SetBasePath(const std::string& path)
 {
 	g_BasePath = path;
-	if (!path.empty() && path[path.size() - 1] != '\\')
-		g_BasePath += '\\';
+	if (!path.empty() && path[path.size() - 1] != '/')
+		g_BasePath += '/';
 }
 
 std::string GetBasePath()
 {
-	return g_BasePath + g_ProgramNamePath;
+	return g_BasePath;
 }
 
 std::string GetCachePath()
 {
-	return g_BasePath + g_ProgramNamePath + "\\cache";
+	return g_BasePath + "/cache";
 }
 
 unsigned long long BitMix(uint64_t lol)

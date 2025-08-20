@@ -1,5 +1,10 @@
 #import "AppDelegate.h"
-#import "GuildListController.h"
+#import "LoginPageController.h"
+
+@interface AppDelegate() {
+	LoginPageController *mainVC;
+}
+@end
 
 @implementation AppDelegate
 
@@ -7,7 +12,7 @@
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	window = [[UIWindow alloc] initWithFrame:screenBounds];
 
-	mainVC = [[GuildListController alloc] init];
+	mainVC = [[LoginPageController alloc] init];
 	navController = [[UINavigationController alloc] initWithRootViewController:mainVC];
 
 	[window addSubview:navController.view];

@@ -27,6 +27,7 @@ CPPHACKS = \
 	-fno-tree-vectorize \
 	-fno-vectorize
 
+# NOTE: -Wl,-w hides incompat warnings for now ...
 LDHACKS = \
 	-L$(THEOS)/libcxx-hack/usr/lib \
 	-L$(OPENSSL_DIR) \
@@ -35,7 +36,8 @@ LDHACKS = \
 	-lc++abi \
 	-lcrypto \
 	-lssl \
-	-lcurl
+	-lcurl \
+	-Wl,-w
 
 WARNINGDISABLES = \
 	-Wno-deprecated-declarations \
@@ -97,6 +99,7 @@ Purplecord_FILES = \
 	src/iphone/GuildListController.m \
 	src/iphone/ChannelListController.m \
 	src/iphone/ChannelController.m \
+	src/iphone/LoginPageController.mm \
 	src/iphone/Frontend_iOS.cpp \
 	src/iphone/TextInterface_iOS.cpp \
 	src/iphone/HTTPClient_iOS.cpp \

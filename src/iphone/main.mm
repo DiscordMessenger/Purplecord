@@ -1,8 +1,12 @@
 #import <UIKit/UIKit.h>
 #import "AppDelegate.h"
 
+#include "../discord/Util.hpp"
+#include "../discord/LocalSettings.hpp"
+
 #include "HTTPClient_iOS.h"
 
+// HTTP Client
 HTTPClient_iOS* g_pHttpClient;
 
 HTTPClient* GetHTTPClient()
@@ -10,6 +14,7 @@ HTTPClient* GetHTTPClient()
 	return g_pHttpClient;
 }
 
+// Testing Stuff
 extern "C" void ShowModalTest(const char* msg);
 
 void TestingCallback(NetRequest* pRequest)
@@ -43,9 +48,14 @@ int main(int argc, char *argv[])
 	g_pHttpClient = new HTTPClient_iOS();
 	g_pHttpClient->Init();
 	
+	SetBasePath("/var/mobile/Purplecord");
+	GetLocalSettings()->Load();
+	
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	int retVal = UIApplicationMain(argc, argv, nil, @"AppDelegate");
 	[pool release];
+	
+	GetLocalSettings()->Save();
 	
 	g_pHttpClient->StopAllRequests();
 	g_pHttpClient->Kill();

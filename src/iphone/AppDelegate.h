@@ -5,7 +5,6 @@
 @interface AppDelegate : NSObject <UIApplicationDelegate> {
 	UIWindow *window;
 	UINavigationController *navController;
-	GuildListController *mainVC;
 }
 
 @end
