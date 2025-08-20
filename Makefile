@@ -6,7 +6,7 @@ TARGET_LD := $(THEOS)/toolchain/linux/iphone/bin/clang++ -v
 INSTALL_TARGET_PROCESSES = Purplecord
 ARCHS = armv6
 
-OPENSSL_DIR ?= /mnt/c/DiscordMessenger/opensslapple
+OPENSSL_DIR ?= /mnt/c/DiscordMessenger/opensslapple-1x
 LIBCURL_DIR ?= /mnt/c/DiscordMessenger/libcurl-apple
 
 include $(THEOS)/makefiles/common.mk

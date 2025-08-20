@@ -55,6 +55,8 @@ Extract it to `$THEOS/libcxx-hack`.  It should be picked up by the makefile even
 
 Just like [Discord Messenger](https://github.com/DiscordMessenger/dm), you will need to build OpenSSL.
 
+TODO: Build OpenSSL 1.x instead.
+
 Apply the diff at `opensslpatch.diff` in the checked out OpenSSL repository with the following command:
 
 ```bash

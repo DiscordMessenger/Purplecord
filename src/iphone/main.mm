@@ -24,7 +24,7 @@ extern "C" void TestFunction()
 	GetHTTPClient()->PerformRequest(
 		true,
 		NetRequest::GET,
-		"http://example.com",
+		"https://discord.com/api/v9/gateway",
 		0,
 		0,
 		"",

@@ -119,6 +119,12 @@ void HTTPClient_iOS::PerformRequest(
 	curl_easy_setopt(pRequest->easyHandle, CURLOPT_READDATA, pRequest);
 	curl_easy_setopt(pRequest->easyHandle, CURLOPT_PRIVATE, pRequest);
 	
+	if (!GetLocalSettings()->EnableTLSVerification())
+	{
+		curl_easy_setopt(pRequest->easyHandle, CURLOPT_SSL_VERIFYPEER, 0L);
+		curl_easy_setopt(pRequest->easyHandle, CURLOPT_SSL_VERIFYHOST, 0L);
+	}
+	
 	switch (type)
 	{
 		case NetRequest::GET_PROGRESS:

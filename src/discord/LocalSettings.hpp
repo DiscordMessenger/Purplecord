@@ -227,7 +227,7 @@ private:
 	bool m_bIsFirstStart = false;
 	bool m_bCheckUpdates = false;
 	bool m_bAskToCheckUpdates = true;
-	bool m_bEnableTLSVerification = true;
+	bool m_bEnableTLSVerification = false;
 	bool m_bDisableFormatting = false;
 	bool m_bShowScrollBarOnGuildList = false;
 	bool m_bCompactMemberList = false;
