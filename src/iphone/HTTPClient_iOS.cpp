@@ -262,7 +262,14 @@ void HTTPClient_iOS::WorkerThreadRun()
 			}
 			
 			// invoke callback now
-			netRequest->pFunc(netRequest);
+			auto func = netRequest->pFunc;
+			func(netRequest);
+			
+			if (func == &HTTPClient_iOS::DefaultHandler)
+			{
+				// DefaultHandler transfers the reference to the net request
+				request->netRequest = nullptr;
+			}
 			
 			// and then cleanup
 			curl_multi_remove_handle(m_multi, easy);
@@ -279,4 +286,11 @@ void HTTPClient_iOS::WorkerThreadRun()
 void HTTPClient_iOS::WorkerThreadInit(HTTPClient_iOS* instance)
 {
 	return instance->WorkerThreadRun();
+}
+
+#include "../discord/Frontend.hpp"
+
+void HTTPClient_iOS::DefaultHandler(NetRequest* pRequest)
+{
+	GetFrontend()->OnRequestDone(pRequest);
 }

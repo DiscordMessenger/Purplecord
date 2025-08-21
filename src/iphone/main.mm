@@ -5,41 +5,15 @@
 #include "../discord/LocalSettings.hpp"
 
 #include "HTTPClient_iOS.h"
+#include "Frontend_iOS.h"
 
 // HTTP Client
 HTTPClient_iOS* g_pHttpClient;
+HTTPClient* GetHTTPClient() { return g_pHttpClient; }
 
-HTTPClient* GetHTTPClient()
-{
-	return g_pHttpClient;
-}
-
-// Testing Stuff
-extern "C" void ShowModalTest(const char* msg);
-
-void TestingCallback(NetRequest* pRequest)
-{
-	std::string finalString = "RESULT:" + std::to_string(pRequest->result) + "\nRESPONSE:" + pRequest->response;
-	
-	ShowModalTest(finalString.c_str());
-}
-
-extern "C" void TestFunction()
-{
-	GetHTTPClient()->PerformRequest(
-		true,
-		NetRequest::GET,
-		"https://discord.com/api/v9/gateway",
-		0,
-		0,
-		"",
-		"",
-		"",
-		TestingCallback,
-		nullptr,
-		0
-	);
-}
+// Frontend
+Frontend_iOS* g_pFrontend;
+Frontend* GetFrontend() { return g_pFrontend; }
 
 int main(int argc, char *argv[])
 {
@@ -47,6 +21,7 @@ int main(int argc, char *argv[])
 	
 	g_pHttpClient = new HTTPClient_iOS();
 	g_pHttpClient->Init();
+	g_pFrontend = new Frontend_iOS();
 	
 	SetBasePath("/var/mobile/Purplecord");
 	GetLocalSettings()->Load();
@@ -59,5 +34,7 @@ int main(int argc, char *argv[])
 	
 	g_pHttpClient->StopAllRequests();
 	g_pHttpClient->Kill();
+	delete g_pHttpClient;
+	delete g_pFrontend;
 	return retVal;
 }

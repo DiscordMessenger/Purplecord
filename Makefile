@@ -95,12 +95,13 @@ Purplecord_FILES = \
 	src/discord/Util.cpp \
 	src/discord/WebsocketClient.cpp \
 	src/iphone/main.mm \
-	src/iphone/AppDelegate.m \
-	src/iphone/GuildListController.m \
-	src/iphone/ChannelListController.m \
-	src/iphone/ChannelController.m \
+	src/iphone/AppDelegate.mm \
+	src/iphone/GuildListController.mm \
+	src/iphone/ChannelListController.mm \
+	src/iphone/ChannelController.mm \
 	src/iphone/LoginPageController.mm \
-	src/iphone/Frontend_iOS.cpp \
+	src/iphone/NetworkController.mm \
+	src/iphone/Frontend_iOS.mm \
 	src/iphone/TextInterface_iOS.cpp \
 	src/iphone/HTTPClient_iOS.cpp \
 	src/iphone/Stuff.cpp

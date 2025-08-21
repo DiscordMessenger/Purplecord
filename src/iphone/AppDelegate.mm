@@ -1,14 +1,18 @@
 #import "AppDelegate.h"
 #import "LoginPageController.h"
+#import "NetworkController.h"
 
 @interface AppDelegate() {
-	LoginPageController *mainVC;
+	NetworkController* networkController;
+	LoginPageController* mainVC;
 }
 @end
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+	networkController = [[NetworkController alloc] init];
+	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	window = [[UIWindow alloc] initWithFrame:screenBounds];
 
@@ -25,6 +29,7 @@
 	[mainVC release];
 	[navController release];
 	[window release];
+	[networkController dealloc];
 	[super dealloc];
 }
 

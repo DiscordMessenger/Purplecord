@@ -83,4 +83,5 @@ private:
 	static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp);
 	static int GetProgress(void* userp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 	static int PutProgress(void* userp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
+	static void DefaultHandler(NetRequest* pRequest);
 };

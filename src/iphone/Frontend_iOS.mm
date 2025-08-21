@@ -1,4 +1,12 @@
 #include "Frontend_iOS.h"
+#import "NetworkController.h"
+
+void Frontend_iOS::OnRequestDone(NetRequest* pRequest)
+{
+	[GetNetworkController() performSelectorOnMainThread:@selector(processResponse:)
+		withObject:[NSValue valueWithPointer:pRequest]
+		waitUntilDone:NO];
+}
 
 void Frontend_iOS::OnLoginAgain()
 {
@@ -41,11 +49,6 @@ void Frontend_iOS::OnDeleteMessage(Snowflake messageInCurrentChannel)
 }
 
 void Frontend_iOS::OnStartTyping(Snowflake userID, Snowflake guildID, Snowflake channelID, time_t startTime)
-{
-    //TODO
-}
-
-void Frontend_iOS::OnRequestDone(NetRequest* pRequest)
 {
     //TODO
 }

@@ -1,23 +1,27 @@
 #import "LoginPageController.h"
 #include "../discord/LocalSettings.hpp"
+#include "../discord/DiscordRequest.hpp"
+#include "../discord/DiscordAPI.hpp"
+
+std::string GetDiscordToken()
+{
+	return GetLocalSettings()->GetToken();
+}
 
 @interface LoginPageController() {
 	UITextField* tokenTextField;
+	UIBarButtonItem* logInButton;
 }
 
 @end
+
+LoginPageController* g_pLoginPageController;
 
 @implementation LoginPageController
 
 - (void)loadView
 {
-	// Are we logged in?
-	if (!GetLocalSettings()->GetToken().empty())
-	{
-		// We are logged in, so don't create anything and just log in
-		// TODO
-		return;
-	}
+	g_pLoginPageController = self;
 	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	
@@ -36,6 +40,13 @@
 	textField.backgroundColor = [UIColor groupTableViewBackgroundColor];
 	textField.textColor = [UIColor blackColor];
 	textField.borderStyle = UITextBorderStyleRoundedRect;
+	
+ 	// Not 100% decided about this.
+	// - If the token already exists, then yes, we definitely want to hide it.
+	// - But do we want to hide it when the user is trying to type it in?
+	// We should make it a checkbo, but I'm lazy.
+	//textField.secureTextEntry = YES;
+	
 	tokenTextField = textField;
 	
 	// Also, a label above that tells you you should log in.
@@ -48,7 +59,7 @@
 	label.font = [UIFont systemFontOfSize:15];
 	
 	// And a button
-	UIBarButtonItem* logInButton = [
+	logInButton = [
 		[UIBarButtonItem alloc]
 		initWithTitle:@"Log In"
 		style:UIBarButtonItemStylePlain
@@ -57,19 +68,47 @@
 	];
 	self.navigationItem.rightBarButtonItem = logInButton;
 	
+	// Are we logged in?
+	std::string token = GetLocalSettings()->GetToken();
+	if (!token.empty())
+	{
+		// We are logged in, so pre-populate the text field.
+		NSString* str = [NSString stringWithUTF8String:token.c_str()];
+		textField.text = str;
+		
+		// Hide the token so no one can see it.
+		textField.secureTextEntry = YES;
+	}
+	
 	[self.view addSubview:textField];
 	[self.view addSubview:label];
 	[logInButton release];
 	[label release];
 }
 
+- (void)viewDidLoad
+{
+	if (!GetLocalSettings()->GetToken().empty())
+		[self logIn];
+}
+
 - (void)logIn
 {
-	// TODO
+	logInButton.title = @"Logging in...";
+	
+	GetHTTPClient()->PerformRequest(
+		false,
+		NetRequest::GET,
+		GetDiscordAPI() + "gateway",
+		DiscordRequest::GATEWAY,
+		0, "", GetDiscordToken()
+	);
 }
 
 - (void)dealloc
 {
+	g_pLoginPageController = NULL;
+	
 	[tokenTextField release];
 	[super dealloc];
 }

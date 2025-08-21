@@ -10,7 +10,8 @@ GuildListController* g_pGuildListController;
 
 @implementation GuildListController
 
-- (void)loadView {
+- (void)loadView
+{
 	g_pGuildListController = self;
 	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
@@ -38,7 +39,8 @@ GuildListController* g_pGuildListController;
 	items = [[NSArray alloc] initWithObjects:@"#2 Item 1", @"#2 Item 2", @"#2 Item 3", @"#2 Item 4", @"#2 Item 5", @"#2 Item 6", @"#2 Item 7", @"#2 Item 8", @"#2 Item 9", @"#2 Item 10", @"#2 Item 11", @"#2 Item 12", @"#2 Item 13", @"#2 Item 14", @"#2 Item 15", @"#2 Item 16", nil];
 }
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
 	[super viewDidLoad];
 	
 	self.title = @"Purplecord";
@@ -57,15 +59,18 @@ GuildListController* g_pGuildListController;
 
 void TestFunction();
 
-- (void)onClickedSettingsButton {
-	TestFunction();
+- (void)onClickedSettingsButton
+{
+	// TODO
 }
 
-- (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section
+{
 	return [items count];
 }
 
-- (UITableViewCell*)tableView:(UITableView*)tv cellForRowAtIndexPath:(NSIndexPath*)indexPath {
+- (UITableViewCell*)tableView:(UITableView*)tv cellForRowAtIndexPath:(NSIndexPath*)indexPath
+{
 	static NSString *cellId = @"Cell";
 	UITableViewCell *cell = [tv dequeueReusableCellWithIdentifier:cellId];
 	if (!cell) {
@@ -76,7 +81,8 @@ void TestFunction();
 	return cell;
 }
 
-- (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+- (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
 	NSString *selected = [items objectAtIndex:indexPath.row];
 
 	ChannelListController *channelVC = [[ChannelListController alloc] initWithGuildID:indexPath.row andGuildName:selected];
@@ -87,13 +93,18 @@ void TestFunction();
 	[channelVC release];
 }
 
-- (void)dealloc {
+- (void)dealloc
+{
+	g_pGuildListController = NULL;
+	
 	[tableView release];
 	[items release];
 	[super dealloc];
 }
 
-- (void)alertView:(UIAlertView*)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+/*
+- (void)alertView:(UIAlertView*)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
 }
 
 - (void)showModalTest:(NSString*)message
@@ -119,5 +130,6 @@ void ShowModalTest(const char* msg)
 		withObject:nsMsg
 		waitUntilDone:NO];
 }
+*/
 
 @end
