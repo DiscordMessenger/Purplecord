@@ -1,8 +1,7 @@
 #import "NetworkController.h"
 #import "LoginPageController.h"
 #include "HTTPClient_iOS.h"
-#include "../discord/DiscordRequest.hpp"
-#include "../discord/Util.hpp"
+#include "../discord/DiscordInstance.hpp"
 
 NetworkController* g_pNetworkController;
 NetworkController* GetNetworkController() {
@@ -29,19 +28,7 @@ extern LoginPageController* g_pLoginPageController;
 {
 	NetRequest* netRequest = (NetRequest*) [netRequestNSValue pointerValue];
 	
-	switch (netRequest->itype)
-	{
-		case DiscordRequest::GATEWAY:
-		{
-			LoginPageController* login = g_pLoginPageController;
-			if (!login)
-				break;
-			
-			login.navigationItem.rightBarButtonItem.title = [NSString stringWithUTF8String:netRequest->response.c_str()];
-			
-			break;
-		}
-	}
+	GetDiscordInstance()->HandleRequest(netRequest);
 	
 	// TODO
 	delete netRequest;

@@ -3,6 +3,7 @@
 
 #include "../discord/Util.hpp"
 #include "../discord/LocalSettings.hpp"
+#include "../discord/DiscordInstance.hpp"
 
 #include "HTTPClient_iOS.h"
 #include "Frontend_iOS.h"
@@ -14,6 +15,18 @@ HTTPClient* GetHTTPClient() { return g_pHttpClient; }
 // Frontend
 Frontend_iOS* g_pFrontend;
 Frontend* GetFrontend() { return g_pFrontend; }
+
+// DiscordInstance
+DiscordInstance* g_pDiscordInstance;
+DiscordInstance* GetDiscordInstance() { return g_pDiscordInstance; }
+
+void CreateDiscordInstanceIfNeeded()
+{
+	if (g_pDiscordInstance)
+		delete g_pDiscordInstance;
+	
+	g_pDiscordInstance = new DiscordInstance(GetLocalSettings()->GetToken());
+}
 
 int main(int argc, char *argv[])
 {
@@ -34,6 +47,10 @@ int main(int argc, char *argv[])
 	
 	g_pHttpClient->StopAllRequests();
 	g_pHttpClient->Kill();
+	
+	if (g_pDiscordInstance)
+		delete g_pDiscordInstance;
+	
 	delete g_pHttpClient;
 	delete g_pFrontend;
 	return retVal;

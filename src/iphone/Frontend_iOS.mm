@@ -8,6 +8,14 @@ void Frontend_iOS::OnRequestDone(NetRequest* pRequest)
 		waitUntilDone:NO];
 }
 
+#ifdef USE_DEBUG_PRINTS
+void Frontend_iOS::DebugPrint(const char* fmt, va_list vl)
+{
+	vfprintf(stderr, fmt, vl);
+	vfprintf(stderr, "\n");
+}
+#endif
+
 void Frontend_iOS::OnLoginAgain()
 {
     //TODO
@@ -363,10 +371,3 @@ bool Frontend_iOS::UseGradientByDefault()
     //TODO
     return false;
 }
-
-#ifdef USE_DEBUG_PRINTS
-void Frontend_iOS::DebugPrint(const char* fmt, va_list vl)
-{
-    //TODO
-}
-#endif

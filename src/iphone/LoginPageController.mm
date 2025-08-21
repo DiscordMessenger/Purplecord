@@ -8,6 +8,8 @@ std::string GetDiscordToken()
 	return GetLocalSettings()->GetToken();
 }
 
+void CreateDiscordInstanceIfNeeded();
+
 @interface LoginPageController() {
 	UITextField* tokenTextField;
 	UIBarButtonItem* logInButton;
@@ -95,6 +97,18 @@ LoginPageController* g_pLoginPageController;
 - (void)logIn
 {
 	logInButton.title = @"Logging in...";
+	
+	NSString* nsString = tokenTextField.text;
+	const char* tokenCStr = [nsString UTF8String];
+	std::string token;
+	if (tokenCStr)
+		token = tokenCStr;
+	
+	fprintf(stderr, "Logging in with token '%s'.\n", token.c_str());
+	
+	GetLocalSettings()->SetToken(token);
+	GetLocalSettings()->Save();
+	CreateDiscordInstanceIfNeeded();
 	
 	GetHTTPClient()->PerformRequest(
 		false,
