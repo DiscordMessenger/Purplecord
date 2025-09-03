@@ -176,7 +176,7 @@ void thread_pool::basic_executor_type<Allocator,
     }
     catch (...)
     {
-      terminateAsio();
+      std::terminate();
     }
 #endif // !defined(ASIO_NO_EXCEPTIONS)
   }

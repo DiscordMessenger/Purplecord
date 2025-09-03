@@ -19,8 +19,6 @@
 
 #if !defined(ASIO_HAS_THREADS)
 # include "asio/detail/null_mutex.hpp"
-#elif defined(ASIO_IPROGS_THREADS)
-# include "asio/detail/iprogs_mutex.hpp"
 #elif defined(ASIO_WINDOWS)
 # include "asio/detail/win_mutex.hpp"
 #elif defined(ASIO_HAS_PTHREADS)
@@ -36,8 +34,6 @@ namespace detail {
 
 #if !defined(ASIO_HAS_THREADS)
 typedef null_mutex mutex;
-#elif defined(ASIO_IPROGS_THREADS)
-typedef iprogs_mutex mutex;
 #elif defined(ASIO_WINDOWS)
 typedef win_mutex mutex;
 #elif defined(ASIO_HAS_PTHREADS)

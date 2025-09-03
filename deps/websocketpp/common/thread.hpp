@@ -59,12 +59,6 @@
     #include <thread>
     #include <mutex>
     #include <condition_variable>
-#elif defined(_WEBSOCKETPP_IPROGS_THREAD_)
-    #include <iprog/mutex.hpp>
-    #include <iprog/thread.hpp>
-    #include <iprog/lock_guard.hpp>
-    #include <iprog/unique_lock.hpp>
-    #include <iprog/condition_variable.hpp>
 #else
     #include <boost/thread.hpp>
     #include <boost/thread/mutex.hpp>
@@ -74,13 +68,7 @@
 namespace websocketpp {
 namespace lib {
 
-#if defined(_WEBSOCKETPP_IPROGS_THREAD_)
-    using iprog::mutex;
-    using iprog::lock_guard;
-    using iprog::thread;
-    using iprog::unique_lock;
-    using iprog::condition_variable;
-#elif defined(_WEBSOCKETPP_CPP11_THREAD_) || defined(_WEBSOCKETPP_MINGW_THREAD_)
+#if defined(_WEBSOCKETPP_CPP11_THREAD_) || defined(_WEBSOCKETPP_MINGW_THREAD_)
     using std::mutex;
     using std::lock_guard;
     using std::thread;

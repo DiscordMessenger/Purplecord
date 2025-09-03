@@ -2,6 +2,7 @@
 #include "../discord/LocalSettings.hpp"
 #include "../discord/DiscordRequest.hpp"
 #include "../discord/DiscordAPI.hpp"
+#include "../discord/Util.hpp"
 
 std::string GetDiscordToken()
 {
@@ -90,8 +91,8 @@ LoginPageController* g_pLoginPageController;
 
 - (void)viewDidLoad
 {
-	if (!GetLocalSettings()->GetToken().empty())
-		[self logIn];
+	//if (!GetLocalSettings()->GetToken().empty())
+	//	[self logIn];
 }
 
 - (void)logIn
@@ -99,17 +100,16 @@ LoginPageController* g_pLoginPageController;
 	logInButton.title = @"Logging in...";
 	
 	NSString* nsString = tokenTextField.text;
-	const char* tokenCStr = [nsString UTF8String];
-	std::string token;
-	if (tokenCStr)
-		token = tokenCStr;
+	std::string token([nsString cStringUsingEncoding:NSUTF8StringEncoding]);
 	
 	fprintf(stderr, "Logging in with token '%s'.\n", token.c_str());
+	fflush(stderr);
 	
 	GetLocalSettings()->SetToken(token);
 	GetLocalSettings()->Save();
 	CreateDiscordInstanceIfNeeded();
 	
+	DbgPrintF("Performing request to find gateway.");
 	GetHTTPClient()->PerformRequest(
 		false,
 		NetRequest::GET,

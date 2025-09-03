@@ -106,19 +106,8 @@ std::string address_v6::to_string() const
     asio::detail::socket_ops::inet_ntop(
         ASIO_OS_DEF(AF_INET6), &addr_, addr_str,
         asio::detail::max_addr_v6_str_len, scope_id_, ec);
-
-#ifdef WIN32
   if (addr == 0)
-  {
-    char buffer[256];
-    snprintf(buffer, sizeof buffer, "Yo, about to throw an error.  We tried to convert an IPv6 address and got error %d.\nJust letting ya know.\n",
-        ec.value());
-    OutputDebugStringA(buffer);
-    return "[placeholder so asio doesnt crash]";
-    //asio::detail::throw_error(ec);
-  }
-#endif
-
+    asio::detail::throw_error(ec);
   return addr;
 }
 

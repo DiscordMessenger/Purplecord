@@ -13,8 +13,6 @@ std::string g_BasePath = "";
 void SetBasePath(const std::string& path)
 {
 	g_BasePath = path;
-	if (!path.empty() && path[path.size() - 1] != '/')
-		g_BasePath += '/';
 }
 
 std::string GetBasePath()

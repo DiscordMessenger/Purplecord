@@ -208,12 +208,9 @@ bool LocalSettings::Save()
 
 	if (!of.is_open())
 	{
-		// ok, try settings.jso
-		fileName = GetBasePath() + "/settings.jso";
-		of.open(fileName, std::ios::trunc);
-
-		if (!of.is_open())
-			return false;
+		DbgPrintF("ERROR: Cannot save settings to '%s'!", fileName.c_str());
+		perror("Saving Settings");
+		return false;
 	}
 
 	of << j.dump();

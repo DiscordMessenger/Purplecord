@@ -77,7 +77,7 @@ struct as_operation
               receiver_),
           std::current_exception());
 #else // defined(ASIO_HAS_STD_EXCEPTION_PTR)
-      terminateAsio();
+      std::terminate();
 #endif // defined(ASIO_HAS_STD_EXCEPTION_PTR)
     }
 #endif // !defined(ASIO_NO_EXCEPTIONS)

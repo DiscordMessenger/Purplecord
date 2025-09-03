@@ -15,10 +15,6 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#ifdef WIN32
-#include "ri/resock2.hpp"
-#endif
-
 #include "asio/detail/config.hpp"
 
 #include <cctype>
@@ -764,7 +760,7 @@ signed_size_type recv(socket_type s, buf* bufs, size_t count,
   DWORD recv_buf_count = static_cast<DWORD>(count);
   DWORD bytes_transferred = 0;
   DWORD recv_flags = flags;
-  int result = ri::WSARecv(s, bufs, recv_buf_count,
+  int result = ::WSARecv(s, bufs, recv_buf_count,
       &bytes_transferred, &recv_flags, 0, 0);
   get_last_error(ec, true);
   if (ec.value() == ERROR_NETNAME_DELETED)
@@ -797,7 +793,7 @@ signed_size_type recv1(socket_type s, void* data, size_t size,
   buf.len = static_cast<ULONG>(size);
   DWORD bytes_transferred = 0;
   DWORD recv_flags = flags;
-  int result = ri::WSARecv(s, &buf, 1,
+  int result = ::WSARecv(s, &buf, 1,
       &bytes_transferred, &recv_flags, 0, 0);
   get_last_error(ec, true);
   if (ec.value() == ERROR_NETNAME_DELETED)
@@ -1028,7 +1024,7 @@ signed_size_type recvfrom(socket_type s, buf* bufs, size_t count,
   DWORD bytes_transferred = 0;
   DWORD recv_flags = flags;
   int tmp_addrlen = (int)*addrlen;
-  int result = ri::WSARecvFrom(s, bufs, recv_buf_count, &bytes_transferred,
+  int result = ::WSARecvFrom(s, bufs, recv_buf_count, &bytes_transferred,
       &recv_flags, static_cast<socket_addr_type*>(addr), &tmp_addrlen, 0, 0);
   get_last_error(ec, true);
   *addrlen = (std::size_t)tmp_addrlen;
@@ -1078,7 +1074,7 @@ signed_size_type recvfrom1(socket_type s, void* data, size_t size,
   DWORD bytes_transferred = 0;
   DWORD recv_flags = flags;
   int tmp_addrlen = (int)*addrlen;
-  int result = ri::WSARecvFrom(s, &buf, 1, &bytes_transferred, &recv_flags,
+  int result = ::WSARecvFrom(s, &buf, 1, &bytes_transferred, &recv_flags,
       static_cast<socket_addr_type*>(addr), &tmp_addrlen, 0, 0);
   get_last_error(ec, true);
   *addrlen = (std::size_t)tmp_addrlen;
@@ -1377,7 +1373,7 @@ signed_size_type send(socket_type s, const buf* bufs, size_t count,
   DWORD send_buf_count = static_cast<DWORD>(count);
   DWORD bytes_transferred = 0;
   DWORD send_flags = flags;
-  int result = ri::WSASend(s, const_cast<buf*>(bufs),
+  int result = ::WSASend(s, const_cast<buf*>(bufs),
         send_buf_count, &bytes_transferred, send_flags, 0, 0);
   get_last_error(ec, true);
   if (ec.value() == ERROR_NETNAME_DELETED)
@@ -1411,7 +1407,7 @@ signed_size_type send1(socket_type s, const void* data, size_t size,
   buf.len = static_cast<ULONG>(size);
   DWORD bytes_transferred = 0;
   DWORD send_flags = flags;
-  int result = ri::WSASend(s, &buf, 1,
+  int result = ::WSASend(s, &buf, 1,
         &bytes_transferred, send_flags, 0, 0);
   get_last_error(ec, true);
   if (ec.value() == ERROR_NETNAME_DELETED)
@@ -1603,7 +1599,7 @@ signed_size_type sendto(socket_type s, const buf* bufs,
   // Send the data.
   DWORD send_buf_count = static_cast<DWORD>(count);
   DWORD bytes_transferred = 0;
-  int result = ri::WSASendTo(s, const_cast<buf*>(bufs),
+  int result = ::WSASendTo(s, const_cast<buf*>(bufs),
         send_buf_count, &bytes_transferred, flags,
         static_cast<const socket_addr_type*>(addr),
         static_cast<int>(addrlen), 0, 0);
@@ -1650,7 +1646,7 @@ signed_size_type sendto1(socket_type s, const void* data,
   buf.buf = const_cast<char*>(static_cast<const char*>(data));
   buf.len = static_cast<ULONG>(size);
   DWORD bytes_transferred = 0;
-  int result = ri::WSASendTo(s, &buf, 1, &bytes_transferred, flags,
+  int result = ::WSASendTo(s, &buf, 1, &bytes_transferred, flags,
       static_cast<const socket_addr_type*>(addr),
       static_cast<int>(addrlen), 0, 0);
   get_last_error(ec, true);
@@ -1813,15 +1809,10 @@ socket_type socket(int af, int type, int protocol,
     asio::error_code& ec)
 {
 #if defined(ASIO_WINDOWS) || defined(__CYGWIN__)
-  socket_type s = ri::WSASocketA(af, type, protocol, 0, 0, WSA_FLAG_OVERLAPPED);
+  socket_type s = ::WSASocketW(af, type, protocol, 0, 0, WSA_FLAG_OVERLAPPED);
   get_last_error(ec, s == invalid_socket);
-  if (s == invalid_socket) {
-    // hey hey. try the non-overlapped version.
-    s = ri::WSASocketA(af, type, protocol, 0, 0, 0);
-    get_last_error(ec, s == invalid_socket);
-    if (s == invalid_socket)
-      return s;
-  }
+  if (s == invalid_socket)
+    return s;
 
   if (af == ASIO_OS_DEF(AF_INET6))
   {
@@ -2138,19 +2129,7 @@ int ioctl(socket_type s, state_type& state, int cmd,
   }
 
 #if defined(ASIO_WINDOWS) || defined(__CYGWIN__)
-  int result;
-  if (!ri::SupportsWSARecv() && cmd == FIONBIO) {
-    // screw it
-    cmd = 0;
-    result = 0;
-
-    // but take the opportunity to do this
-    int flag = 1;
-    ::setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int));
-  }
-  else {
-    result = ::ioctlsocket(s, cmd, arg);
-  }
+  int result = ::ioctlsocket(s, cmd, arg);
 #elif defined(__MACH__) && defined(__APPLE__) \
   || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
   int result = ::ioctl(s, static_cast<unsigned int>(cmd), arg);
@@ -2510,7 +2489,7 @@ const char* inet_ntop(int af, const void* src, char* dest, size_t length,
   ::WideCharToMultiByte(CP_ACP, 0, string_buffer, -1,
       dest, static_cast<int>(length), 0, 0);
 #else
-  int result = ri::WSAAddressToStringA(&address.base,
+  int result = ::WSAAddressToStringA(&address.base,
       address_length, 0, dest, &string_length);
   get_last_error(ec, true);
 #endif
@@ -2555,13 +2534,13 @@ int inet_pton(int af, const char* src, void* dest,
     unsigned long* scope_id, asio::error_code& ec)
 {
   clear_last_error();
-#if defined(ASIO_WINDOWS_RUNTIME) || defined(MINGW_SPECIFIC_HACKS)
+#if defined(ASIO_WINDOWS_RUNTIME)
   using namespace std; // For sscanf.
   unsigned char* bytes = static_cast<unsigned char*>(dest);
   if (af == ASIO_OS_DEF(AF_INET))
   {
     unsigned int b0, b1, b2, b3;
-    if (sscanf(src, "%u.%u.%u.%u", &b0, &b1, &b2, &b3) != 4)
+    if (sscanf_s(src, "%u.%u.%u.%u", &b0, &b1, &b2, &b3) != 4)
     {
       ec = asio::error::invalid_argument;
       return -1;
@@ -2724,7 +2703,7 @@ int inet_pton(int af, const char* src, void* dest,
       af, 0, &address.base, &address_length);
   get_last_error(ec, true);
 #else
-  int result = ri::WSAStringToAddressA(const_cast<char*>(src),
+  int result = ::WSAStringToAddressA(const_cast<char*>(src),
       af, 0, &address.base, &address_length);
   get_last_error(ec, true);
 #endif

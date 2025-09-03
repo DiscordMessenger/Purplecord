@@ -65,7 +65,7 @@ T& posix_global()
       &posix_global_impl<T>::do_init);
 
   if (result != 0)
-    terminateAsio();
+    std::terminate();
 
   return *posix_global_impl<T>::instance_.ptr_;
 }

@@ -54,7 +54,7 @@ struct as_receiver
   template <typename E>
   void set_error(E) ASIO_NOEXCEPT
   {
-    terminateAsio();
+    std::terminate();
   }
 
   void set_done() ASIO_NOEXCEPT

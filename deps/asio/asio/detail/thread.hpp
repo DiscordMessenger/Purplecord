@@ -19,8 +19,6 @@
 
 #if !defined(ASIO_HAS_THREADS)
 # include "asio/detail/null_thread.hpp"
-#elif defined(ASIO_IPROGS_THREADS)
-# include "asio/detail/iprogs_thread.hpp"
 #elif defined(ASIO_HAS_PTHREADS)
 # include "asio/detail/posix_thread.hpp"
 #elif defined(ASIO_WINDOWS)
@@ -42,8 +40,6 @@ namespace detail {
 
 #if !defined(ASIO_HAS_THREADS)
 typedef null_thread thread;
-#elif defined(ASIO_IPROGS_THREADS)
-typedef iprogs_thread thread;
 #elif defined(ASIO_HAS_PTHREADS)
 typedef posix_thread thread;
 #elif defined(ASIO_WINDOWS)

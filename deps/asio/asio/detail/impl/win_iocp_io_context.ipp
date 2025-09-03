@@ -30,8 +30,6 @@
 
 #include "asio/detail/push_options.hpp"
 
-#include "ri/reimpl.hpp"
-
 namespace asio {
 namespace detail {
 
@@ -538,10 +536,10 @@ DWORD win_iocp_io_context::get_gqcs_timeout()
   osvi.dwOSVersionInfoSize = sizeof(osvi);
   osvi.dwMajorVersion = 6ul;
 
-  const uint64_t condition_mask = ri::VerSetConditionMask(
+  const uint64_t condition_mask = ::VerSetConditionMask(
       0, VER_MAJORVERSION, VER_GREATER_EQUAL);
 
-  if (!!ri::VerifyVersionInfo(&osvi, VER_MAJORVERSION, condition_mask))
+  if (!!::VerifyVersionInfo(&osvi, VER_MAJORVERSION, condition_mask))
     return INFINITE;
 
   return default_gqcs_timeout;

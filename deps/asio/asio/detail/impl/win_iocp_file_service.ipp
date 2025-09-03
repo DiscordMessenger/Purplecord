@@ -26,8 +26,6 @@
 
 #include "asio/detail/push_options.hpp"
 
-#include "ri/reimpl.hpp"
-
 namespace asio {
 namespace detail {
 
@@ -132,7 +130,7 @@ uint64_t win_iocp_file_service::size(
     asio::error_code& ec) const
 {
   LARGE_INTEGER result;
-  if (ri::GetFileSizeEx(native_handle(impl), &result))
+  if (::GetFileSizeEx(native_handle(impl), &result))
   {
     asio::error::clear(ec);
     return static_cast<uint64_t>(result.QuadPart);
@@ -152,13 +150,13 @@ asio::error_code win_iocp_file_service::resize(
 {
   LARGE_INTEGER distance;
   distance.QuadPart = n;
-  if (ri::SetFilePointerEx(native_handle(impl), distance, 0, FILE_BEGIN))
+  if (::SetFilePointerEx(native_handle(impl), distance, 0, FILE_BEGIN))
   {
     BOOL result = ::SetEndOfFile(native_handle(impl));
     DWORD last_error = ::GetLastError();
 
     distance.QuadPart = static_cast<LONGLONG>(impl.offset_);
-    if (!ri::SetFilePointerEx(native_handle(impl), distance, 0, FILE_BEGIN))
+    if (!::SetFilePointerEx(native_handle(impl), distance, 0, FILE_BEGIN))
     {
       result = FALSE;
       last_error = ::GetLastError();
@@ -241,7 +239,7 @@ uint64_t win_iocp_file_service::seek(
 
   LARGE_INTEGER distance, new_offset;
   distance.QuadPart = offset;
-  if (ri::SetFilePointerEx(native_handle(impl), distance, &new_offset, method))
+  if (::SetFilePointerEx(native_handle(impl), distance, &new_offset, method))
   {
     impl.offset_ = new_offset.QuadPart;
     asio::error::clear(ec);
