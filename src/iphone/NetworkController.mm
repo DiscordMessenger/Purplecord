@@ -1,6 +1,7 @@
 #import "NetworkController.h"
 #import "LoginPageController.h"
-#include "HTTPClient_iOS.h"
+#include "HTTPClient_curl.h"
+#include "Frontend_iOS.h"
 #include "../discord/DiscordInstance.hpp"
 
 NetworkController* g_pNetworkController;
@@ -30,8 +31,17 @@ extern LoginPageController* g_pLoginPageController;
 	
 	GetDiscordInstance()->HandleRequest(netRequest);
 	
-	// TODO
 	delete netRequest;
+}
+
+- (void)processWebsocketMessage:(NSValue*)websocketMessageNSValue
+{
+	WebsocketMessage* message = (WebsocketMessage*) [websocketMessageNSValue pointerValue];
+	
+	if (GetDiscordInstance()->GetGatewayID() == message->gatewayId)
+		GetDiscordInstance()->HandleGatewayMessage(message->msg);
+	
+	delete message;
 }
 
 @end

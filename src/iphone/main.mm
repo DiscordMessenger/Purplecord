@@ -1,16 +1,18 @@
 #import <UIKit/UIKit.h>
 #import "AppDelegate.h"
 
+#include <sys/stat.h>
+
 #include "../discord/Util.hpp"
 #include "../discord/LocalSettings.hpp"
 #include "../discord/DiscordInstance.hpp"
 #include "../discord/WebsocketClient.hpp"
 
-#include "HTTPClient_iOS.h"
+#include "HTTPClient_curl.h"
 #include "Frontend_iOS.h"
 
 // HTTP Client
-HTTPClient_iOS* g_pHttpClient;
+HTTPClient_curl* g_pHttpClient;
 HTTPClient* GetHTTPClient() { return g_pHttpClient; }
 
 // Frontend
@@ -31,9 +33,10 @@ void CreateDiscordInstanceIfNeeded()
 
 int main(int argc, char *argv[])
 {
+	HTTPClient_curl::InitializeCABlob();
 	freopen("/var/mobile/Purplecord.log", "w", stderr);
 	
-	g_pHttpClient = new HTTPClient_iOS();
+	g_pHttpClient = new HTTPClient_curl();
 	g_pHttpClient->Init();
 	g_pFrontend = new Frontend_iOS();
 	

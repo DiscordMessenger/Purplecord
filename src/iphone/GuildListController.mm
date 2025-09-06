@@ -1,5 +1,6 @@
 #import "GuildListController.h"
 #import "ChannelListController.h"
+#include "HTTPClient_curl.h"
 
 @interface GuildListController() {
 	NSArray* items;

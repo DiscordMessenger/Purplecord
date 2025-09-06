@@ -51,74 +51,87 @@ Download this archive:
 
 Extract it to `$THEOS/libcxx-hack`.  It should be picked up by the makefile eventually.
 
-### Building OpenSSL
+### Building MbedTLS
 
-Just like [Discord Messenger](https://github.com/DiscordMessenger/dm), you will need to build OpenSSL.
-
-TODO: Build OpenSSL 1.x instead.
-
-Apply the diff at `opensslpatch.diff` in the checked out OpenSSL repository with the following command:
-
-```bash
-git apply [purplecord repo]/opensslpatch.diff
+First, clone the repository.
+```
+git clone https://github.com/DiscordMessenger/mbedtls
 ```
 
-Then, configure OpenSSL and compile with the following commands:
+Then, build it:
 ```
-perl ./Configure \
-	iphoneos-cross-custom \
-	no-shared \
-	no-asm \
-	no-tests \
-	--openssldir=./output/opensslapple/armv6 \
-	CROSS_COMPILE=$THEOS/toolchain/linux/iphone/bin/ \
-	"CC=clang -target armv6-apple-darwin9 -isysroot $THEOS/sdks/iPhoneOS3.0.sdk" \
-	-DBROKEN_CLANG_ATOMICS
-make -j$(nproc) build_sw
+mkdir build && cd build
+cmake .. \
+	-DCMAKE_TOOLCHAIN_FILE=../iphoneos.cmake \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DENABLE_TESTING=OFF \
+	-DENABLE_PROGRAMS=OFF \
+	-DCMAKE_INSTALL_PREFIX=$CD/../install
+make -j$(nproc)
 ```
 
-Finally, define the environment variable:
+Define the environment variable related to this:
 ```
-OPENSSL_DIR=[your openssl checkout dir]
+PURPLECORD_MBEDTLS_PATH=[your mbedtls checkout path]
 ```
 
 ### Building Libcurl
 
 After building OpenSSL you will need to build libcurl too.
 
+Download:
+```
+curl -LO https://curl.se/download/curl-7.88.1.tar.gz
+tar xf curl-7.88.1.tar.gz
+cd curl-7.88.1
+```
+
+Then open `lib/vtls/mbed.tls` and move this line:
+```c
+  mbedtls_ssl_conf_rng(&backend->config, mbedtls_ctr_drbg_random,
+                       &backend->ctr_drbg);
+```
+to between `mbedtls_ssl_init` and `mbedtls_ssl_setup`.
+
+Then configure and make:
 ```bash
-./configure \
-	--host=armv6-apple-darwin9 \
-	--disable-shared \
-	--enable-static \
-	--with-openssl \
-	--disable-ftp \
-	--disable-file \
-	--disable-ldap \
-	--disable-ldaps \
-	--disable-rtsp \
-	--disable-dict \
-	--disable-telnet \
-	--disable-tftp \
-	--disable-pop3 \
-	--disable-imap \
-	--disable-smtp \
-	--disable-gopher \
-	--disable-mqtt \
-	--disable-smb \
-	CC="$THEOS/toolchain/linux/iphone/bin/clang" \
-	LD="$THEOS/toolchain/linux/iphone/bin/clang" \
-	AR="$THEOS/toolchain/linux/iphone/bin/ar" \
-	RANLIB="$THEOS/toolchain/linux/iphone/bin/ranlib" \
-	CFLAGS="-target armv6-apple-darwin9 -isysroot $THEOS/sdks/iPhoneOS3.0.sdk -I/mnt/c/DiscordMessenger/opensslapple/include" \
-	LDFLAGS="-L$THEOS/sdks/iPhoneOS3.0.sdk/usr/lib -L/mnt/c/DiscordMessenger/opensslapple"
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../iphoneos.cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=$CD/../install \
+  -DCURL_USE_MBEDTLS=ON \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DBUILD_CURL_EXE=OFF \
+  -DCURL_STATICLIB=ON \
+  -DMBEDTLS_INCLUDE_DIRS=$PURPLECORD_MBEDTLS_PATH/include \
+  -DMBEDTLS_LIBRARY=$PURPLECORD_MBEDTLS_PATH/build/library/libmbedtls.a \
+  -DMBEDX509_LIBRARY=$PURPLECORD_MBEDTLS_PATH/build/library/libmbedx509.a \
+  -DMBEDCRYPTO_LIBRARY=$PURPLECORD_MBEDTLS_PATH/build/library/libmbedcrypto.a \
+  -DCURL_DISABLE_FTP=ON \
+  -DCURL_DISABLE_FILE=ON \
+  -DCURL_DISABLE_LDAP=ON \
+  -DCURL_DISABLE_LDAPS=ON \
+  -DCURL_DISABLE_RTSP=ON \
+  -DCURL_DISABLE_DICT=ON \
+  -DCURL_DISABLE_TELNET=ON \
+  -DCURL_DISABLE_TFTP=ON \
+  -DCURL_DISABLE_POP3=ON \
+  -DCURL_DISABLE_IMAP=ON \
+  -DCURL_DISABLE_SMTP=ON \
+  -DCURL_DISABLE_GOPHER=ON \
+  -DCURL_DISABLE_MQTT=ON \
+  -DCURL_DISABLE_SMB=ON \
+  -DCURL_DISABLE_NTLM=ON \
+  -DENABLE_WEBSOCKETS=ON
 
 make -j$(nproc)
 ```
 
+NOTE: If you get an error that says `SystemFramework was not found`, edit CMakeLists.txt and remove the dependency on SystemFramework as we don't have it.
+
+
 Define the environment variables:
 ```
-LIBCURL_DIR=[your curl checkout dir]
+PURPLECORD_LIBCURL_PATH=[your curl checkout path]
 ```
 
 ### Hack to make the linker use static libc++

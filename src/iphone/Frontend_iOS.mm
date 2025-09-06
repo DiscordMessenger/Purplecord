@@ -10,6 +10,19 @@ void Frontend_iOS::OnRequestDone(NetRequest* pRequest)
 	}
 }
 
+void Frontend_iOS::OnWebsocketMessage(int gatewayID, const std::string& payload)
+{
+	@autoreleasepool {
+		WebsocketMessage* message = new WebsocketMessage;
+		message->gatewayId = gatewayID;
+		message->msg = payload;
+		
+		[GetNetworkController() performSelectorOnMainThread:@selector(processWebsocketMessage:)
+			withObject:[NSValue valueWithPointer:message]
+			waitUntilDone:NO];
+	}
+}
+
 #ifdef USE_DEBUG_PRINTS
 void Frontend_iOS::DebugPrint(const char* fmt, va_list vl)
 {
@@ -110,29 +123,50 @@ void Frontend_iOS::OnNotification()
     //TODO
 }
 
+void ShowMessageBox(const std::string& title, const std::string& message)
+{
+	DbgPrintF("ShowMessageBox(\"%s\", \"%s\")", title.c_str(), message.c_str());
+	
+	NSString *nsMessage = [NSString stringWithUTF8String:message.c_str()];
+	NSString *nsTitle = [NSString stringWithUTF8String:title.c_str()];
+	
+	// Create and show alert (UIAlertView is deprecated, but here’s the classic form)
+	UIAlertView *alert = [
+		[UIAlertView alloc]
+		initWithTitle:nsTitle
+		message:nsMessage
+		delegate:nil
+		cancelButtonTitle:@"OK"
+		otherButtonTitles:nil
+	];
+	
+	[alert show];
+	[alert release];
+}
+
 void Frontend_iOS::OnGenericError(const std::string& message)
 {
-    //TODO
+	ShowMessageBox("Generic Error", message);
 }
 
 void Frontend_iOS::OnJsonException(const std::string& message)
 {
-    //TODO
+	ShowMessageBox("JSON Exception", message);
 }
 
 void Frontend_iOS::OnCantViewChannel(const std::string& channelName)
 {
-    //TODO
+	ShowMessageBox(channelName, "You cannot view this channel.");
 }
 
 void Frontend_iOS::OnGatewayConnectFailure()
 {
-    //TODO
+	ShowMessageBox("Gateway Connect Failure", "Failed to connect to gateway. I don't know why.");
 }
 
 void Frontend_iOS::OnProtobufError(Protobuf::ErrorCode code)
 {
-    //TODO
+	ShowMessageBox("Protobuf Error", "Error code " + std::to_string(code));
 }
 
 void Frontend_iOS::OnAttachmentDownloaded(bool bIsProfilePicture, const uint8_t* pData, size_t nSize, const std::string& additData)
@@ -216,11 +250,6 @@ void Frontend_iOS::RefreshMembers(const std::set<Snowflake>& members)
 }
 
 void Frontend_iOS::JumpToMessage(Snowflake messageInCurrentChannel)
-{
-    //TODO
-}
-
-void Frontend_iOS::OnWebsocketMessage(int gatewayID, const std::string& payload)
 {
     //TODO
 }

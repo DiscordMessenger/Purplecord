@@ -6,8 +6,8 @@ TARGET_LD := $(THEOS)/toolchain/linux/iphone/bin/clang++ -v
 INSTALL_TARGET_PROCESSES = Purplecord
 ARCHS = armv6
 
-OPENSSL_DIR ?= /mnt/c/DiscordMessenger/opensslapple-1x
-LIBCURL_DIR ?= /mnt/c/DiscordMessenger/libcurl-apple
+PURPLECORD_MBEDTLS_PATH ?= /mnt/c/DiscordMessenger/mbedtls-apple
+PURPLECORD_LIBCURL_PATH ?= /mnt/c/DiscordMessenger/libcurl-apple
 
 include $(THEOS)/makefiles/common.mk
 
@@ -22,20 +22,21 @@ CPPHACKS = \
 	-I$(THEOS)/sdks/iPhoneOS3.0.sdk/usr/include/c++/4.2.1/$(ARCHS)-apple-darwin9 \
 	-I$(THEOS)/libcxx-hack/usr/include \
 	-I$(THEOS)/libcxx-hack/usr/include/c++/v1 \
-	-I$(OPENSSL_DIR)/include \
-	-I$(LIBCURL_DIR)/include \
+	-I$(PURPLECORD_MBEDTLS_PATH)/include \
+	-I$(PURPLECORD_LIBCURL_PATH)/include \
 	-fno-tree-vectorize \
 	-fno-vectorize
 
 # NOTE: -Wl,-w hides incompat warnings for now ...
 LDHACKS = \
 	-L$(THEOS)/libcxx-hack/usr/lib \
-	-L$(OPENSSL_DIR) \
-	-L$(LIBCURL_DIR)/lib/.libs \
+	-L$(PURPLECORD_MBEDTLS_PATH)/build/library \
+	-L$(PURPLECORD_LIBCURL_PATH)/build/lib \
 	-lc++ \
 	-lc++abi \
-	-lcrypto \
-	-lssl \
+	-lmbedtls \
+	-lmbedx509 \
+	-lmbedcrypto \
 	-lcurl \
 	-Wl,-w
 
@@ -61,8 +62,6 @@ SWITCHES = \
 INCLUDES = -Ideps -Ideps/asio -Ideps/zlib
 
 Purplecord_FILES = \
-	deps/asio/src/asio.cpp \
-	deps/asio/src/asio_ssl.cpp \
 	deps/zlib/deflate.c \
 	deps/zlib/inflate.c \
 	deps/zlib/compress.c \
@@ -93,7 +92,6 @@ Purplecord_FILES = \
 	src/discord/UpdateChecker.cpp \
 	src/discord/UserGuildSettings.cpp \
 	src/discord/Util.cpp \
-	src/discord/WebsocketClient.cpp \
 	src/iphone/main.mm \
 	src/iphone/AppDelegate.mm \
 	src/iphone/GuildListController.mm \
@@ -103,7 +101,8 @@ Purplecord_FILES = \
 	src/iphone/NetworkController.mm \
 	src/iphone/Frontend_iOS.mm \
 	src/iphone/TextInterface_iOS.cpp \
-	src/iphone/HTTPClient_iOS.cpp \
+	src/iphone/HTTPClient_curl.cpp \
+	src/iphone/WebsocketClient_curl.cpp \
 	src/iphone/Stuff.cpp
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics

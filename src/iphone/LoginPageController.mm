@@ -3,6 +3,7 @@
 #include "../discord/DiscordRequest.hpp"
 #include "../discord/DiscordAPI.hpp"
 #include "../discord/Util.hpp"
+#include "HTTPClient_curl.h"
 
 std::string GetDiscordToken()
 {

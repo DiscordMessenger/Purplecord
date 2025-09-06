@@ -4,6 +4,7 @@
 @interface NetworkController : NSObject
 
 - (void)processResponse:(NSValue*)netRequestNSValue;
+- (void)processWebsocketMessage:(NSValue*)websocketMessageNSValue;
 - (instancetype)init;
 - (void)dealloc;
 

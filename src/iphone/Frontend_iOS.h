@@ -82,3 +82,9 @@ public:
 	void DebugPrint(const char* fmt, va_list vl) override;
 #endif
 };
+
+struct WebsocketMessage
+{
+	int gatewayId;
+	std::string msg;
+};

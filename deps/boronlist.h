@@ -22,42 +22,51 @@ Author:
 
 //#include <main.h>
 #include <stdint.h>
+
+#ifdef MINGW_SPECIFIC_HACKS
 #define ALWAYS_INLINE __attribute__((always_inline))
 #define UNUSED __attribute__((unused))
+#else
+#define ALWAYS_INLINE
+#define UNUSED
+#endif
+
+#ifndef CONTAINING_RECORD
 #define CONTAINING_RECORD(Pointer, Type, Field) ((Type*)((uintptr_t)(Pointer) - (uintptr_t)offsetof(Type, Field)))
+#endif
 
-typedef struct _LIST_ENTRY LIST_ENTRY, *PLIST_ENTRY;
+typedef struct _BLIST_ENTRY BLIST_ENTRY, *PBLIST_ENTRY;
 
-struct _LIST_ENTRY
+struct _BLIST_ENTRY
 {
-	PLIST_ENTRY Flink;
-	PLIST_ENTRY Blink;
+	PBLIST_ENTRY Flink;
+	PBLIST_ENTRY Blink;
 };
 
-// void InitializeListHead(PLIST_ENTRY ListHead);
-#define InitializeListHead(Head) \
+// void BInitializeListHead(PBLIST_ENTRY ListHead);
+#define BInitializeListHead(Head) \
 	(Head)->Flink = (Head),      \
 	(Head)->Blink = (Head)
 
-// void InsertHeadList(PLIST_ENTRY ListHead, PLIST_ENTRY Entry);
-#define InsertHeadList(ListHead, Entry) \
+// void BInsertHeadList(PBLIST_ENTRY ListHead, PBLIST_ENTRY Entry);
+#define BInsertHeadList(ListHead, Entry) \
     (Entry)->Flink = (ListHead)->Flink,   \
 	(Entry)->Blink = (ListHead),          \
 	(ListHead)->Flink->Blink = (Entry), \
 	(ListHead)->Flink = (Entry)
 
-// void InsertTailList(PLIST_ENTRY ListHead, PLIST_ENTRY Entry);
-#define InsertTailList(ListHead, Entry) \
+// void BInsertTailList(PBLIST_ENTRY ListHead, PBLIST_ENTRY Entry);
+#define BInsertTailList(ListHead, Entry) \
     (Entry)->Blink = (ListHead)->Blink,   \
 	(Entry)->Flink = (ListHead),          \
 	(ListHead)->Blink->Flink = (Entry), \
 	(ListHead)->Blink = (Entry)
 
-// PLIST_ENTRY RemoveHeadList(PLIST_ENTRY ListHead);
+// PBLIST_ENTRY BRemoveHeadList(PBLIST_ENTRY ListHead);
 static inline ALWAYS_INLINE UNUSED
-PLIST_ENTRY RemoveHeadList(PLIST_ENTRY ListHead)
+PBLIST_ENTRY BRemoveHeadList(PBLIST_ENTRY ListHead)
 {
-	PLIST_ENTRY Entry = ListHead->Flink;
+	PBLIST_ENTRY Entry = ListHead->Flink;
 	ListHead->Flink = Entry->Flink;
 	ListHead->Flink->Blink = ListHead;
 #ifdef DEBUG
@@ -67,11 +76,11 @@ PLIST_ENTRY RemoveHeadList(PLIST_ENTRY ListHead)
 	return Entry;
 }
 
-// PLIST_ENTRY RemoveTailList(PLIST_ENTRY ListHead);
+// PBLIST_ENTRY BRemoveTailList(PBLIST_ENTRY ListHead);
 static inline ALWAYS_INLINE UNUSED
-PLIST_ENTRY RemoveTailList(PLIST_ENTRY ListHead)
+PBLIST_ENTRY BRemoveTailList(PBLIST_ENTRY ListHead)
 {
-	PLIST_ENTRY Entry = ListHead->Blink;
+	PBLIST_ENTRY Entry = ListHead->Blink;
 	ListHead->Blink = Entry->Blink;
 	ListHead->Blink->Flink = ListHead;
 #ifdef DEBUG
@@ -81,11 +90,11 @@ PLIST_ENTRY RemoveTailList(PLIST_ENTRY ListHead)
 	return Entry;
 }
 
-// bool RemoveEntryList(PLIST_ENTRY Entry);
+// bool BRemoveEntryList(PBLIST_ENTRY Entry);
 static inline ALWAYS_INLINE UNUSED
-bool RemoveEntryList(PLIST_ENTRY Entry)
+bool BRemoveEntryList(PBLIST_ENTRY Entry)
 {
-	PLIST_ENTRY OldFlink, OldBlink;
+	PBLIST_ENTRY OldFlink, OldBlink;
 	OldFlink = Entry->Flink;
 	OldBlink = Entry->Blink;
 	OldBlink->Flink = OldFlink;
@@ -97,7 +106,7 @@ bool RemoveEntryList(PLIST_ENTRY Entry)
 	return OldFlink == OldBlink;
 }
 
-// bool IsListEmpty(PLIST_ENTRY ListHead);
-#define IsListEmpty(ListHead) ((ListHead)->Flink == (ListHead))
+// bool BIsListEmpty(PBLIST_ENTRY ListHead);
+#define BIsListEmpty(ListHead) ((ListHead)->Flink == (ListHead))
 
 #endif//BORON_RTL_LIST_H
