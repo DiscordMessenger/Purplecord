@@ -1,5 +1,7 @@
 #import "NetworkController.h"
 #import "LoginPageController.h"
+#import "GuildListController.h"
+
 #include "HTTPClient_curl.h"
 #include "Frontend_iOS.h"
 #include "../discord/DiscordInstance.hpp"
@@ -10,6 +12,7 @@ NetworkController* GetNetworkController() {
 }
 
 extern LoginPageController* g_pLoginPageController;
+extern GuildListController* g_pGuildListController;
 
 @implementation NetworkController
 
@@ -23,6 +26,22 @@ extern LoginPageController* g_pLoginPageController;
 {
 	g_pNetworkController = NULL;
 	[super dealloc];
+}
+
+- (void)sendToGuildList
+{
+	if (g_pLoginPageController)
+		[g_pLoginPageController sendToGuildList];
+	else
+		DbgPrintF("ERROR in sendToGuildList: No login page controller.");
+}
+
+- (void)refreshGuildList
+{
+	if (g_pGuildListController)
+		[g_pGuildListController refreshGuilds];
+	else
+		DbgPrintF("ERROR in refreshGuildList: No guild list controller.");
 }
 
 - (void)processResponse:(NSValue*)netRequestNSValue

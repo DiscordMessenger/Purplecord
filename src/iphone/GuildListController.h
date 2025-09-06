@@ -5,4 +5,6 @@
 	UITableView *tableView;
 }
 
+- (void)refreshGuilds;
+
 @end

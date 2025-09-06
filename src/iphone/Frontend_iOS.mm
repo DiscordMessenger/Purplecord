@@ -23,6 +23,80 @@ void Frontend_iOS::OnWebsocketMessage(int gatewayID, const std::string& payload)
 	}
 }
 
+void Frontend_iOS::OnConnected()
+{
+	// N.B. This is run from main thread.
+	[GetNetworkController() sendToGuildList];
+}
+
+void Frontend_iOS::RepaintGuildList()
+{
+	[GetNetworkController() refreshGuildList];
+}
+
+std::string Frontend_iOS::GetDirectMessagesText()
+{
+	return "Direct Messages";
+}
+
+std::string Frontend_iOS::GetPleaseWaitText()
+{
+	return "Please wait...";
+}
+
+std::string Frontend_iOS::GetMonthName(int index)
+{
+	static const char* const monthNames[] = {
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December"
+	};
+	
+	if (index < 0 || index >= 12)
+		return "Month-" + std::to_string(index);
+	
+	return std::string(monthNames[index]);
+}
+
+std::string Frontend_iOS::GetTodayAtText()
+{
+	return "Today at %H:%M";
+}
+
+std::string Frontend_iOS::GetYesterdayAtText()
+{
+	return "Yesterday at %H:%M";
+}
+
+std::string Frontend_iOS::GetFormatDateOnlyText()
+{
+	return "%s %d%s, %d";
+}
+
+std::string Frontend_iOS::GetFormatTimeLongText()
+{
+	return "%d-%m-%Y at %H:%M";
+}
+
+std::string Frontend_iOS::GetFormatTimeShortText()
+{
+	return "%d/%m %H:%M";
+}
+
+std::string Frontend_iOS::GetFormatTimeShorterText()
+{
+	return "%d/%m %H:%M";
+}
+
 #ifdef USE_DEBUG_PRINTS
 void Frontend_iOS::DebugPrint(const char* fmt, va_list vl)
 {
@@ -34,93 +108,88 @@ void Frontend_iOS::DebugPrint(const char* fmt, va_list vl)
 
 void Frontend_iOS::OnLoginAgain()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnLoggedOut()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnSessionClosed(int errorCode)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnConnecting()
 {
-    //TODO
-}
-
-void Frontend_iOS::OnConnected()
-{
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnAddMessage(Snowflake channelID, const Message& msg)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnUpdateMessage(Snowflake channelID, const Message& msg)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnDeleteMessage(Snowflake messageInCurrentChannel)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnStartTyping(Snowflake userID, Snowflake guildID, Snowflake channelID, time_t startTime)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnLoadedPins(Snowflake channel, const std::string& data)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnUpdateAvailable(const std::string& url, const std::string& version)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnFailedToSendMessage(Snowflake channel, Snowflake message)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnFailedToUploadFile(const std::string& file, int error)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnFailedToCheckForUpdates(int result, const std::string& response)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnStartProgress(Snowflake key, const std::string& fileName, bool isUploading)
 {
-    //TODO
+	//TODO
 }
 
 bool Frontend_iOS::OnUpdateProgress(Snowflake key, size_t offset, size_t length)
 {
-    //TODO
-    return false;
+	//TODO
+	return false;
 }
 
 void Frontend_iOS::OnStopProgress(Snowflake key)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnNotification()
 {
-    //TODO
+	//TODO
 }
 
 void ShowMessageBox(const std::string& title, const std::string& message)
@@ -171,235 +240,175 @@ void Frontend_iOS::OnProtobufError(Protobuf::ErrorCode code)
 
 void Frontend_iOS::OnAttachmentDownloaded(bool bIsProfilePicture, const uint8_t* pData, size_t nSize, const std::string& additData)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnAttachmentFailed(bool bIsProfilePicture, const std::string& additData)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::UpdateSelectedGuild()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::UpdateSelectedChannel()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::UpdateChannelList()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::UpdateMemberList()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::UpdateChannelAcknowledge(Snowflake channelID, Snowflake messageID)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::UpdateProfileAvatar(Snowflake userID, const std::string& resid)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::UpdateProfilePopout(Snowflake userID)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::UpdateUserData(Snowflake userID)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::UpdateAttachment(Snowflake attID)
 {
-    //TODO
-}
-
-void Frontend_iOS::RepaintGuildList()
-{
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RepaintProfile()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RepaintProfileWithUserID(Snowflake id)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RefreshMessages(ScrollDir::eScrollDir sd, Snowflake gapCulprit)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RefreshMembers(const std::set<Snowflake>& members)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::JumpToMessage(Snowflake messageInCurrentChannel)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnWebsocketClose(int gatewayID, int errorCode, const std::string& message)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::OnWebsocketFail(int gatewayID, int errorCode, const std::string& message, bool isTLSError, bool mayRetry)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::SetHeartbeatInterval(int timeMs)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::LaunchURL(const std::string& url)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RegisterIcon(Snowflake sf, const std::string& avatarlnk)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RegisterAvatar(Snowflake sf, const std::string& avatarlnk)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RegisterAttachment(Snowflake sf, const std::string& avatarlnk)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RegisterChannelIcon(Snowflake sf, const std::string& avatarlnk)
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RequestQuit()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::HideWindow()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::RestoreWindow()
 {
-    //TODO
+	//TODO
 }
 
 void Frontend_iOS::MaximizeWindow()
 {
-    //TODO
+	//TODO
 }
 
 bool Frontend_iOS::IsWindowMinimized()
 {
-    //TODO
-    return false;
-}
-
-std::string Frontend_iOS::GetDirectMessagesText()
-{
-    //TODO
-    return {};
-}
-
-std::string Frontend_iOS::GetPleaseWaitText()
-{
-    //TODO
-    return {};
-}
-
-std::string Frontend_iOS::GetMonthName(int index)
-{
-    //TODO
-    return {};
-}
-
-std::string Frontend_iOS::GetTodayAtText()
-{
-    //TODO
-    return {};
-}
-
-std::string Frontend_iOS::GetYesterdayAtText()
-{
-    //TODO
-    return {};
-}
-
-std::string Frontend_iOS::GetFormatDateOnlyText()
-{
-    //TODO
-    return {};
-}
-
-std::string Frontend_iOS::GetFormatTimeLongText()
-{
-    //TODO
-    return {};
-}
-
-std::string Frontend_iOS::GetFormatTimeShortText()
-{
-    //TODO
-    return {};
-}
-
-std::string Frontend_iOS::GetFormatTimeShorterText()
-{
-    //TODO
-    return {};
+	return false;
 }
 
 int Frontend_iOS::GetMinimumWidth()
 {
-    //TODO
-    return 0;
+	//TODO
+	return 0;
 }
 
 int Frontend_iOS::GetMinimumHeight()
 {
-    //TODO
-    return 0;
+	//TODO
+	return 0;
 }
 
 int Frontend_iOS::GetDefaultWidth()
 {
-    //TODO
-    return 0;
+	//TODO
+	return 0;
 }
 
 int Frontend_iOS::GetDefaultHeight()
 {
-    //TODO
-    return 0;
+	//TODO
+	return 0;
 }
 
 bool Frontend_iOS::UseGradientByDefault()
 {
-    //TODO
-    return false;
+	//TODO
+	return false;
 }

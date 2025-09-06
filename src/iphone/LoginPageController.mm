@@ -1,4 +1,7 @@
+#import <UIKit/UIKit.h>
 #import "LoginPageController.h"
+#import "GuildListController.h"
+
 #include "../discord/LocalSettings.hpp"
 #include "../discord/DiscordRequest.hpp"
 #include "../discord/DiscordAPI.hpp"
@@ -15,6 +18,7 @@ void CreateDiscordInstanceIfNeeded();
 @interface LoginPageController() {
 	UITextField* tokenTextField;
 	UIBarButtonItem* logInButton;
+	bool loggingIn;
 }
 
 @end
@@ -26,6 +30,8 @@ LoginPageController* g_pLoginPageController;
 - (void)loadView
 {
 	g_pLoginPageController = self;
+	
+	self->loggingIn = false;
 	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	
@@ -92,13 +98,37 @@ LoginPageController* g_pLoginPageController;
 
 - (void)viewDidLoad
 {
-	//if (!GetLocalSettings()->GetToken().empty())
-	//	[self logIn];
+	if (!GetLocalSettings()->GetToken().empty())
+		[self logIn];
+}
+
+- (void)sendToGuildList
+{
+	GuildListController* controller = [[GuildListController alloc] init];
+	UINavigationController* navController = [[UINavigationController alloc] initWithRootViewController:controller];
+	
+	UIWindow* window = [UIApplication sharedApplication].keyWindow;
+	if (!window) {
+		window = [[UIApplication sharedApplication].windows objectAtIndex:0];
+	}
+	
+	[window addSubview:navController.view];
+	[window makeKeyAndVisible];
+	
+	[UIView beginAnimations:nil context:NULL];
+	[UIView setAnimationDuration:0.5];
+	[UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:YES];
+	[UIView commitAnimations];
 }
 
 - (void)logIn
 {
+	if (self->loggingIn)
+		return;
+	
+	self->loggingIn = true;
 	logInButton.title = @"Logging in...";
+	logInButton.enabled = NO;
 	
 	NSString* nsString = tokenTextField.text;
 	std::string token([nsString cStringUsingEncoding:NSUTF8StringEncoding]);

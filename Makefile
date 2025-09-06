@@ -106,7 +106,7 @@ Purplecord_FILES = \
 	src/iphone/Stuff.cpp
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics
-Purplecord_CFLAGS = -fno-objc-arc $(INCLUDES) $(CPPHACKS) $(WARNINGDISABLES) $(SWITCHES)
+Purplecord_CFLAGS = -fno-objc-arc -O3 $(INCLUDES) $(CPPHACKS) $(WARNINGDISABLES) $(SWITCHES)
 Purplecord_LDFLAGS = $(LDHACKS)
 
 include $(THEOS_MAKE_PATH)/application.mk

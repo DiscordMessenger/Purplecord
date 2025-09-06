@@ -4,4 +4,6 @@
 @interface LoginPageController : UIViewController {
 }
 
+- (void)sendToGuildList;
+
 @end

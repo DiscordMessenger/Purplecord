@@ -3,10 +3,13 @@
 
 @interface NetworkController : NSObject
 
-- (void)processResponse:(NSValue*)netRequestNSValue;
-- (void)processWebsocketMessage:(NSValue*)websocketMessageNSValue;
 - (instancetype)init;
 - (void)dealloc;
+
+- (void)processResponse:(NSValue*)netRequestNSValue;
+- (void)processWebsocketMessage:(NSValue*)websocketMessageNSValue;
+- (void)sendToGuildList;
+- (void)refreshGuildList;
 
 @end
 

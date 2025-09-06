@@ -21,6 +21,24 @@
 
 using Json = nlohmann::json;
 
+/*** PROFILING STUFF ***/
+#define PROFILE_DO DbgPrintF("%s: Profiling reached line %d at %lld ms (since boot).", __func__, __LINE__, getTimeMsProfiling())
+#include <mach/mach_time.h>
+
+uint64_t getTimeMsProfiling(void)
+{
+    static mach_timebase_info_data_t timebase = {0,0};
+    if (timebase.denom == 0) {
+        mach_timebase_info(&timebase);
+    }
+    uint64_t t = mach_absolute_time();
+    uint64_t nanoseconds = t * timebase.numer / timebase.denom;
+	
+	// but we actually need milliseconds so
+	return nanoseconds / 1000000;
+}
+/*** PROFILING STUFF END ***/
+
 // Creates a temporary snowflake based on time.
 Snowflake CreateTemporarySnowflake()
 {
@@ -1150,11 +1168,17 @@ typedef void(DiscordInstance::*DispatchFunction)(Json& j);
 std::map <std::string, DispatchFunction> g_dispatchFunctions;
 void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 {
-	DbgPrintF("Got Payload: %s [PAYLOAD ENDS HERE]", payload.c_str());
-
+	PROFILE_DO;
 	Json j = Json::parse(payload);
+	PROFILE_DO;
 
 	int op = j["op"];
+	
+	if (payload.size() < 100)
+		DbgPrintF("Got payload with OP:%d : %s[END]", op, payload.c_str());
+	else
+		DbgPrintF("Got payload with OP:%d : %s[snip]", op, payload.substr(0, 100).c_str());
+	
 	using namespace GatewayOp;
 	switch (op)
 	{
@@ -1189,6 +1213,14 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 			// send a heartbeat too, we'd like to keep things simple
 			SendHeartbeat();
 
+			break;
+		}
+		case HEARTBEAT:
+		{
+			// N.B.  Never seen this in DiscordMessenger.  Discord-Lite sends
+			// a heartbeat with this
+			DbgPrintF("Heartbeat from server");
+			SendHeartbeat();
 			break;
 		}
 		case HEARTBACK:
@@ -2188,18 +2220,18 @@ void DiscordInstance::HandleREADY_SUPPLEMENTAL(Json& j)
 
 void DiscordInstance::HandleREADY(Json& j)
 {
-	GetFrontend()->OnConnected();
-
 #ifdef _DEBUG
 	std::string str = j.dump();
 #endif
 
+	PROFILE_DO;
 	Json& data = j["d"];
 	m_gatewayResumeUrl = data["resume_gateway_url"];
 	m_sessionId = data["session_id"];
 	m_sessionType = data["session_type"];
 
 	// ==== reload user
+	PROFILE_DO;
 	Json& user = data["user"];
 
 	Snowflake oldSnowflake = m_mySnowflake;
@@ -2213,9 +2245,11 @@ void DiscordInstance::HandleREADY(Json& j)
 	m_dmGuild.m_ownerId = pf->m_snowflake;
 
 	// ==== load user settings
+	PROFILE_DO;
 	LoadUserSettings(data["user_settings_proto"]);
 
 	// ==== reload guild DB
+	PROFILE_DO;
 	Json& guilds = data["guilds"];
 	m_guilds.clear();
 
@@ -2228,9 +2262,11 @@ void DiscordInstance::HandleREADY(Json& j)
 	for (auto& elem : guilds)
 		ParseAndAddGuild(elem);
 
+	PROFILE_DO;
 	SortGuilds();
 
 	// ==== find session object
+	PROFILE_DO;
 	Json sesh;
 	for (auto& se : data["sessions"]) {
 		if (se["session_id"] == m_sessionId) {
@@ -2244,6 +2280,7 @@ void DiscordInstance::HandleREADY(Json& j)
 	assert(!sesh.empty());
 
 	// ==== load users
+	PROFILE_DO;
 	if (data.contains("users") && data["users"].is_array())
 	{
 		auto& membs = data["users"];
@@ -2255,6 +2292,7 @@ void DiscordInstance::HandleREADY(Json& j)
 	}
 
 	// ==== load merged members
+	PROFILE_DO;
 	if (data.contains("merged_members") && data["merged_members"].is_array())
 	{
 		// no meme, this is MErged MEmberS
@@ -2282,6 +2320,7 @@ void DiscordInstance::HandleREADY(Json& j)
 	}
 
 	// ==== load private channels
+	PROFILE_DO;
 	if (data.contains("private_channels") && data["private_channels"].is_array())
 	{
 		auto& chans = data["private_channels"];
@@ -2306,6 +2345,7 @@ void DiscordInstance::HandleREADY(Json& j)
 	}
 
 	// ==== load read_state
+	PROFILE_DO;
 	if (data.contains("read_state") && data["read_state"].is_object())
 	{
 		// Members: "entries" (array), "partial" (true/false, for now false), "version"
@@ -2320,6 +2360,7 @@ void DiscordInstance::HandleREADY(Json& j)
 	}
 
 	// ==== load relationships - friends and blocked
+	PROFILE_DO;
 	if (data.contains("relationships") && data["relationships"].is_array())
 	{
 		auto& rels = data["relationships"];
@@ -2333,6 +2374,7 @@ void DiscordInstance::HandleREADY(Json& j)
 
 	// ==== load resume_gateway_url
 	// ==== load user_guild_settings
+	PROFILE_DO;
 	if (data.contains("user_guild_settings") && data["user_guild_settings"].is_object())
 	{
 		m_userGuildSettings.Clear();
@@ -2353,12 +2395,16 @@ void DiscordInstance::HandleREADY(Json& j)
 		guildsf = m_CurrentGuild;
 	}
 
-	GetFrontend()->RepaintGuildList();
+	//GetFrontend()->RepaintGuildList();
 	OnSelectGuild(guildsf);
 
 	// Doing this because the contents of all channels might be outdated.
+	PROFILE_DO;
 	GetMessageCache()->ClearAllChannels();
 	GetFrontend()->UpdateSelectedChannel();
+	
+	PROFILE_DO;
+	GetFrontend()->OnConnected();
 }
 
 void DiscordInstance::HandleMessageInsertOrUpdate(Json& j, bool bIsUpdate)
