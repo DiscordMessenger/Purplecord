@@ -1,5 +1,9 @@
 #include "Frontend_iOS.h"
 #import "NetworkController.h"
+#import "LoginPageController.h"
+#import "GuildListController.h"
+#import "GuildController.h"
+#import "ChannelController.h"
 
 void Frontend_iOS::OnRequestDone(NetRequest* pRequest)
 {
@@ -37,7 +41,22 @@ void Frontend_iOS::OnConnected()
 
 void Frontend_iOS::RepaintGuildList()
 {
+	if (GetChannelController())
+		[GetChannelController() update];
+	
+	if (GetGuildController())
+		[GetGuildController() exitIfYouDontExist];
+	
 	[GetNetworkController() refreshGuildList];
+}
+
+void Frontend_iOS::UpdateChannelList()
+{
+	if (GetChannelController())
+		[GetChannelController() update];
+	
+	if (GetGuildController())
+		[GetGuildController() updateChannelList];
 }
 
 std::string Frontend_iOS::GetDirectMessagesText()
@@ -260,11 +279,6 @@ void Frontend_iOS::UpdateSelectedGuild()
 }
 
 void Frontend_iOS::UpdateSelectedChannel()
-{
-	//TODO
-}
-
-void Frontend_iOS::UpdateChannelList()
 {
 	//TODO
 }

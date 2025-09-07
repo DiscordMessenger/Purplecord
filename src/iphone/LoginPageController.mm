@@ -8,6 +8,11 @@
 #include "../discord/Util.hpp"
 #include "HTTPClient_curl.h"
 
+LoginPageController* g_pLoginPageController;
+LoginPageController* GetLoginPageController() {
+	return g_pLoginPageController;
+}
+
 // N.B.  This has RESTRICTED access to GetDiscordInstance() while logging in,
 // because things may be worked on in a background thread!
 
@@ -25,8 +30,6 @@ void CreateDiscordInstanceIfNeeded();
 }
 
 @end
-
-LoginPageController* g_pLoginPageController;
 
 @implementation LoginPageController
 

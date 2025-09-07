@@ -7,3 +7,5 @@
 - (void)sendToGuildList;
 
 @end
+
+LoginPageController* GetLoginPageController();

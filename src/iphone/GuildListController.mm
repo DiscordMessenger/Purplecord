@@ -1,14 +1,17 @@
 #import "GuildListController.h"
-#import "ChannelListController.h"
+#import "GuildController.h"
 #include "HTTPClient_curl.h"
 #include "../discord/DiscordInstance.hpp"
+
+GuildListController* g_pGuildListController;
+GuildListController* GetGuildListController() {
+	return g_pGuildListController;
+}
 
 @interface GuildListController() {
 	std::vector<Snowflake> m_guilds;
 }
 @end
-
-GuildListController* g_pGuildListController;
 
 @implementation GuildListController
 
@@ -126,14 +129,11 @@ void TestFunction();
 	if (!pGuild)
 		return;
 	
-	NSString *selected = [NSString stringWithUTF8String:pGuild->m_name.c_str()];
+	GuildController *guildVC = [[GuildController alloc] initWithGuildID:guildId];
+	guildVC.view.backgroundColor = [UIColor whiteColor];
 
-	ChannelListController *channelVC = [[ChannelListController alloc] initWithGuildID:guildId andGuildName:selected];
-	channelVC.view.backgroundColor = [UIColor whiteColor];
-	channelVC.title = selected;
-
-	[self.navigationController pushViewController:channelVC animated:YES];
-	[channelVC release];
+	[self.navigationController pushViewController:guildVC animated:YES];
+	[guildVC release];
 }
 
 - (void)dealloc

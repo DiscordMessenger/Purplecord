@@ -8,3 +8,5 @@
 - (void)refreshGuilds;
 
 @end
+
+GuildListController* GetGuildListController();
