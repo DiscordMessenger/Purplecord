@@ -247,7 +247,7 @@ private:
 	int m_width = 1000;
 	int m_height = 700;
 	int m_userScale = 1000;
-	bool m_bUseDarkMode = true; // NOTE: True by default. Disable later!
+	bool m_bUseDarkMode = false;
 };
 
 LocalSettings* GetLocalSettings();

@@ -27,6 +27,7 @@ void CreateDiscordInstanceIfNeeded();
 @interface LoginPageController() {
 	UITextField* tokenTextField;
 	UIBarButtonItem* logInButton;
+	UILabel* label;
 	bool loggingIn;
 }
 
@@ -66,7 +67,7 @@ void CreateDiscordInstanceIfNeeded();
 	tokenTextField = textField;
 	
 	// Also, a label above that tells you you should log in.
-	UILabel* label = [[UILabel alloc] initWithFrame: CGRectMake(20, 30, width - 40, 80)];
+	label = [[UILabel alloc] initWithFrame: CGRectMake(20, 30, width - 40, 80)];
 	label.text = @"Welcome to Purplecord!\nBefore you can use this client you must first log in using your token.";
 	label.textAlignment = UITextAlignmentCenter;
 	label.backgroundColor = [UIColorScheme getBackgroundColor];
@@ -149,6 +150,8 @@ void CreateDiscordInstanceIfNeeded();
 	logInButton.title = @"Logging in...";
 	logInButton.enabled = NO;
 	
+	label.text = @"Please wait...\nThis may take up to a minute. Sorry it isn't faster.";
+	
 	// show animation
 	UIActivityIndicatorView* spinner = [
 		[UIActivityIndicatorView alloc]
@@ -180,6 +183,7 @@ void CreateDiscordInstanceIfNeeded();
 {
 	g_pLoginPageController = NULL;
 	
+	[label release];
 	[tokenTextField release];
 	[super dealloc];
 }
