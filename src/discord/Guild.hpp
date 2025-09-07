@@ -58,7 +58,8 @@ struct Guild
 	std::string m_avatarlnk = "";
 
 	bool m_bChannelsLoaded = false;
-	std::list<Channel> m_channels;
+	std::map<Snowflake, Channel> m_channels;
+	std::vector<Snowflake> m_channelOrder;
 	Snowflake m_currentChannel = 0;
 
 	std::map<Snowflake, GuildRole> m_roles;
@@ -81,11 +82,11 @@ struct Guild
 	}
 
 	Channel* GetChannel(Snowflake sf) {
-		for (auto& ch : m_channels) {
-			if (ch.m_snowflake == sf)
-				return &ch;
-		}
-		return nullptr;
+		auto it = m_channels.find(sf);
+		if (it == m_channels.end())
+			return nullptr;
+		
+		return &it->second;
 	}
 
 	GuildMember* GetGuildMember(Snowflake sf);
@@ -101,9 +102,21 @@ struct Guild
 
 	uint64_t ComputeBasePermissions(Snowflake member);
 
-	bool IsFirstChannel(Snowflake channel);
-
 	void AddKnownMember(Snowflake sf) {
 		m_knownMembers.insert(sf);
+	}
+	
+	bool SortChannels() {
+		const auto& compare = [this] (Snowflake a, Snowflake b) -> bool {
+			Channel* ca = this->GetChannel(a);
+			Channel* cb = this->GetChannel(b);
+			return ca->CompareWith(*cb);
+		};
+
+		if (std::is_sorted(m_channelOrder.begin(), m_channelOrder.end(), compare))
+			return false;
+
+		std::sort(m_channelOrder.begin(), m_channelOrder.end(), compare);
+		return true;
 	}
 };

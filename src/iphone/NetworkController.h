@@ -8,7 +8,7 @@
 
 - (void)processResponse:(NSValue*)netRequestNSValue;
 - (void)processWebsocketMessage:(NSValue*)websocketMessageNSValue;
-- (void)sendToGuildList;
+- (void)finishedProcessingHugeMessage;
 - (void)refreshGuildList;
 
 @end

@@ -23,10 +23,16 @@ void Frontend_iOS::OnWebsocketMessage(int gatewayID, const std::string& payload)
 	}
 }
 
+// N.B. These two are NOT run from main thread.
+void Frontend_iOS::OnFinishedHugeMessage()
+{
+	[GetNetworkController() performSelectorOnMainThread:@selector(finishedProcessingHugeMessage) withObject:nil waitUntilDone:NO];
+}
+
 void Frontend_iOS::OnConnected()
 {
-	// N.B. This is run from main thread.
-	[GetNetworkController() sendToGuildList];
+	OnFinishedHugeMessage();
+	[GetNetworkController() performSelectorOnMainThread:@selector(onConnected) withObject:nil waitUntilDone:NO];
 }
 
 void Frontend_iOS::RepaintGuildList()

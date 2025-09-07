@@ -22,13 +22,18 @@ extern GuildListController* g_pGuildListController;
 	return self;
 }
 
-- (void) dealloc
+- (void)dealloc
 {
 	g_pNetworkController = NULL;
 	[super dealloc];
 }
 
-- (void)sendToGuildList
+- (void)finishedProcessingHugeMessage
+{
+	GetDiscordInstance()->FinishedProcessingHugeMessage();
+}
+
+- (void)onConnected
 {
 	if (g_pLoginPageController)
 		[g_pLoginPageController sendToGuildList];

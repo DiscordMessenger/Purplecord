@@ -5,6 +5,7 @@
 #include <string>
 #include <list>
 #include <set>
+#include <thread>
 #include <nlohmann/json.h>
 #include "DiscordAPI.hpp"
 #include "Snowflake.hpp"
@@ -212,6 +213,14 @@ public:
 
 	// List of guilds and guild folders.
 	GuildItemList m_guildItemList;
+	
+	// To avoid data races while the READY packet is processing, store payloads
+	// here and de-queue them after handling a big gateway message.
+	std::queue<std::string> m_pendingGatewayMessages;
+	
+	// If this is true, then enqueue to m_pendingGatewayMessages instead of
+	// running directly.  This must only be manipulated by the main thread.
+	bool m_bProcessingHugePacket = false;
 
 public:
 	Profile* GetProfile() {
@@ -470,6 +479,11 @@ public:
 
 	// Clears data about the current user when logged out.
 	void ClearData();
+	
+	// Drains the message queue that built up during a READY packet's processing.
+	// Must ONLY be called from the main thread.
+	// Use GetFrontend()->OnFinishedHugeMessage() from auxiliary threads.
+	void FinishedProcessingHugeMessage();
 
 public:
 	DiscordInstance(std::string token) : m_token(token), m_notificationManager(this) {

@@ -48,7 +48,7 @@ struct Channel
 	// Passed to POST(*/messages/$LAST_MESSAGE_HERE/ack).  -1 if doesn't exist
 	int m_lastViewedNum = 0;
 
-	bool operator<(const Channel& b) const
+	bool CompareWith(const Channel& b) const
 	{
 		// TODO: this is a mess, fix it.
 		bool isDm = m_channelType == DM || m_channelType == GROUPDM;
@@ -76,6 +76,12 @@ struct Channel
 
 		if (m_snowflake != b.m_snowflake)     return m_snowflake > b.m_snowflake;
 		return false;
+	}
+	
+	bool operator<(const Channel& b) const
+	{
+		if (m_snowflake != b.m_snowflake) return m_snowflake > b.m_snowflake;
+		return CompareWith(b);
 	}
 
 	Channel() {}

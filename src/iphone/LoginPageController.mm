@@ -8,6 +8,9 @@
 #include "../discord/Util.hpp"
 #include "HTTPClient_curl.h"
 
+// N.B.  This has RESTRICTED access to GetDiscordInstance() while logging in,
+// because things may be worked on in a background thread!
+
 std::string GetDiscordToken()
 {
 	return GetLocalSettings()->GetToken();
@@ -121,8 +124,17 @@ LoginPageController* g_pLoginPageController;
 	[UIView commitAnimations];
 }
 
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+	// RETURN pressed
+	[self logIn];
+	return YES;
+}
+
 - (void)logIn
 {
+	// close keyboard
+	[tokenTextField resignFirstResponder];
+	
 	if (self->loggingIn)
 		return;
 	
@@ -130,17 +142,24 @@ LoginPageController* g_pLoginPageController;
 	logInButton.title = @"Logging in...";
 	logInButton.enabled = NO;
 	
+	// show animation
+	UIActivityIndicatorView* spinner = [
+		[UIActivityIndicatorView alloc]
+		initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray
+	];
+	spinner.center = self.view.center;
+	[self.view addSubview:spinner];
+	[spinner startAnimating];
+	[spinner release];
+	
+	// kick-start the login procedure
 	NSString* nsString = tokenTextField.text;
 	std::string token([nsString cStringUsingEncoding:NSUTF8StringEncoding]);
-	
-	fprintf(stderr, "Logging in with token '%s'.\n", token.c_str());
-	fflush(stderr);
 	
 	GetLocalSettings()->SetToken(token);
 	GetLocalSettings()->Save();
 	CreateDiscordInstanceIfNeeded();
 	
-	DbgPrintF("Performing request to find gateway.");
 	GetHTTPClient()->PerformRequest(
 		false,
 		NetRequest::GET,
