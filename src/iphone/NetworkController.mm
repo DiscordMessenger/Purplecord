@@ -11,7 +11,11 @@ NetworkController* GetNetworkController() {
 	return g_pNetworkController;
 }
 
-@implementation NetworkController
+@implementation NetworkController {
+	
+	NSTimer* heartbeatTimer;
+	
+}
 
 - (instancetype) init
 {
@@ -22,7 +26,36 @@ NetworkController* GetNetworkController() {
 - (void)dealloc
 {
 	g_pNetworkController = NULL;
+	
+	if (heartbeatTimer != nil) {
+		[heartbeatTimer invalidate];
+		[heartbeatTimer release];
+		heartbeatTimer = nil;
+	}
+	
 	[super dealloc];
+}
+
+- (void)heartbeatTimerFired:(NSTimer*)timer
+{
+	GetDiscordInstance()->SendHeartbeat();
+}
+
+- (void)setHeartbeatInterval:(NSInteger)timeMs
+{
+	if (heartbeatTimer != nil) {
+		[heartbeatTimer invalidate];
+		[heartbeatTimer release];
+		heartbeatTimer = nil;
+	}
+	
+	heartbeatTimer = [[
+		NSTimer scheduledTimerWithTimeInterval:(NSTimeInterval)(timeMs / 1000.0)
+		target:self
+		selector:@selector(heartbeatTimerFired:)
+		userInfo:nil
+		repeats:YES
+	] retain];
 }
 
 - (void)finishedProcessingHugeMessage

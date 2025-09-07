@@ -59,6 +59,17 @@ void Frontend_iOS::UpdateChannelList()
 		[GetGuildController() updateChannelList];
 }
 
+void Frontend_iOS::RefreshMessages(ScrollDir::eScrollDir sd, Snowflake gapCulprit)
+{
+	if (GetChannelController())
+		[GetChannelController() refreshMessages:sd withGapCulprit:gapCulprit];
+}
+
+void Frontend_iOS::SetHeartbeatInterval(int timeMs)
+{
+	[GetNetworkController() setHeartbeatInterval:timeMs];
+}
+
 std::string Frontend_iOS::GetDirectMessagesText()
 {
 	return "Direct Messages";
@@ -323,11 +334,6 @@ void Frontend_iOS::RepaintProfileWithUserID(Snowflake id)
 	//TODO
 }
 
-void Frontend_iOS::RefreshMessages(ScrollDir::eScrollDir sd, Snowflake gapCulprit)
-{
-	//TODO
-}
-
 void Frontend_iOS::RefreshMembers(const std::set<Snowflake>& members)
 {
 	//TODO
@@ -344,11 +350,6 @@ void Frontend_iOS::OnWebsocketClose(int gatewayID, int errorCode, const std::str
 }
 
 void Frontend_iOS::OnWebsocketFail(int gatewayID, int errorCode, const std::string& message, bool isTLSError, bool mayRetry)
-{
-	//TODO
-}
-
-void Frontend_iOS::SetHeartbeatInterval(int timeMs)
 {
 	//TODO
 }

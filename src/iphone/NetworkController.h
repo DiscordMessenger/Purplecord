@@ -10,6 +10,7 @@
 - (void)processWebsocketMessage:(NSValue*)websocketMessageNSValue;
 - (void)finishedProcessingHugeMessage;
 - (void)refreshGuildList;
+- (void)setHeartbeatInterval:(NSInteger)timeMs;
 
 @end
 

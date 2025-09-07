@@ -21,6 +21,15 @@ void MessageCache::GetLoadedMessages(Snowflake channel, Snowflake guild, std::li
 		out.push_back(msg.second);
 }
 
+void MessageCache::GetLoadedMessages(Snowflake channel, Snowflake guild, std::vector<MessagePtr>& out)
+{
+	MessageChunkList& lst = m_mapMessages[channel];
+	lst.m_guild = guild;
+
+	for (auto& msg : lst.m_messages)
+		out.push_back(msg.second);
+}
+
 void MessageCache::ProcessRequest(Snowflake channel, ScrollDir::eScrollDir sd, Snowflake anchor, nlohmann::json& j, const std::string& channelName)
 {
 	MessageChunkList& lst = m_mapMessages[channel];

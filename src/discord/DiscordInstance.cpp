@@ -1241,7 +1241,7 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 
 			auto dispatchCode = j["t"];
 			if (dispatchCode != "READY") {
-				DbgPrintF("Huge payload with t != READY unsupported.");
+				DbgPrintF("Huge payload with t != READY unsupported.  Dumping: %s[done]", payload.c_str());
 				GetFrontend()->OnFinishedHugeMessage();
 				return;
 			}

@@ -122,6 +122,8 @@ GuildController* GetGuildController() {
 	tableView.delegate = self;
 	[self.view addSubview:tableView];
 	
+	GetDiscordInstance()->OnSelectGuild(guildID);
+	
 	[self updateChannelList];
 }
 

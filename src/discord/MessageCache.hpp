@@ -2,6 +2,7 @@
 
 #include <map>
 #include <list>
+#include <vector>
 #include <nlohmann/json.h>
 #include "Snowflake.hpp"
 #include "ScrollDir.hpp"
@@ -30,6 +31,7 @@ public:
 	MessageCache();
 	
 	void GetLoadedMessages(Snowflake channel, Snowflake guild, std::list<MessagePtr>& out);
+	void GetLoadedMessages(Snowflake channel, Snowflake guild, std::vector<MessagePtr>& out);
 
 	// note: scroll dir used to add gap message
 	void ProcessRequest(Snowflake channel, ScrollDir::eScrollDir sd, Snowflake anchor, nlohmann::json& j, const std::string& channelName);
