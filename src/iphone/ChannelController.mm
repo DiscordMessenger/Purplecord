@@ -74,6 +74,11 @@ ChannelController* GetChannelController() {
 {
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	
+	size_t oldMessageCount = m_messages.size();
+	CGFloat oldContentHeight = tableView.contentSize.height;
+	CGFloat oldOffsetY = tableView.contentOffset.y;
+	CGFloat distanceFromBottom = oldContentHeight - oldOffsetY;
+	
 	// TODO: Keep the scroll position
 	// TODO: Imitate what DM does
 	m_messages.clear();
@@ -83,12 +88,94 @@ ChannelController* GetChannelController() {
 	
 	[tableView reloadData];
 	
-	NSInteger lastRow = (NSInteger)(m_messages.size() - 1);
-	NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:lastRow inSection:0];
-	[tableView scrollToRowAtIndexPath:lastIndexPath atScrollPosition:UITableViewScrollPositionBottom animated:NO];
+	if (oldMessageCount < 2 || distanceFromBottom < tableView.frame.size.height)
+	{
+		// scroll to the bottom
+		if (m_messages.size() > 1)
+		{
+			NSInteger lastRow = (NSInteger)(m_messages.size() - 1);
+			NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:lastRow inSection:0];
+			[tableView scrollToRowAtIndexPath:lastIndexPath atScrollPosition:UITableViewScrollPositionBottom animated:NO];
+		}
+	}
+	else
+	{
+		// keep the scroll the EXACT same
+		CGFloat newOffsetY = tableView.contentSize.height - distanceFromBottom;
+		tableView.contentOffset = CGPointMake(0, newOffsetY);
+	}
 	
 	m_doNotLoadMessages = false;
 }
+
+- (BOOL)isChannelIDActive:(Snowflake)_channelID
+{
+	return channelID == _channelID;
+}
+
+- (void)reloadDataAndScrollToBottomIfNeeded
+{
+	// Figure out if we need to scroll to bottom or not
+	CGFloat oldContentHeight = tableView.contentSize.height;
+	CGFloat oldOffsetY = tableView.contentOffset.y;
+	CGFloat distanceFromBottom = oldContentHeight - oldOffsetY;
+	
+	[tableView reloadData];
+	
+	if (distanceFromBottom < 200)
+	{
+		// scroll to bottom
+		NSInteger lastRow = (NSInteger)(m_messages.size() - 1);
+		NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:lastRow inSection:0];
+		[tableView scrollToRowAtIndexPath:lastIndexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+	}
+}
+
+- (void)addMessage:(MessagePtr)message
+{
+	if (message->m_anchor)
+		[self removeMessage:message->m_anchor];
+	
+	m_messages.push_back(message);
+	
+	[self reloadDataAndScrollToBottomIfNeeded];
+}
+
+- (void)removeMessage:(Snowflake)messageID
+{
+	auto iter = std::find_if(m_messages.begin(), m_messages.end(), [messageID] (MessagePtr ptr) {
+		return ptr->m_snowflake == messageID;
+	});
+	
+	if (iter == m_messages.end())
+	{
+		DbgPrintF("Message with id %lld not found for deletion", messageID);
+		return;
+	}
+	
+	m_messages.erase(iter);
+	
+	[self reloadDataAndScrollToBottomIfNeeded];
+}
+
+- (void)updateMessage:(MessagePtr)message
+{
+	Snowflake messageID = message->m_snowflake;
+	auto iter = std::find_if(m_messages.begin(), m_messages.end(), [messageID] (MessagePtr ptr) {
+		return ptr->m_snowflake == messageID;
+	});
+	
+	if (iter == m_messages.end())
+	{
+		DbgPrintF("Message with id %lld not found for update, resorting to add", messageID);
+		[self addMessage:message];
+		return;
+	}
+	
+	*iter = message;
+	[self reloadDataAndScrollToBottomIfNeeded];
+}
+
 
 - (void)update
 {

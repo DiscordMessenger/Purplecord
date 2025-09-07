@@ -18,8 +18,8 @@ struct MessageChunkList
 
 	MessageChunkList();
 	void ProcessRequest(ScrollDir::eScrollDir sd, Snowflake anchor, nlohmann::json& j, const std::string& channelName);
-	void AddMessage(const Message& msg);
-	void EditMessage(const Message& msg);
+	MessagePtr AddMessage(const Message& msg);
+	MessagePtr EditMessage(const Message& msg);
 	void DeleteMessage(Snowflake message);
 	int GetMentionCountSince(Snowflake message, Snowflake user);
 	MessagePtr GetLoadedMessage(Snowflake message);
@@ -36,8 +36,8 @@ public:
 	// note: scroll dir used to add gap message
 	void ProcessRequest(Snowflake channel, ScrollDir::eScrollDir sd, Snowflake anchor, nlohmann::json& j, const std::string& channelName);
 
-	void AddMessage(Snowflake channel, const Message& msg);
-	void EditMessage(Snowflake channel, const Message& msg);
+	MessagePtr AddMessage(Snowflake channel, const Message& msg);
+	MessagePtr EditMessage(Snowflake channel, const Message& msg);
 	void DeleteMessage(Snowflake channel, Snowflake message);
 	int GetMentionCountSince(Snowflake channel, Snowflake message, Snowflake user);
 	void ClearAllChannels();

@@ -1,4 +1,5 @@
 #include "Frontend_iOS.h"
+#include "../discord/MessageCache.hpp"
 #import "NetworkController.h"
 #import "LoginPageController.h"
 #import "GuildListController.h"
@@ -68,6 +69,14 @@ void Frontend_iOS::RefreshMessages(ScrollDir::eScrollDir sd, Snowflake gapCulpri
 void Frontend_iOS::SetHeartbeatInterval(int timeMs)
 {
 	[GetNetworkController() setHeartbeatInterval:timeMs];
+}
+
+void Frontend_iOS::OnAddMessage(Snowflake channelID, const Message& msg)
+{
+	MessagePtr message = GetMessageCache()->AddMessage(channelID, msg);
+	
+	if (GetChannelController() && [GetChannelController() isChannelIDActive:channelID])
+		[GetChannelController() addMessage:message];
 }
 
 std::string Frontend_iOS::GetDirectMessagesText()
@@ -158,11 +167,6 @@ void Frontend_iOS::OnSessionClosed(int errorCode)
 }
 
 void Frontend_iOS::OnConnecting()
-{
-	//TODO
-}
-
-void Frontend_iOS::OnAddMessage(Snowflake channelID, const Message& msg)
 {
 	//TODO
 }

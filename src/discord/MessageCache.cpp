@@ -36,14 +36,14 @@ void MessageCache::ProcessRequest(Snowflake channel, ScrollDir::eScrollDir sd, S
 	lst.ProcessRequest(sd, anchor, j, channelName);
 }
 
-void MessageCache::AddMessage(Snowflake channel, const Message& msg)
+MessagePtr MessageCache::AddMessage(Snowflake channel, const Message& msg)
 {
-	m_mapMessages[channel].AddMessage(msg);
+	return m_mapMessages[channel].AddMessage(msg);
 }
 
-void MessageCache::EditMessage(Snowflake channel, const Message& msg)
+MessagePtr MessageCache::EditMessage(Snowflake channel, const Message& msg)
 {
-	m_mapMessages[channel].EditMessage(msg);
+	return m_mapMessages[channel].EditMessage(msg);
 }
 
 void MessageCache::DeleteMessage(Snowflake channel, Snowflake msg)
@@ -167,18 +167,22 @@ void MessageChunkList::ProcessRequest(ScrollDir::eScrollDir sd, Snowflake gap, j
 	GetDiscordInstance()->OnFetchedMessages(gap, sd);
 }
 
-void MessageChunkList::AddMessage(const Message& msg)
+MessagePtr MessageChunkList::AddMessage(const Message& msg)
 {
 	if (msg.m_anchor)
 		DeleteMessage(msg.m_anchor);
 
-	m_messages[msg.m_snowflake] = std::make_shared<Message>(msg);
+	auto ptr = std::make_shared<Message>(msg);
+	m_messages[msg.m_snowflake] = ptr;
+	return ptr;
 }
 
-void MessageChunkList::EditMessage(const Message& msg)
+MessagePtr MessageChunkList::EditMessage(const Message& msg)
 {
 	DeleteMessage(msg.m_snowflake);
-	m_messages[msg.m_snowflake] = std::make_shared<Message>(msg);
+	auto ptr = std::make_shared<Message>(msg);
+	m_messages[msg.m_snowflake] = ptr;
+	return ptr;
 }
 
 void MessageChunkList::DeleteMessage(Snowflake message)
