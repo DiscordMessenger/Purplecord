@@ -38,7 +38,7 @@ struct ChannelMember
 			return m_category < other.m_category;
 
 		// within each category, sort by position
-		if (m_pos != other.m_pos)
+		if (!IsCategory() && !other.IsCategory() && m_pos != other.m_pos)
 			return m_pos < other.m_pos;
 		
 		return m_id < other.m_id;
@@ -182,7 +182,7 @@ GuildController* GetGuildController() {
 	for (size_t i = 0; i < m_items.size(); )
 	{
 		// remove any empty categories.
-		if (m_items[i].IsCategory() && i + 1 < m_items.size() && m_items[i + 1].IsCategory())
+		if (m_items[i].IsCategory() && (i + 1 >= m_items.size() || m_items[i + 1].IsCategory()))
 			m_items.erase(m_items.begin() + i);
 		else
 			i++;
