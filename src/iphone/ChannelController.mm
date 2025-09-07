@@ -66,6 +66,7 @@ ChannelController* GetChannelController() {
 	//[toggleButton release];
 	
 	GetDiscordInstance()->OnSelectChannel(channelID);
+	GetDiscordInstance()->HandledChannelSwitch();
 	
 	[self update];
 }
@@ -113,6 +114,17 @@ ChannelController* GetChannelController() {
 	return channelID == _channelID;
 }
 
+- (void)scrollToBottom
+{
+	// scroll to bottom
+	if (m_messages.empty())
+		return;
+	
+	NSInteger lastRow = (NSInteger)(m_messages.size() - 1);
+	NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:lastRow inSection:0];
+	[tableView scrollToRowAtIndexPath:lastIndexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+}
+
 - (void)reloadDataAndScrollToBottomIfNeeded
 {
 	// Figure out if we need to scroll to bottom or not
@@ -122,13 +134,8 @@ ChannelController* GetChannelController() {
 	
 	[tableView reloadData];
 	
-	if (distanceFromBottom < 200)
-	{
-		// scroll to bottom
-		NSInteger lastRow = (NSInteger)(m_messages.size() - 1);
-		NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:lastRow inSection:0];
-		[tableView scrollToRowAtIndexPath:lastIndexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
-	}
+	if (distanceFromBottom < 2000)
+		[self performSelector:@selector(scrollToBottom) withObject:nil afterDelay:0];
 }
 
 - (void)addMessage:(MessagePtr)message
