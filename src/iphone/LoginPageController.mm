@@ -43,7 +43,7 @@ LoginPageController* g_pLoginPageController;
 	self.view = mainView;
 	[mainView release];
 	
-	self.title = @"Log In to Purplecord";
+	self.title = @"Purplecord";
 	
 	// Add the login token box
 	int width = screenBounds.size.width;
@@ -74,7 +74,7 @@ LoginPageController* g_pLoginPageController;
 	// And a button
 	logInButton = [
 		[UIBarButtonItem alloc]
-		initWithTitle:@"Log In"
+		initWithTitle:@"Login"
 		style:UIBarButtonItemStylePlain
 		target:self
 		action:@selector(logIn)

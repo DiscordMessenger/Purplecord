@@ -292,7 +292,7 @@ std::string DiscordInstance::LookupChannelNameGlobally(Snowflake sf)
 {
 	for (auto& gld : m_guilds)
 	{
-		Channel* pChan = gld.GetChannel(sf);
+		Channel* pChan = gld.second.GetChannel(sf);
 		if (pChan)
 			return pChan->m_name;
 	}
@@ -323,7 +323,7 @@ std::string DiscordInstance::LookupRoleNameGlobally(Snowflake sf)
 {
 	for (const auto& gld : m_guilds)
 	{
-		for (const auto& role : gld.m_roles)
+		for (const auto& role : gld.second.m_roles)
 		{
 			if (role.first == sf)
 				return role.second.m_name;
@@ -424,15 +424,16 @@ std::vector<QuickMatch> DiscordInstance::Search(const std::string& query)
 		if (matchFlags & (MATCH_TEXT | MATCH_DMS | MATCH_VOICE))
 		{
 			for (auto& gld : m_guilds)
-				SearchSubGuild(matches, &gld, matchFlags, queryPtr);
+				SearchSubGuild(matches, &gld.second, matchFlags, queryPtr);
 
 			SearchSubGuild(matches, &m_dmGuild, matchFlags, queryPtr);
 		}
 
 		if (matchFlags & MATCH_GUILDS)
 		{
-			for (auto& gld : m_guilds)
+			for (auto& gldk : m_guilds)
 			{
+				auto& gld = gldk.second;
 				if (gld.m_snowflake == m_CurrentGuild)
 					continue;
 
@@ -754,13 +755,7 @@ void DiscordInstance::HandleRequest(NetRequest* pRequest)
 				m_CurrentChannel = 0;
 
 				GetFrontend()->RepaintGuildList();
-
-				// select the first one, if possible
-				Snowflake guildsf = 0;
-				if (m_guilds.size() > 0)
-					guildsf = m_guilds.front().m_snowflake;
-
-				OnSelectGuild(guildsf);
+				OnSelectGuild(0);
 				break;
 			}
 			case GUILD:
@@ -1223,7 +1218,6 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 	if (m_bProcessingHugePacket)
 	{
 		// don't run it yet, there is activity on this
-		DbgPrintF("Deferring gateway message to after READY message is processed.");
 		m_pendingGatewayMessages.push(payload);
 		return;
 	}
@@ -1283,11 +1277,6 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 	PROFILE_DONE("Parse Payload");
 
 	int op = j["op"];
-	
-	if (payload.size() < 100)
-		DbgPrintF("Got payload with OP:%d : %s[END]", op, payload.c_str());
-	else
-		DbgPrintF("Got payload with OP:%d : %s[snip]", op, payload.substr(0, 100).c_str());
 	
 	using namespace GatewayOp;
 	switch (op)
@@ -2029,7 +2018,11 @@ bool DiscordInstance::SortGuilds()
 {
 #ifdef DISABLE_GUILD_FOLDERS
 	// Sort.
-	m_guilds.sort();
+	std::sort(m_guildOrder.begin(), m_guildOrder.end(), [this] (Snowflake a, Snowflake b) {
+		auto guildA = this->GetGuild(a);
+		auto guildB = this->GetGuild(b);
+		return *guildA < *guildB;
+	});
 
 	std::vector<Snowflake> ids = GetSettingsManager()->GetGuildFolders();
 
@@ -2043,9 +2036,10 @@ bool DiscordInstance::SortGuilds()
 	int orderOffset = 10000;
 	int unordered = 1;
 
-	for (auto& gld : m_guilds)
+	for (auto& gldsf : m_guildOrder)
 	{
-		auto iter = ids_set.find(gld.m_snowflake);
+		Guild& gld = m_guilds[gldsf];
+		auto iter = ids_set.find(gldsf);
 		if (iter == ids_set.end())
 		{
 			// not found in guild folders
@@ -2061,8 +2055,9 @@ bool DiscordInstance::SortGuilds()
 	// Check if already sorted, if yes, don't need to do a redundant check
 	bool sorted = true;
 	int lastOrder = -1;
-	for (auto& gld : m_guilds)
+	for (auto& gldsf : m_guildOrder)
 	{
+		Guild& gld = m_guilds[gldsf];
 		if (lastOrder > gld.m_order) {
 			sorted = false;
 			break;
@@ -2075,7 +2070,12 @@ bool DiscordInstance::SortGuilds()
 	if (sorted)
 		return false;
 
-	m_guilds.sort();
+	std::sort(m_guildOrder.begin(), m_guildOrder.end(), [this] (Snowflake a, Snowflake b) {
+		auto guildA = this->GetGuild(a);
+		auto guildB = this->GetGuild(b);
+		return *guildA < *guildB;
+	});
+
 	return true;
 #else
 	GuildItemList gil = std::move(m_guildItemList);
@@ -2114,8 +2114,9 @@ bool DiscordInstance::SortGuilds()
 	}
 
 	// If there are any leftover guilds to add, add those as well.
-	for (auto& guild : m_guilds)
+	for (auto& guildk : m_guilds)
 	{
+		auto& guild = guildk.second;
 		if (!guildAdded[guild.m_snowflake]) {
 			DbgPrintF("Guild %lld isn't in guild folders, adding to the end", guild.m_snowflake);
 			m_guildItemList.AddGuild(0, guild.m_snowflake, guild.m_name, guild.m_avatarlnk);
@@ -2224,13 +2225,14 @@ void DiscordInstance::ParseAndAddGuild(nlohmann::json& elem)
 	// the server I was testing with is considered a "lazy guild"?
 	for (auto& gld : m_guilds)
 	{
-		if (gld.m_snowflake == g.m_snowflake) {
-			gld = g;
+		if (gld.second.m_snowflake == g.m_snowflake) {
+			gld.second = g;
 			return;
 		}
 	}
 
-	m_guilds.push_front(g);
+	m_guilds[g.m_snowflake] = g;
+	m_guildOrder.push_front(g.m_snowflake);
 	PROFILE_END("ParseAndAddGuild done");
 }
 
@@ -2665,25 +2667,21 @@ void DiscordInstance::HandleGUILD_DELETE(Json& j)
 {
 	Json& data = j["d"];
 	Snowflake sf = GetSnowflake(data, "id");
+	
+	auto iter = m_guilds.find(sf);
+	if (iter == m_guilds.end())
+		return;
 
-	for (auto iter = m_guilds.begin();
-		iter != m_guilds.end();
-		++iter)
+	m_guilds.erase(iter);
+	GetFrontend()->RepaintGuildList();
+
+	if (m_CurrentGuild == sf)
 	{
-		if (iter->m_snowflake == sf)
-		{
-			m_guilds.erase(iter);
-			GetFrontend()->RepaintGuildList();
-
-			if (m_CurrentGuild == sf)
-			{
-				Snowflake sf = 0;
-				if (!m_guilds.empty())
-					sf = m_guilds.begin()->m_snowflake;
-				OnSelectGuild(sf);
-			}
-			break;
-		}
+		Snowflake sf = 0;
+		if (!m_guilds.empty())
+			sf = m_guilds.begin()->second.m_snowflake;
+		
+		OnSelectGuild(sf);
 	}
 }
 

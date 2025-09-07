@@ -166,7 +166,8 @@ public:
 	Snowflake m_CurrentChannel = 0;
 
 	// Guild DB
-	std::list<Guild> m_guilds;
+	std::map<Snowflake, Guild> m_guilds;
+	std::list<Snowflake> m_guildOrder;
 
 	Guild m_dmGuild;
 
@@ -251,12 +252,10 @@ public:
 		if (!sf)
 			return &m_dmGuild;
 
-		for (auto& g : m_guilds)
-		{
-			if (g.m_snowflake == sf)
-				return &g;
-		}
-		return nullptr;
+		auto it = m_guilds.find(sf);
+		if (it == m_guilds.end()) return nullptr;
+		
+		return &it->second;
 	}
 
 	void GetGuildIDs(std::vector<Snowflake>& sf, bool bUI = false)
@@ -267,7 +266,7 @@ public:
 		}
 
 		for (auto& g : m_guilds)
-			sf.push_back(g.m_snowflake);
+			sf.push_back(g.second.m_snowflake);
 	}
 
 	std::string GetGuildFolderName(Snowflake sf)
@@ -353,7 +352,7 @@ public:
 		}
 
 		for (auto& gld : m_guilds) {
-			pChan = gld.GetChannel(sf);
+			pChan = gld.second.GetChannel(sf);
 			if (pChan)
 				return pChan;
 		}
