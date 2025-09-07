@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #import "LoginPageController.h"
 #import "GuildListController.h"
+#import "UIColorScheme.h"
 
 #include "../discord/LocalSettings.hpp"
 #include "../discord/DiscordRequest.hpp"
@@ -42,7 +43,7 @@ void CreateDiscordInstanceIfNeeded();
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	
 	UIView *mainView = [[UIView alloc] initWithFrame:screenBounds];
-	mainView.backgroundColor = [UIColor groupTableViewBackgroundColor]; 
+	mainView.backgroundColor = [UIColorScheme getBackgroundColor]; 
 	self.view = mainView;
 	[mainView release];
 	
@@ -53,8 +54,7 @@ void CreateDiscordInstanceIfNeeded();
 	UITextField* textField = [[UITextField alloc] initWithFrame: CGRectMake(20, 140, width - 40, 30)];
 	textField.placeholder = @"Token...";
 	textField.font = [UIFont systemFontOfSize:16];
-	textField.backgroundColor = [UIColor groupTableViewBackgroundColor];
-	textField.textColor = [UIColor blackColor];
+	textField.backgroundColor = [UIColorScheme getBackgroundColor];
 	textField.borderStyle = UITextBorderStyleRoundedRect;
 	
  	// Not 100% decided about this.
@@ -69,7 +69,8 @@ void CreateDiscordInstanceIfNeeded();
 	UILabel* label = [[UILabel alloc] initWithFrame: CGRectMake(20, 30, width - 40, 80)];
 	label.text = @"Welcome to Purplecord!\nBefore you can use this client you must first log in using your token.";
 	label.textAlignment = UITextAlignmentCenter;
-	label.backgroundColor = [UIColor groupTableViewBackgroundColor];
+	label.backgroundColor = [UIColorScheme getBackgroundColor];
+	label.textColor = [UIColorScheme getTextColor];
 	label.numberOfLines = 0;
 	label.lineBreakMode = UILineBreakModeWordWrap;
 	label.font = [UIFont systemFontOfSize:15];
@@ -112,6 +113,9 @@ void CreateDiscordInstanceIfNeeded();
 {
 	GuildListController* controller = [[GuildListController alloc] init];
 	UINavigationController* navController = [[UINavigationController alloc] initWithRootViewController:controller];
+	
+	if ([UIColorScheme useDarkMode])
+		navController.navigationBar.barStyle = UIBarStyleBlack;
 	
 	UIWindow* window = [UIApplication sharedApplication].keyWindow;
 	if (!window) {

@@ -1,5 +1,6 @@
 #import "GuildController.h"
 #import "ChannelController.h"
+#import "UIColorScheme.h"
 #include "../discord/DiscordInstance.hpp"
 
 struct ChannelMember
@@ -120,6 +121,7 @@ GuildController* GetGuildController() {
 	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
 	tableView.dataSource = self;
 	tableView.delegate = self;
+	tableView.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	[self.view addSubview:tableView];
 	
 	GetDiscordInstance()->OnSelectGuild(guildID);
@@ -244,7 +246,7 @@ GuildController* GetGuildController() {
 		cell.userInteractionEnabled = NO;
 	}
 	else {
-		cell.textLabel.textColor = [UIColor blackColor];
+		cell.textLabel.textColor = [UIColorScheme getTextColor];
 		cell.textLabel.font = [UIFont boldSystemFontOfSize:20.0];
 		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
 		cell.userInteractionEnabled = YES;
@@ -272,7 +274,7 @@ GuildController* GetGuildController() {
 		return;
 	
 	ChannelController *channelVC = [[ChannelController alloc] initWithChannelID:channelID andGuildID:guildID];
-	channelVC.view.backgroundColor = [UIColor whiteColor];
+	channelVC.view.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	
 	[self.navigationController pushViewController:channelVC animated:YES];
 	[channelVC release];

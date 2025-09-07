@@ -104,7 +104,8 @@ Purplecord_FILES = \
 	src/iphone/HTTPClient_curl.cpp \
 	src/iphone/WebsocketClient_curl.cpp \
 	src/iphone/MessageItem.mm \
-	src/iphone/MessageList.mm
+	src/iphone/MessageInputView.mm \
+	src/iphone/UIColorScheme.mm
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics
 Purplecord_CFLAGS = -fno-objc-arc -O3 $(INCLUDES) $(CPPHACKS) $(WARNINGDISABLES) $(SWITCHES)

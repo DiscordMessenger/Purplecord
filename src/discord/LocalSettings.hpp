@@ -208,6 +208,12 @@ public:
 	void SetFlashOnNotification(bool b) {
 		m_bFlashOnNotification = b;
 	}
+	bool UseDarkMode() const {
+		return m_bUseDarkMode;
+	}
+	void SetDarkMode(bool b) {
+		m_bUseDarkMode = b;
+	}
 
 private:
 	std::string m_token;
@@ -241,6 +247,7 @@ private:
 	int m_width = 1000;
 	int m_height = 700;
 	int m_userScale = 1000;
+	bool m_bUseDarkMode = true; // NOTE: True by default. Disable later!
 };
 
 LocalSettings* GetLocalSettings();

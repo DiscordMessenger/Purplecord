@@ -1,5 +1,6 @@
 #import "MessageItem.h"
 #import "ChannelController.h"
+#import "UIColorScheme.h"
 #include "../discord/DiscordInstance.hpp"
 #include "../discord/Util.hpp"
 
@@ -39,6 +40,12 @@ bool IsActionMessage(MessageType::eType msgType)
 
 @synthesize authorLabel, dateLabel, messageLabel, message, height;
 
+- (void)applyThemingOn:(UILabel*)label
+{
+	label.backgroundColor = [UIColorScheme getTextBackgroundColor];
+	label.textColor = [UIColorScheme getTextColor];
+}
+
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
 	if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])
@@ -57,6 +64,10 @@ bool IsActionMessage(MessageType::eType msgType)
 		messageLabel.numberOfLines = 0;
 		messageLabel.font = [UIFont systemFontOfSize:16];
 		[self.contentView addSubview:messageLabel];
+		
+		[self applyThemingOn:authorLabel];
+		[self applyThemingOn:dateLabel];
+		[self applyThemingOn:messageLabel];
 	}
 	
 	return self;
@@ -67,8 +78,9 @@ bool IsActionMessage(MessageType::eType msgType)
 	message = _message;
 	
 	self.opaque = YES;
-	self.backgroundColor = [UIColor whiteColor];
-	self.contentView.backgroundColor = [UIColor whiteColor];
+	self.backgroundColor = [UIColorScheme getTextBackgroundColor];
+	self.textColor = [UIColorScheme getTextColor];
+	self.contentView.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	
 	CGFloat padding = 15.0f;
 	CGFloat cellWidth = self.contentView.bounds.size.width;
@@ -85,8 +97,28 @@ bool IsActionMessage(MessageType::eType msgType)
 			case MessageType::GAP_DOWN:
 			case MessageType::GAP_AROUND:
 			{
-				messageLabel.text = @"Purplecord is loading messages, please wait...";
-				break;
+				messageLabel.text = @"";
+				
+				UIActivityIndicatorView* spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+				spinner.center = CGPointMake(cellWidth / 2, 40);
+				
+				self.contentView.backgroundColor = [UIColor clearColor];
+				self.opaque = NO;
+				
+				// hack
+				authorLabel.backgroundColor = [UIColor clearColor];
+				dateLabel.backgroundColor = [UIColor clearColor];
+				messageLabel.backgroundColor = [UIColor clearColor];
+				authorLabel.opaque = NO;
+				dateLabel.opaque = NO;
+				messageLabel.opaque = NO;
+				
+				[self.contentView addSubview:spinner];
+				[spinner startAnimating];
+				[spinner release];
+				
+				height = 80;
+				return;
 			}
 		}
 		

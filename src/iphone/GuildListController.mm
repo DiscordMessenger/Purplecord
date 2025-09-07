@@ -1,5 +1,6 @@
 #import "GuildListController.h"
 #import "GuildController.h"
+#import "UIColorScheme.h"
 #include "HTTPClient_curl.h"
 #include "../discord/DiscordInstance.hpp"
 
@@ -39,6 +40,7 @@ GuildListController* GetGuildListController() {
 	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
 	tableView.dataSource = self;
 	tableView.delegate = self;
+	tableView.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	[self.view addSubview:tableView];
 	
 	[self refreshGuilds];
@@ -113,6 +115,7 @@ void TestFunction();
 	if (!cell) {
 		cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0,0,tv.bounds.size.width,44) reuseIdentifier:cellId];
 		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+		cell.textLabel.textColor = [UIColorScheme getTextColor];
 	}
 	cell.text = guildNameNS;
 	return cell;
@@ -130,7 +133,7 @@ void TestFunction();
 		return;
 	
 	GuildController *guildVC = [[GuildController alloc] initWithGuildID:guildId];
-	guildVC.view.backgroundColor = [UIColor whiteColor];
+	guildVC.view.backgroundColor = [UIColorScheme getBackgroundColor];
 
 	[self.navigationController pushViewController:guildVC animated:YES];
 	[guildVC release];

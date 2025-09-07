@@ -1,6 +1,7 @@
 #import "AppDelegate.h"
 #import "LoginPageController.h"
 #import "NetworkController.h"
+#import "UIColorScheme.h"
 
 @interface AppDelegate() {
 	NetworkController* networkController;
@@ -18,7 +19,13 @@
 
 	mainVC = [[LoginPageController alloc] init];
 	navController = [[UINavigationController alloc] initWithRootViewController:mainVC];
-
+	
+	if ([UIColorScheme useDarkMode])
+	{
+		navController.navigationBar.barStyle = UIBarStyleBlack;
+		[UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackOpaque;
+	}
+	
 	[window addSubview:navController.view];
 	[window makeKeyAndVisible];
 
@@ -29,7 +36,7 @@
 	[mainVC release];
 	[navController release];
 	[window release];
-	[networkController dealloc];
+	[networkController release];
 	[super dealloc];
 }
 

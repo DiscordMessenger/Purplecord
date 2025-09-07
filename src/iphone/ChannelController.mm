@@ -1,5 +1,6 @@
 #import "ChannelController.h"
 #import "MessageItem.h"
+#import "UIColorScheme.h"
 #include "../discord/DiscordInstance.hpp"
 
 ChannelController* g_pChannelController;
@@ -43,7 +44,7 @@ ChannelController* GetChannelController() {
 	[super viewWillAppear:animated];
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	UIView *mainView = [[UIView alloc] initWithFrame:screenBounds];
-	mainView.backgroundColor = [UIColor groupTableViewBackgroundColor];
+	mainView.backgroundColor = [UIColorScheme getBackgroundColor];
 	self.view = mainView;
 	[mainView release];
 	
@@ -54,7 +55,7 @@ ChannelController* GetChannelController() {
 	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
 	tableView.dataSource = self;
 	tableView.delegate = self;
-	tableView.backgroundColor = [UIColor groupTableViewBackgroundColor];
+	tableView.backgroundColor = [UIColorScheme getBackgroundColor];
 	tableView.opaque = YES;
 	tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
 	[self.view addSubview:tableView];
