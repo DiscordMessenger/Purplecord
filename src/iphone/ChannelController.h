@@ -1,8 +1,9 @@
 #import <UIKit/UIKit.h>
+#import "MessageInputView.h"
 #include "../discord/ScrollDir.hpp"
 #include "../discord/Message.hpp"
 
-@interface ChannelController : UIViewController <UITableViewDataSource, UITableViewDelegate> {
+@interface ChannelController : UIViewController <UITableViewDataSource, UITableViewDelegate, MessageInputViewDelegate> {
 	UITableView* tableView;
 }
 

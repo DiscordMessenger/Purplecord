@@ -1,6 +1,7 @@
 #import "ChannelController.h"
 #import "MessageItem.h"
 #import "UIColorScheme.h"
+#include "UIProportions.h"
 #include "../discord/DiscordInstance.hpp"
 
 ChannelController* g_pChannelController;
@@ -9,6 +10,8 @@ ChannelController* GetChannelController() {
 }
 
 @interface ChannelController () {
+	MessageInputView* inputView;
+	
 	uint64_t guildID;
 	uint64_t channelID;
 	
@@ -39,19 +42,31 @@ ChannelController* GetChannelController() {
 	return self;
 }
 
+// MessageInputView communication
+- (BOOL)canBecomeFirstResponder
+{
+	return YES;
+}
+
+- (void)messageInputView:(MessageInputView *)inputView didSendMessage:(NSString *)message
+{
+	std::string message([message UTF8String]);
+	
+}
+
 - (void)viewWillAppear:(BOOL)animated
 {
 	[super viewWillAppear:animated];
+	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	UIView *mainView = [[UIView alloc] initWithFrame:screenBounds];
 	mainView.backgroundColor = [UIColorScheme getBackgroundColor];
 	self.view = mainView;
 	[mainView release];
 	
-	CGFloat statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
-	CGFloat navBarHeight = self.navigationController.navigationBar.frame.size.height;
+	CGFloat bottomBarHeight = BOTTOM_BAR_HEIGHT;
 	
-	CGRect frame = CGRectMake(0, 0, screenBounds.size.width, screenBounds.size.height - statusBarHeight - navBarHeight);
+	CGRect frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - bottomBarHeight);
 	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
 	tableView.dataSource = self;
 	tableView.delegate = self;
@@ -66,10 +81,73 @@ ChannelController* GetChannelController() {
 	//self.navigationItem.rightBarButtonItem = toggleButton;
 	//[toggleButton release];
 	
+	inputView = [[MessageInputView alloc] initWithFrame:CGRectZero];
+	inputView.delegate = self;
+	inputView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
+	inputView.frame = CGRectMake(0, self.view.frame.size.height - bottomBarHeight, self.view.frame.size.width, bottomBarHeight);
+	
+	[self.view addSubview:inputView];
+	
+	// let us know when the keyboard shows up
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+	
 	GetDiscordInstance()->OnSelectChannel(channelID);
 	GetDiscordInstance()->HandledChannelSwitch();
 	
 	[self update];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+	[super viewWillDisappear:animated];
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)keyboardWillShow:(NSNotification*)notification
+{
+	NSDictionary* info = [notification userInfo];
+	CGRect keyboardRect = [[info objectForKey:UIKeyboardBoundsUserInfoKey] CGRectValue];
+	NSTimeInterval duration = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+	UIViewAnimationCurve curve = (UIViewAnimationCurve) [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] intValue];
+	CGFloat keyboardHeight = keyboardRect.size.height;
+	
+	[UIView beginAnimations:nil context:NULL];
+	[UIView setAnimationDuration:duration];
+	[UIView setAnimationCurve:curve];
+	
+	CGFloat bottomBarHeight = BOTTOM_BAR_HEIGHT;
+	inputView.frame = CGRectMake(0, self.view.frame.size.height - bottomBarHeight - keyboardHeight, self.view.frame.size.width, bottomBarHeight);
+	
+	UIEdgeInsets insets = tableView.contentInset;
+	insets.bottom = keyboardHeight;
+	tableView.contentInset = insets;
+	tableView.scrollIndicatorInsets = insets;
+	
+	[UIView commitAnimations];
+	
+	[self performSelector:@selector(scrollToBottom) withObject:nil afterDelay:0.01];
+}
+
+- (void)keyboardWillHide:(NSNotification*)notification
+{
+	NSDictionary* info = [notification userInfo];
+	NSTimeInterval duration = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+	UIViewAnimationCurve curve = (UIViewAnimationCurve) [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] intValue];
+	
+	[UIView beginAnimations:nil context:NULL];
+	[UIView setAnimationDuration:duration];
+	[UIView setAnimationCurve:curve];
+	
+	CGFloat bottomBarHeight = BOTTOM_BAR_HEIGHT;
+	inputView.frame = CGRectMake(0, self.view.frame.size.height - bottomBarHeight, self.view.frame.size.width, bottomBarHeight);
+	
+	UIEdgeInsets insets = tableView.contentInset;
+	insets.bottom = 0;
+	tableView.contentInset = insets;
+	tableView.scrollIndicatorInsets = insets;
+	
+	[UIView commitAnimations];
 }
 
 - (void)refreshMessages:(ScrollDir::eScrollDir)sd withGapCulprit:(Snowflake)gapCulprit
@@ -115,7 +193,7 @@ ChannelController* GetChannelController() {
 	return channelID == _channelID;
 }
 
-- (void)scrollToBottom
+- (void)scrollToBottomAnimated:(BOOL)animated
 {
 	// scroll to bottom
 	if (m_messages.empty())
@@ -123,7 +201,12 @@ ChannelController* GetChannelController() {
 	
 	NSInteger lastRow = (NSInteger)(m_messages.size() - 1);
 	NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:lastRow inSection:0];
-	[tableView scrollToRowAtIndexPath:lastIndexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+	[tableView scrollToRowAtIndexPath:lastIndexPath atScrollPosition:UITableViewScrollPositionBottom animated:animated];
+}
+
+- (void)scrollToBottom
+{
+	[self scrollToBottomAnimated:YES];
 }
 
 - (void)reloadDataAndScrollToBottomIfNeeded
@@ -244,7 +327,7 @@ ChannelController* GetChannelController() {
 		switch (msg->m_type) {
 			default:
 			case MessageType::GAP_AROUND: sd = ScrollDir::AROUND; break;
-			case MessageType::GAP_UP:     sd = ScrollDir::BEFORE; break;
+			case MessageType::GAP_UP:	 sd = ScrollDir::BEFORE; break;
 			case MessageType::GAP_DOWN:   sd = ScrollDir::AFTER; break;
 		}
 
@@ -266,6 +349,7 @@ ChannelController* GetChannelController() {
 - (void)dealloc {
 	g_pChannelController = nullptr;
 	[tableView release];
+	[inputView release];
 	[super dealloc];
 }
 
