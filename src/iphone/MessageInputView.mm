@@ -27,6 +27,7 @@
 		[sendButton setTitle:@"Send" forState:UIControlStateNormal];
 		[sendButton addTarget:self action:@selector(sendPressed) forControlEvents:UIControlEventTouchUpInside];
 		sendButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+		sendButton.titleLabel.font = [UIFont boldSystemFontOfSize:16];
 		[self addSubview:sendButton];
 		
 		// make the button look like the SMS app's send button

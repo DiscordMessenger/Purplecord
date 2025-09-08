@@ -86,6 +86,11 @@ GuildController* GetGuildController() {
 		self.title = [NSString stringWithUTF8String:pGuild->m_name.c_str()];
 	}
 	
+	if (g_pGuildController)
+	{
+		DbgPrintF("ERROR: Guild controller already opened!  GuildID: %lld", g_pGuildController->guildID);
+	}
+	
 	assert(!g_pGuildController);
 	g_pGuildController = self;
 	
@@ -95,7 +100,11 @@ GuildController* GetGuildController() {
 - (void)exitIfYouDontExist
 {
 	if (!GetDiscordInstance()->GetGuild(guildID))
+	{
+		if (g_pGuildController == self)
+			g_pGuildController = nil;
 		[self.navigationController popViewControllerAnimated:YES];
+	}
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -129,7 +138,15 @@ GuildController* GetGuildController() {
 	[self updateChannelList];
 }
 
-- (void)onClickedSettingsButton {
+- (void)viewWillDisappear:(BOOL)animated
+{
+	[super viewWillDisappear:animated];
+	if (g_pGuildController == self)
+		g_pGuildController = nil;
+}
+
+- (void)onClickedSettingsButton
+{
 	// TODO
 }
 
@@ -206,14 +223,16 @@ GuildController* GetGuildController() {
 	[tableView reloadData];
 }
 
-- (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section
+{
 	if (![self ensureGuildPointerExists])
 		return 0;
 	
 	return m_items.size();
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
 	if (![self ensureGuildPointerExists])
 		return nil;
 	
@@ -227,7 +246,8 @@ GuildController* GetGuildController() {
 	return 44.0f; // default
 }
 
-- (UITableViewCell*)tableView:(UITableView*)tv cellForRowAtIndexPath:(NSIndexPath*)indexPath {
+- (UITableViewCell*)tableView:(UITableView*)tv cellForRowAtIndexPath:(NSIndexPath*)indexPath
+{
 	if (![self ensureGuildPointerExists])
 		return nil;
 	
@@ -256,7 +276,8 @@ GuildController* GetGuildController() {
 	return cell;
 }
 
-- (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+- (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
 	if (![self ensureGuildPointerExists])
 		return;
 	
@@ -280,8 +301,11 @@ GuildController* GetGuildController() {
 	[channelVC release];
 }
 
-- (void)dealloc {
-	g_pGuildController = nullptr;
+- (void)dealloc
+{
+	if (g_pGuildController == self)
+		g_pGuildController = nil;
+	
 	[tableView release];
 	[super dealloc];
 }

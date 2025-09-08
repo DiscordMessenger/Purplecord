@@ -180,9 +180,6 @@ void HTTPClient_curl::PerformRequest(
 	curl_easy_setopt(pRequest->easyHandle, CURLOPT_PRIVATE, pRequest);
 	curl_easy_setopt(pRequest->easyHandle, CURLOPT_FOLLOWLOCATION, 1L);
 	
-	// for debugging
-	curl_easy_setopt(pRequest->easyHandle, CURLOPT_VERBOSE, 1L);
-
 	curl_easy_setopt(pRequest->easyHandle, CURLOPT_WRITEFUNCTION, WriteCallback);
 	curl_easy_setopt(pRequest->easyHandle, CURLOPT_READFUNCTION, ReadCallback);
 	
@@ -336,7 +333,6 @@ bool HTTPClient_curl::ProcessMultiEvent()
 		BRemoveEntryList(&request->entry);
 		curl_multi_remove_handle(m_multi, easy);
 		curl_easy_cleanup(easy);
-		DbgPrintF("easy: %p   msg: %p", easy, msg);
 		request->easyHandle = nullptr;
 	}
 
@@ -356,7 +352,6 @@ bool HTTPClient_curl::ProcessMultiEvent()
 
 	// invoke callback now
 	auto func = netRequest->pFunc;
-	DbgPrintF("HTTPClient_curl  Request:%p  NetRequest:%p", request, netRequest);
 	func(netRequest);
 
 	// if this is the default handler, then simply transfer ownership

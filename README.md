@@ -4,7 +4,9 @@ This is an attempt to create a Discord client for iOS 2 and 3.
 
 Support for newer versions of iOS is not guaranteed because I do not own any newer devices.
 
-This does nothing currently!
+This can log in (which takes about 50 seconds on my iPhone 3G over Wi-Fi), view messages,
+and send simple messages. But it is not fully featured yet! And also, it's really slow and
+drains your battery fast, so probably not very practical either.
 
 ## Attributions
 

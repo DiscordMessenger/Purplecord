@@ -4,6 +4,57 @@
 #include "UIProportions.h"
 #include "../discord/DiscordInstance.hpp"
 
+#define MAX_MESSAGE_SIZE 2000
+#define MAX_MESSAGE_SIZE_PREMIUM 4000
+
+static bool IsJustWhiteSpace(const char* str)
+{
+	while (*str)
+	{
+		if (*str != ' ' && *str != '\r' && *str != '\n' && *str != '\t')
+			// Not going to add exceptions for ALL of the characters that Discord thinks are white space.
+			// Just assume good faith from the user.  They'll get an "invalid request" response if they
+			// try :(
+			return false;
+
+		str++;
+	}
+
+	return true;
+}
+
+static bool ContainsAuthenticationToken(const std::string& str)
+{
+	const int lengthToken = 58;
+	const int placeFirstSep = 23;
+	const int placeSecondSep = 30;
+
+	if (str.size() < lengthToken) return false;
+
+	for (size_t i = 0; i <= str.size() - lengthToken; i++)
+	{
+		if (str[i + placeFirstSep] != L'.' || str[i + placeSecondSep] != L'.')
+			continue;
+
+		bool fake = false;
+		for (size_t j = 0; j < lengthToken; j++)
+		{
+			if (j == placeFirstSep || j == placeSecondSep)
+				continue;
+
+			if (strchr("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_", (char)str[i + j]) == NULL) {
+				fake = true;
+				break;
+			}
+		}
+
+		if (!fake)
+			return true;
+	}
+
+	return false;
+}
+
 ChannelController* g_pChannelController;
 ChannelController* GetChannelController() {
 	return g_pChannelController;
@@ -48,10 +99,51 @@ ChannelController* GetChannelController() {
 	return YES;
 }
 
-- (void)messageInputView:(MessageInputView *)inputView didSendMessage:(NSString *)message
+- (int)maxMessageLength
 {
-	std::string message([message UTF8String]);
+	// TODO: Detect if user has Nitro and return MAX_MESSAGE_SIZE_PREMIUM
+	return MAX_MESSAGE_SIZE;
+}
+
+- (void)messageInputView:(MessageInputView *)inputView didSendMessage:(NSString *)messageNS
+{
+	std::string message([messageNS UTF8String]);
+	if (message.empty() || IsJustWhiteSpace(message.c_str()))
+		return;
 	
+	if (ContainsAuthenticationToken(message)) {
+		// TODO: Show a UIAlertView then wait.
+		DbgPrintF("WARNING: Message contains authentication token!");
+	}
+	
+	// TODO: Reply Support
+	// TODO: Edit Support
+	
+	if (message.size() > [self maxMessageLength]) {
+		// TODO: Show a UIAlertView.
+		DbgPrintF("WARNING: Message is %zu chars long longer than the maximum of %d!", message.size(), [self maxMessageLength]);
+		return;
+	}
+	
+	Snowflake sf;
+	if (!GetDiscordInstance()->SendMessageToCurrentChannel(message, sf))
+		return;
+	
+	// Add a temporary message
+	MessagePtr m = MakeMessage();
+	Profile* pf = GetDiscordInstance()->GetProfile();
+	
+	m->m_snowflake = sf;
+	m->m_author_snowflake = pf->m_snowflake;
+	m->m_author = pf->m_name;
+	m->m_avatar = pf->m_avatarlnk;
+	m->m_message = message;
+	m->m_type = MessageType::SENDING_MESSAGE;
+	m->SetTime(time(NULL));
+	m->m_dateFull = "Sending...";
+	m->m_dateCompact = "Sending...";
+	
+	[self addMessage:m];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -224,6 +316,7 @@ ChannelController* GetChannelController() {
 
 - (void)addMessage:(MessagePtr)message
 {
+	DbgPrintF("addMessage messageAnchor:%lld", message->m_anchor);
 	if (message->m_anchor)
 		[self removeMessage:message->m_anchor];
 	

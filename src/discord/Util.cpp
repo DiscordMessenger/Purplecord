@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <chrono>
 #include <ctime>
+#include <sys/time.h>
 #include "Util.hpp"
 #include "Frontend.hpp"
 
@@ -257,8 +258,10 @@ int64_t GetIntFromString(const std::string& str)
 {
 	std::stringstream sstr(str);
 	int64_t t = 0;
-	if (!(sstr >> t))
+	if (!(sstr >> t)) {
+		DbgPrintF("Error in GetIntFromString converting %s.", str.c_str());
 		return 0;
+	}
 	return t;
 }
 
@@ -292,11 +295,15 @@ using Json = nlohmann::json;
 
 const uint64_t GetTimeMs() noexcept
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 const uint64_t GetTimeUs() noexcept
 {
-	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (uint64_t)tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
 std::string GetMonthName(int mon)
