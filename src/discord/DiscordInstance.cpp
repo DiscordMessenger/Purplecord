@@ -43,7 +43,7 @@ uint64_t getTimeMsProfiling(void)
 	return nanoseconds / 1000000;
 }
 
-//#define ENABLE_PROFILING
+#define ENABLE_PROFILING
 #ifdef ENABLE_PROFILING
 
 uint64_t lastTime = 0;
@@ -1224,12 +1224,19 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 	
 	if (payload.size() > 100000)
 	{
+		std::string fileName = "/var/mobile/Purplecord_HP" + std::to_string(GetTimeMs()) + ".txt";
+		FILE* f = fopen(fileName.c_str(), "w");
+		fprintf(f, "%s", payload.c_str());
+		fclose(f);
+		
 		m_bProcessingHugePacket = true;
 
 		// Process a huge payload, typical with READY packets
 		const auto& processHugePayload = [this] (std::string payload)
 		{
+			PROFILE_DO;
 			Json j = Json::parse(payload);
+			PROFILE_DONE("Parse Huge Payload");
 
 			int op = j["op"];
 
