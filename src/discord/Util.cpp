@@ -212,7 +212,7 @@ int64_t ExtractTimestamp(Snowflake sf)
 	return (sf >> 22) + 1420070400000;
 }
 
-std::string GetFieldSafe(const nlohmann::json& j, const std::string& key)
+std::string GetFieldSafe(const iprog::JsonObject& j, const std::string& key)
 {
 	if (j.contains(key) && !j[key].is_null())
 		return j[key];
@@ -220,7 +220,7 @@ std::string GetFieldSafe(const nlohmann::json& j, const std::string& key)
 	return "";
 }
 
-int GetFieldSafeInt(const nlohmann::json& j, const std::string& key)
+int GetFieldSafeInt(const iprog::JsonObject& j, const std::string& key)
 {
 	if (j.contains(key) && j[key].is_number_integer())
 		return j[key];
@@ -235,7 +235,7 @@ std::string FormatDiscrim(int discrim)
 	return std::string(chr);
 }
 
-std::string GetGlobalName(const nlohmann::json& j)
+std::string GetGlobalName(const iprog::JsonObject& j)
 {
 	if (j.contains("global_name") && !j["global_name"].is_null())
 		return GetFieldSafe(j, "global_name");
@@ -243,7 +243,7 @@ std::string GetGlobalName(const nlohmann::json& j)
 		return GetFieldSafe(j, "username");
 }
 
-std::string GetUsername(const nlohmann::json& j)
+std::string GetUsername(const iprog::JsonObject& j)
 {
 	std::string username = GetFieldSafe(j, "username");
 	int discrim = int(GetIntFromString(GetFieldSafe(j, "discriminator")));
@@ -265,14 +265,14 @@ int64_t GetIntFromString(const std::string& str)
 	return t;
 }
 
-bool GetFieldSafeBool(const nlohmann::json& j, const std::string& key, bool default1)
+bool GetFieldSafeBool(const iprog::JsonObject& j, const std::string& key, bool default1)
 {
 	if (j.contains(key) && j[key].is_boolean())
 		return j[key];
 	return default1;
 }
 
-Snowflake GetSnowflakeFromJsonObject(const nlohmann::json& j) {
+Snowflake GetSnowflakeFromJsonObject(const iprog::JsonObject& j) {
 	if (j.is_number_integer())
 		return Snowflake(int64_t(j));
 	if (j.is_number_unsigned())
@@ -282,7 +282,7 @@ Snowflake GetSnowflakeFromJsonObject(const nlohmann::json& j) {
 	return 0;
 }
 
-Snowflake GetSnowflake(const nlohmann::json& j, const std::string& key)
+Snowflake GetSnowflake(const iprog::JsonObject& j, const std::string& key)
 {
 	auto ji = j.find(key);
 	if (ji == j.end())
@@ -291,7 +291,7 @@ Snowflake GetSnowflake(const nlohmann::json& j, const std::string& key)
 	return GetSnowflakeFromJsonObject(ji.value());
 }
 
-using Json = nlohmann::json;
+using Json = iprog::JsonObject;
 
 const uint64_t GetTimeMs() noexcept
 {

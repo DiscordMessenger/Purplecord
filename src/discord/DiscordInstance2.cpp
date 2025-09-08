@@ -2,12 +2,12 @@
 #include "Util.hpp"
 #include "HTTPClient.hpp"
 #include "Frontend.hpp"
-#include <nlohmann/json.h>
+#include "iprogsjson.hpp"
 
 // split away because this function was causing crash problems with clang-21
 // (yes the compiler was literally crashing, i'm not joking)
 
-using Json = nlohmann::json;
+using Json = iprog::JsonObject;
 
 void DiscordInstance::OnUploadAttachmentFirst(NetRequest* pReq)
 {
@@ -26,7 +26,7 @@ void DiscordInstance::OnUploadAttachmentFirst(NetRequest* pReq)
 		return;
 	}
 
-	Json j = Json::parse(pReq->response);
+	Json j = iprog::JsonParser::parse(pReq->response);
 	assert(j["attachments"].size() == 1);
 
 	for (auto& att : j["attachments"])

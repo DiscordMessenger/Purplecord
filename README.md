@@ -19,14 +19,14 @@ SDKs Theos provides, so you must find the iPhoneOS 3.0 SDK to build.
 
 Also, building has only been tested on Linux, but it might work on Mac OS too.
 
-### Install Clang 21
+### Install Clang 22
 
-You will need Clang 21 to compile this project.  If Clang 21 is not provided by your distro's package
-manager, you can install Clang 21 with the following command:
+You will need Clang 22 to compile this project.  If Clang 22 is not provided by your distro's package
+manager, you can install Clang 22 with the following command:
 ```bash
 wget https://apt.llvm.org/llvm.sh
 chmod +x llvm.sh
-sudo ./llvm.sh 21
+sudo ./llvm.sh 22
 ```
 
 ### Fixing a Theos quirk

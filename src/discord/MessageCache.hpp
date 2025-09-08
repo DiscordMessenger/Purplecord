@@ -3,7 +3,7 @@
 #include <map>
 #include <list>
 #include <vector>
-#include <nlohmann/json.h>
+#include "iprogsjson.hpp"
 #include "Snowflake.hpp"
 #include "ScrollDir.hpp"
 #include "Message.hpp"
@@ -17,7 +17,7 @@ struct MessageChunkList
 	Snowflake m_guild = 0;
 
 	MessageChunkList();
-	void ProcessRequest(ScrollDir::eScrollDir sd, Snowflake anchor, nlohmann::json& j, const std::string& channelName);
+	void ProcessRequest(ScrollDir::eScrollDir sd, Snowflake anchor, iprog::JsonObject& j, const std::string& channelName);
 	MessagePtr AddMessage(const Message& msg);
 	MessagePtr EditMessage(const Message& msg);
 	void DeleteMessage(Snowflake message);
@@ -34,7 +34,7 @@ public:
 	void GetLoadedMessages(Snowflake channel, Snowflake guild, std::vector<MessagePtr>& out);
 
 	// note: scroll dir used to add gap message
-	void ProcessRequest(Snowflake channel, ScrollDir::eScrollDir sd, Snowflake anchor, nlohmann::json& j, const std::string& channelName);
+	void ProcessRequest(Snowflake channel, ScrollDir::eScrollDir sd, Snowflake anchor, iprog::JsonObject& j, const std::string& channelName);
 
 	MessagePtr AddMessage(Snowflake channel, const Message& msg);
 	MessagePtr EditMessage(Snowflake channel, const Message& msg);

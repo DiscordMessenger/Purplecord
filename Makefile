@@ -1,7 +1,7 @@
 # Makefile for Purplecord
 TARGET := iphone:clang:3.0:3.0
-TARGET_CC := clang-21
-TARGET_CXX := clang-21
+TARGET_CC := clang-22
+TARGET_CXX := clang-22
 TARGET_LD := $(THEOS)/toolchain/linux/iphone/bin/clang++ -v
 INSTALL_TARGET_PROCESSES = Purplecord
 ARCHS = armv6
