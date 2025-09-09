@@ -99,8 +99,11 @@ void WebsocketClient_curl::WSConnection::Disconnect(int code)
 
 void WebsocketClient_curl::WSConnection::Send(const std::string& payload)
 {
+	BeginProfiling("WSConnection::Send wait on mutex");
 	std::lock_guard<std::mutex> guard(m_mutex);
+	EndProfiling();
 
+	Profiler profiler("WSConnection::Send curl_ws_send");
 	size_t sent = 0;
 	CURLcode rc = curl_ws_send(m_easy, payload.data(), payload.size(), &sent, (curl_off_t) payload.size(), CURLWS_TEXT);
 
@@ -162,8 +165,13 @@ void WebsocketClient_curl::WSConnection::ReceiveThread2()
 
 		// Read data
 		{
-			std::lock_guard<std::mutex> guard(m_mutex);
+			m_mutex.lock();
+			
+			auto x = GetTimeMsProfiling();
 			rc = curl_ws_recv(m_easy, m_buffer, m_bufferSize, &bytesRead, &meta);
+			DbgPrintF("curl_ws_recv took %lld ms.", GetTimeMsProfiling() - x);
+			
+			m_mutex.unlock();
 		}
 
 		if (rc == CURLE_AGAIN)

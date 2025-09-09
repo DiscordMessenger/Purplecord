@@ -27,18 +27,29 @@ struct ProfilingTask
 
 static ProfilingTask g_profilingStack[MAX_PROFILES];
 static int g_profilingStackIndex = 0;
+static FILE* profilingFile = NULL;
+
+#define FPRINTF_TWICE(file1, file2, ...) do { \
+	fprintf(file1, __VA_ARGS__); \
+	fprintf(file2, __VA_ARGS__); \
+	fflush(file1); fflush(file2); \
+} while (0)
 
 void BeginProfiling(const char* what)
 {
+	if (!profilingFile) {
+		profilingFile = fopen("/var/mobile/Purplecord_Profiling.log", "w");
+	}
+	
 	if (g_profilingStackIndex >= MAX_PROFILES) {
-		fprintf(stderr, "BeginProfiling: profiling stack over flow");
+		FPRINTF_TWICE(stderr, profilingFile, "BeginProfiling: profiling stack over flow");
 		return;
 	}
 	
 	int depth = g_profilingStackIndex++;
 	
 	std::string padding(depth, '\t');
-	fprintf(stderr, "%sTask \"%s\" started.\n", padding.c_str(), what);
+	FPRINTF_TWICE(stderr, profilingFile, "%sTask \"%s\" started.\n", padding.c_str(), what);
 	
 	ProfilingTask& task = g_profilingStack[depth];
 	task.what = what;
@@ -48,7 +59,7 @@ void BeginProfiling(const char* what)
 void EndProfiling()
 {
 	if (g_profilingStackIndex <= 0) {
-		fprintf(stderr, "EndProfiling: profiling stack under flow");
+		FPRINTF_TWICE(stderr, profilingFile, "EndProfiling: profiling stack under flow");
 		return;
 	}
 	
@@ -58,5 +69,5 @@ void EndProfiling()
 	uint64_t diff = currTime - task.startTime;
 	
 	std::string padding(depth, '\t');
-	fprintf(stderr, "%sTask \"%s\" finished in %lld milliseconds.\n", padding.c_str(), task.what, diff);
+	FPRINTF_TWICE(stderr, profilingFile, "%sTask \"%s\" finished in %lld milliseconds.\n", padding.c_str(), task.what, diff);
 }

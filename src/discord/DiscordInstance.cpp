@@ -126,6 +126,7 @@ void DiscordInstance::OnSelectChannel(Snowflake sf, bool bSendSubscriptionUpdate
 	else if (pChan->m_channelType == Channel::CATEGORY)
 		return;
 
+	BeginProfiling("checking permissions");
 	// Check if we have permission to view the channel.
 	if (m_channelDenyList.find(sf) != m_channelDenyList.end() ||
 		(pChan && !pChan->HasPermission(PERM_VIEW_CHANNEL)))
@@ -133,13 +134,16 @@ void DiscordInstance::OnSelectChannel(Snowflake sf, bool bSendSubscriptionUpdate
 		GetFrontend()->OnCantViewChannel(pChan->m_name);
 		return;
 	}
+	EndProfiling();
 
 	m_channelHistory.AddToHistory(m_CurrentChannel);
 	m_CurrentChannel = sf;
 
 	pGuild->m_currentChannel = m_CurrentChannel;
 
+	BeginProfiling("calling Frontend::UpdateSelectedChannel");
 	GetFrontend()->UpdateSelectedChannel();
+	EndProfiling();
 
 	if (!GetCurrentChannel() || !GetCurrentGuild())
 		return;
@@ -1589,17 +1593,20 @@ void DiscordInstance::RequestDeleteMessage(Snowflake chan, Snowflake msg)
 
 void DiscordInstance::UpdateSubscriptions(Snowflake guildId, Snowflake channelId, bool typing, bool activities, bool threads, int rangeMembers)
 {
+	Profiler profiler("DiscordInstance::UpdateSubscriptions");
 	Json j, data;
 
 	if (guildId == 0)
 	{
+		Profiler profiler2("DiscordInstance::UpdateSubscriptions  DM subscription");
+		
 		// TODO - Subscriptions for DMs and groups.
 		j["op"] = GatewayOp::SUBSCRIBE_DM;
-
 		data["channel_id"] = channelId;
 	}
 	else
 	{
+		Profiler profiler2("DiscordInstance::UpdateSubscriptions  guild subscription");
 		j["op"] = GatewayOp::SUBSCRIBE_GUILD;
 
 		Json subs, guild, channels, rangeParent, rangeChildren[1];
@@ -1627,7 +1634,9 @@ void DiscordInstance::UpdateSubscriptions(Snowflake guildId, Snowflake channelId
 	j["d"] = data;
 
 	DbgPrintF("Would be: %s", j.dump().c_str());
+	BeginProfiling("Sending message");
 	GetWebsocketClient()->SendMsg(m_gatewayConnId, j.dump());
+	EndProfiling();
 }
 
 void DiscordInstance::RequestLeaveGuild(Snowflake guild)

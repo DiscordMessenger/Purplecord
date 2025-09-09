@@ -523,9 +523,12 @@ namespace iprog
 
 			if (!data.structured.names)
 			{
-				fprintf(stderr, "ERROR: No data.structured.names.\nDumping object:\n");
+				fprintf(stderr, "ERROR: No data.structured.names!\nDumping object:\n");
+				fflush(stderr);
+				
 				const std::string& obj = dump();
 				fprintf(stderr, "%s\n", obj.c_str());
+				fflush(stderr);
 			}
 			
 			assert(data.structured.names);
@@ -963,10 +966,14 @@ namespace iprog
 				case eType::Decimal: return std::to_string(data.decimal);
 				case eType::String: return "\"" + escape_string(std::string(data.string.data, data.string.size)) + "\"";
 				case eType::StringShort: return "\"" + escape_string(std::string(data.stringShort.data, data.stringShort.size)) + "\"";
-
+			}
+			
+			std::string dump = "[";
+			switch (type)
+			{
 				case eType::Array:
 				{
-					std::string dump = "[";
+				dumpAsArray:
 					bool first = true;
 
 					for (size_t i = 0; i < data.structured.itemCount; i++)
@@ -985,7 +992,13 @@ namespace iprog
 				
 				case eType::Struct:
 				{
-					std::string dump = "{";
+					if (!data.structured.names)
+					{
+						dump = "??[ERROR ERROR CORRUPTED - Struct missing names, dumping as array]??[";
+						goto dumpAsArray;
+					}
+					
+					dump = "{";
 					bool first = true;
 
 					for (size_t i = 0; i < data.structured.itemCount; i++)
@@ -1093,6 +1106,7 @@ namespace iprog
 #ifdef IPROG_JSON_DISABLE_EXCEPTIONS
 			fprintf(stderr, "JSON error: ");
 			vfprintf(stderr, message, vl);
+			fflush(stderr);
 			std::terminate();
 #else
 			char buffer[512];
@@ -1110,7 +1124,7 @@ namespace iprog
 
 			bool isObject = is_object();
 
-			if (isObject)
+			if (isObject && data.structured.names)
 			{
 				// since we created the names array using placement new, we must use placement delete
 				for (size_t i = 0; i < data.structured.itemCount; i++)
@@ -1119,11 +1133,14 @@ namespace iprog
 				::operator delete[](data.structured.names);
 			}
 
-			for (size_t i = 0; i < data.structured.itemCount; i++)
-				data.structured.array[i].~JsonObject();
+			if (data.structured.array)
+			{
+				for (size_t i = 0; i < data.structured.itemCount; i++)
+					data.structured.array[i].~JsonObject();
 
-			::operator delete[](data.structured.array);
-
+				::operator delete[](data.structured.array);
+			}
+			
 			data.structured.array = nullptr;
 			data.structured.names = nullptr;
 			data.structured.itemCount = 0;
@@ -1357,6 +1374,7 @@ namespace iprog
 				{
 					// THIS SHOULD NOT HAPPEN! Severe performance penalty otherwise!
 					fprintf(stderr, "THIS SHOULD NOT HAPPEN!  parse_object() expanding from %zu to %zu", itemCount, itemPos + 1);
+					fflush(stderr);
 					itemCount = itemPos + 1;
 					mainObject.internal_resize(itemCount);
 				}
@@ -1446,6 +1464,7 @@ namespace iprog
 				{
 					// THIS SHOULD NOT HAPPEN! Severe performance penalty otherwise!
 					fprintf(stderr, "THIS SHOULD NOT HAPPEN!  parse_array() expanding from %zu to %zu", itemCount, itemPos + 1);
+					fflush(stderr);
 					itemCount = itemPos + 1;
 					array.internal_resize(itemCount);
 				}
