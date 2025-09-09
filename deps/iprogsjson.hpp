@@ -521,6 +521,14 @@ namespace iprog
 			if (keyLen == 0)
 				keyLen = strlen(key);
 
+			if (!data.structured.names)
+			{
+				fprintf(stderr, "ERROR: No data.structured.names.\nDumping object:\n");
+				const std::string& obj = dump();
+				fprintf(stderr, "%s\n", obj.c_str());
+			}
+			
+			assert(data.structured.names);
 			for (size_t i = 0; i < data.structured.itemCount; i++)
 			{
 				if (data.structured.names[i].Equals(key, keyLen))
@@ -1037,7 +1045,7 @@ namespace iprog
 				else if (chr == '"') new_string += "\\\"";
 				else if (chr == '\\') new_string += "\\\\";
 				// UTF-8
-				else if (chr < 0) new_string += utf8_to_unicode_escape(str.c_str(), i);
+				else if (chr < 0) new_string += utf8_to_unicode_escape(str.c_str() + i, i);
 				// default
 				else new_string += chr;
 			}
@@ -1345,9 +1353,9 @@ namespace iprog
 				if (itemPos >= itemCount)
 				{
 					// THIS SHOULD NOT HAPPEN! Severe performance penalty otherwise!
-					fprintf(stderr, "THIS SHOULD NOT HAPPEN!");
+					fprintf(stderr, "THIS SHOULD NOT HAPPEN!  parse_object() expanding from %zu to %zu", itemCount, itemPos + 1);
 					itemCount = itemPos + 1;
-					object.internal_resize(itemCount);
+					mainObject.internal_resize(itemCount);
 				}
 
 				mainObject.internal_set_at(itemPos, name, std::move(object));
@@ -1434,7 +1442,7 @@ namespace iprog
 				if (itemPos >= itemCount)
 				{
 					// THIS SHOULD NOT HAPPEN! Severe performance penalty otherwise!
-					fprintf(stderr, "THIS SHOULD NOT HAPPEN!");
+					fprintf(stderr, "THIS SHOULD NOT HAPPEN!  parse_array() expanding from %zu to %zu", itemCount, itemPos + 1);
 					itemCount = itemPos + 1;
 					array.internal_resize(itemCount);
 				}

@@ -21,7 +21,7 @@ bool IsActionMessage(MessageType::eType msgType)
 		//case MessageType::LOADING_PINNED_MESSAGES:
 		//case MessageType::NO_PINNED_MESSAGES:
 		//case MessageType::NO_NOTIFICATIONS:
-		//case MessageType::CHANNEL_HEADER:
+		case MessageType::CHANNEL_HEADER:
 		//case MessageType::STAGE_START:
 		//case MessageType::STAGE_END:
 		//case MessageType::STAGE_SPEAKER:
@@ -73,9 +73,49 @@ bool IsActionMessage(MessageType::eType msgType)
 	return self;
 }
 
+- (NSString*)getChannelHeader
+{
+	if ([UIColorScheme useDarkMode])
+		return @"channelHeaderDark.png";
+	
+	return @"channelHeader.png";
+}
+
+- (void)makeTransparent
+{
+	self.contentView.backgroundColor = [UIColor clearColor];
+	self.opaque = NO;
+	
+	authorLabel.backgroundColor = [UIColor clearColor];
+	dateLabel.backgroundColor = [UIColor clearColor];
+	messageLabel.backgroundColor = [UIColor clearColor];
+	authorLabel.opaque = NO;
+	dateLabel.opaque = NO;
+	messageLabel.opaque = NO;
+}
+
+- (void)removeExtraViewsIfNeeded
+{
+	if (imageView)
+	{
+		[imageView removeFromSuperview];
+		[imageView release];
+		imageView = nil;
+	}
+	
+	if (spinner)
+	{
+		[spinner removeFromSuperview];
+		[spinner release];
+		spinner = nil;
+	}
+}
+
 - (void)configureWithMessage:(MessagePtr)_message
 {
 	message = _message;
+	
+	[self removeExtraViewsIfNeeded];
 	
 	self.opaque = YES;
 	self.backgroundColor = [UIColorScheme getTextBackgroundColor];
@@ -88,8 +128,11 @@ bool IsActionMessage(MessageType::eType msgType)
 	
 	if (IsActionMessage(message->m_type))
 	{
+		int heightAtLeast = 0;
 		authorLabel.text = dateLabel.text = @"";
 		height = 0;
+		
+		UIImage* image = nil;
 		
 		switch (message->m_type)
 		{
@@ -99,26 +142,31 @@ bool IsActionMessage(MessageType::eType msgType)
 			{
 				messageLabel.text = @"";
 				
-				UIActivityIndicatorView* spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+				spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
 				spinner.center = CGPointMake(cellWidth / 2, 40);
-				
-				self.contentView.backgroundColor = [UIColor clearColor];
-				self.opaque = NO;
-				
-				// hack
-				authorLabel.backgroundColor = [UIColor clearColor];
-				dateLabel.backgroundColor = [UIColor clearColor];
-				messageLabel.backgroundColor = [UIColor clearColor];
-				authorLabel.opaque = NO;
-				dateLabel.opaque = NO;
-				messageLabel.opaque = NO;
 				
 				[self.contentView addSubview:spinner];
 				[spinner startAnimating];
-				[spinner release];
 				
+				[self makeTransparent];
 				height = 80;
 				return;
+			}
+			
+			case MessageType::CHANNEL_HEADER:
+			{
+				[self makeTransparent];
+				
+				Channel* channel = GetDiscordInstance()->GetCurrentChannel();
+				std::string channelName = channel->GetTypeSymbol() + channel->m_name;
+				messageLabel.text = [NSString stringWithUTF8String:("Welcome to the beginning of the " + channelName + " channel.").c_str()];
+				
+				image = [UIImage imageNamed:[self getChannelHeader]];
+				imageView = [[UIImageView alloc] initWithImage:image];
+				
+				[self.contentView insertSubview:imageView atIndex:0];
+				
+				heightAtLeast = 40;
 			}
 		}
 		
@@ -131,6 +179,16 @@ bool IsActionMessage(MessageType::eType msgType)
 		
 		messageLabel.frame = CGRectMake(padding, padding, messageTextSize.width, messageTextSize.height);
 		height += padding * 2 + messageTextSize.height;
+		
+		if (height < heightAtLeast)
+			height = heightAtLeast;
+		
+		if (imageView)
+		{
+			// place it at the bottom.
+			imageView.frame = CGRectMake(0, height - image.size.height, image.size.width, image.size.height);
+		}
+		
 		return;
 	}
 	
@@ -171,6 +229,7 @@ bool IsActionMessage(MessageType::eType msgType)
 
 - (void)dealloc
 {
+	[self removeExtraViewsIfNeeded];
 	[authorLabel release];
 	[dateLabel release];
 	[messageLabel release];

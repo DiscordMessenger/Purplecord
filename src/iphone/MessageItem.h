@@ -6,6 +6,8 @@
 	UILabel* authorLabel;
 	UILabel* dateLabel;
 	UILabel* messageLabel;
+	UIImageView* imageView;
+	UIActivityIndicatorView* spinner;
 	MessagePtr message;
 	CGFloat height;
 }
