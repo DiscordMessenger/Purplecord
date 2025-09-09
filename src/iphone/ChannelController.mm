@@ -437,6 +437,8 @@ ChannelController* GetChannelController() {
 	MessagePtr message = m_messages[indexPath.row];
 	[item configureWithMessage:message];
 	
+	item.selectionStyle = UITableViewCellSelectionStyleGray;
+	
 	return item;
 }
 

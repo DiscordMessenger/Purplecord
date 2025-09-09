@@ -22,6 +22,11 @@ struct ChannelMember
 	{
 		return m_type == Channel::DM || m_type == Channel::GROUPDM;
 	}
+	
+	bool IsVoice() const
+	{
+		return m_type == Channel::VOICE || m_type == Channel::STAGEVOICE;
+	}
 
 	bool operator<(const ChannelMember& other) const
 	{
@@ -37,6 +42,14 @@ struct ChannelMember
 		
 		if (m_category != other.m_category)
 			return m_category < other.m_category;
+		
+		// within this category group, put the category first
+		if (IsCategory() && !other.IsCategory()) return true;
+		if (!IsCategory() && other.IsCategory()) return false;
+		
+		// voice channels are always below text channels
+		if (IsVoice() && !other.IsVoice()) return false;
+		if (!IsVoice() && other.IsVoice()) return true;
 
 		// within each category, sort by position
 		if (!IsCategory() && !other.IsCategory() && m_pos != other.m_pos)
@@ -256,7 +269,9 @@ GuildController* GetGuildController() {
 	
 	auto& item = m_items[indexPath.row];
 	
-	NSString* text = [NSString stringWithUTF8String:item.m_name.c_str()];
+	//std::string name = item.m_name + " [" + std::to_string(item.m_categIndex) + "] (" + std::to_string(item.m_pos) + ") {" + std::to_string(item.m_id) + "}";
+	std::string& name = item.m_name;
+	NSString* text = [NSString stringWithUTF8String:name.c_str()];
 	UITableViewCell *cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0,0,tv.bounds.size.width,44)];
 	
 	if (item.IsCategory()) {
