@@ -1045,7 +1045,10 @@ namespace iprog
 				else if (chr == '"') new_string += "\\\"";
 				else if (chr == '\\') new_string += "\\\\";
 				// UTF-8
-				else if (chr < 0) new_string += utf8_to_unicode_escape(str.c_str() + i, i);
+				else if (chr < 0) {
+					new_string += utf8_to_unicode_escape(str.c_str() + i, i);
+					i--;
+				}
 				// default
 				else new_string += chr;
 			}
