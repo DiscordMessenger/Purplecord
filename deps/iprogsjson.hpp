@@ -510,6 +510,11 @@ namespace iprog
 		// Contains
 		bool contains(const char* key, size_t keyLen = 0) const
 		{
+			if (is_null())
+				// null objects CAN be placeholders for missing structures, so handle this case.
+				// however, they are null, so obviously they can't have references to anything
+				return false;
+			
 			if (!is_object())
 				throw_error("json object is not a structure");
 
