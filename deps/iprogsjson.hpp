@@ -1160,6 +1160,11 @@ namespace iprog
 
 			JsonObject* newObjects = nullptr;
 			JsonName* newNames = nullptr;
+			
+			if (newSize > 50000 || newSize == 0) {
+				fprintf(stderr, "ATOMIC NUCLEAR ALERT: Trying to allocate %zu items", newSize);
+				fflush(stderr);
+			}
 
 			newObjects = (JsonObject*) ::operator new[](newSize * sizeof(JsonObject));
 			if (is_object())

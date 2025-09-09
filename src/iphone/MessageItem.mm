@@ -40,6 +40,16 @@ bool IsActionMessage(MessageType::eType msgType)
 
 @synthesize authorLabel, dateLabel, messageLabel, message, height;
 
++ (UIFont*)createAuthorTextFont
+{
+	return [UIFont boldSystemFontOfSize:16];
+}
+
++ (UIFont*)createMessageTextFont
+{
+	return [UIFont systemFontOfSize:16];
+}
+
 - (void)applyThemingOn:(UILabel*)label
 {
 	label.backgroundColor = [UIColorScheme getTextBackgroundColor];
@@ -52,17 +62,17 @@ bool IsActionMessage(MessageType::eType msgType)
 	{
 		authorLabel = [[UILabel alloc] initWithFrame:CGRectZero];
 		authorLabel.numberOfLines = 1;
-		authorLabel.font = [UIFont boldSystemFontOfSize:16];
+		authorLabel.font = [MessageItem createAuthorTextFont];
 		[self.contentView addSubview:authorLabel];
 		
 		dateLabel = [[UILabel alloc] initWithFrame:CGRectZero];
 		dateLabel.numberOfLines = 1;
-		dateLabel.font = [UIFont systemFontOfSize:16];
+		dateLabel.font = [MessageItem createMessageTextFont];
 		[self.contentView addSubview:dateLabel];
 		
 		messageLabel = [[UILabel alloc] initWithFrame:CGRectZero];
 		messageLabel.numberOfLines = 0;
-		messageLabel.font = [UIFont systemFontOfSize:16];
+		messageLabel.font = [MessageItem createMessageTextFont];
 		[self.contentView addSubview:messageLabel];
 		
 		[self applyThemingOn:authorLabel];
@@ -111,6 +121,83 @@ bool IsActionMessage(MessageType::eType msgType)
 	}
 }
 
++ (NSString*)channelHeaderString:(Channel*)channel
+{
+	std::string channelName = channel->GetTypeSymbol() + channel->m_name;
+	return [NSString stringWithUTF8String:("Welcome to the beginning of the " + channelName + " channel.").c_str()];;
+}
+
+// KEEP IN SYNC WITH configureWithMessage!!!
++ (CGFloat)computeHeightForMessage:(MessagePtr)message
+{
+	CGRect screenBounds = [[UIScreen mainScreen] bounds];
+	
+	CGFloat height = 0.0f;
+	CGFloat padding = IN_MESSAGE_PADDING;
+	CGFloat cellWidth = screenBounds.size.width;
+	CGSize maxMessageSize = CGSizeMake(cellWidth - padding * 2, 99999.0);
+	
+	NSString* authorText = @"";
+	NSString* messageText = @"";
+	
+	if (IsActionMessage(message->m_type))
+	{
+		int minHeight = 0;
+		height = 0;
+		
+		switch (message->m_type)
+		{
+			case MessageType::GAP_UP:
+			case MessageType::GAP_DOWN:
+			case MessageType::GAP_AROUND:
+				return 80;
+				
+			case MessageType::CHANNEL_HEADER:
+			{
+				minHeight = 40;
+				
+				Channel* channel = GetDiscordInstance()->GetCurrentChannel();
+				messageText = [MessageItem channelHeaderString:channel];
+				break;
+			}
+		}
+		
+		CGSize messageTextSize = [
+			messageText
+			sizeWithFont:[MessageItem createMessageTextFont]
+			constrainedToSize:maxMessageSize
+			lineBreakMode:UILineBreakModeWordWrap
+		];
+		
+		height += padding * 2 + messageTextSize.height;
+		
+		if (height < minHeight)
+			height = minHeight;
+		
+		return height;
+	}
+	
+	authorText = [NSString stringWithUTF8String:message->m_author.c_str()];
+	messageText = [NSString stringWithUTF8String:message->m_message.c_str()];
+	
+	CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2, 40.0);
+	CGSize authorTextSize = [
+		authorText
+		sizeWithFont:[MessageItem createAuthorTextFont]
+		constrainedToSize:maxAuthorSize
+		lineBreakMode:UILineBreakModeClip
+	];
+	CGSize messageTextSize = [
+		messageText
+		sizeWithFont:[MessageItem createMessageTextFont]
+		constrainedToSize:maxMessageSize
+		lineBreakMode:UILineBreakModeWordWrap
+	];
+	
+	height = padding * 3 + authorTextSize.height + messageTextSize.height;
+	return height;
+}
+
 - (void)configureWithMessage:(MessagePtr)_message
 {
 	message = _message;
@@ -128,7 +215,7 @@ bool IsActionMessage(MessageType::eType msgType)
 	
 	if (IsActionMessage(message->m_type))
 	{
-		int heightAtLeast = 0;
+		int minHeight = 0;
 		authorLabel.text = dateLabel.text = @"";
 		height = 0;
 		
@@ -158,15 +245,15 @@ bool IsActionMessage(MessageType::eType msgType)
 				[self makeTransparent];
 				
 				Channel* channel = GetDiscordInstance()->GetCurrentChannel();
-				std::string channelName = channel->GetTypeSymbol() + channel->m_name;
-				messageLabel.text = [NSString stringWithUTF8String:("Welcome to the beginning of the " + channelName + " channel.").c_str()];
+				messageLabel.text = [MessageItem channelHeaderString:channel];
 				
 				image = [UIImage imageNamed:[self getChannelHeader]];
 				imageView = [[UIImageView alloc] initWithImage:image];
 				
 				[self.contentView insertSubview:imageView atIndex:0];
 				
-				heightAtLeast = 40;
+				minHeight = 40;
+				break;
 			}
 		}
 		
@@ -180,8 +267,8 @@ bool IsActionMessage(MessageType::eType msgType)
 		messageLabel.frame = CGRectMake(padding, padding, messageTextSize.width, messageTextSize.height);
 		height += padding * 2 + messageTextSize.height;
 		
-		if (height < heightAtLeast)
-			height = heightAtLeast;
+		if (height < minHeight)
+			height = minHeight;
 		
 		if (imageView)
 		{

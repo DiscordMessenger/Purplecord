@@ -14,4 +14,6 @@
 
 @property (nonatomic, assign) id<MessageInputViewDelegate> delegate;
 
+- (void)closeKeyboard;
+
 @end

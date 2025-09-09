@@ -211,10 +211,9 @@ ChannelController* GetChannelController() {
 	CGFloat bottomBarHeight = BOTTOM_BAR_HEIGHT;
 	inputView.frame = CGRectMake(0, self.view.frame.size.height - bottomBarHeight - keyboardHeight, self.view.frame.size.width, bottomBarHeight);
 	
-	UIEdgeInsets insets = tableView.contentInset;
-	insets.bottom = keyboardHeight;
-	tableView.contentInset = insets;
-	tableView.scrollIndicatorInsets = insets;
+	CGRect tableViewFrame = tableView.frame;
+	tableViewFrame.size.height = self.view.frame.size.height - bottomBarHeight - keyboardHeight;
+	tableView.frame = tableViewFrame;
 	
 	[UIView commitAnimations];
 	
@@ -234,16 +233,17 @@ ChannelController* GetChannelController() {
 	CGFloat bottomBarHeight = BOTTOM_BAR_HEIGHT;
 	inputView.frame = CGRectMake(0, self.view.frame.size.height - bottomBarHeight, self.view.frame.size.width, bottomBarHeight);
 	
-	UIEdgeInsets insets = tableView.contentInset;
-	insets.bottom = 0;
-	tableView.contentInset = insets;
-	tableView.scrollIndicatorInsets = insets;
+	CGRect tableViewFrame = tableView.frame;
+	tableViewFrame.size.height = self.view.frame.size.height - bottomBarHeight;
+	tableView.frame = tableViewFrame;
 	
 	[UIView commitAnimations];
 }
 
 - (void)refreshMessages:(ScrollDir::eScrollDir)sd withGapCulprit:(Snowflake)gapCulprit
 {
+	Profiler profiler("- [ChannelController refreshMessages:withGapCulprit:]");
+	
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	
 	size_t oldMessageCount = m_messages.size();
@@ -258,7 +258,9 @@ ChannelController* GetChannelController() {
 	
 	m_doNotLoadMessages = true;
 	
+	BeginProfiling("ChannelController: reloadData in refreshMessages");
 	[tableView reloadData];
+	EndProfiling();
 	
 	if (oldMessageCount < 2 || distanceFromBottom < tableView.frame.size.height)
 	{
@@ -301,28 +303,61 @@ ChannelController* GetChannelController() {
 	[self scrollToBottomAnimated:YES];
 }
 
-- (void)reloadDataAndScrollToBottomIfNeeded
+- (void)scrollToBottomIfNeeded
 {
+	Profiler profiler("- [ChannelController scrollToBottomIfNeeded]");
+	
 	// Figure out if we need to scroll to bottom or not
 	CGFloat oldContentHeight = tableView.contentSize.height;
 	CGFloat oldOffsetY = tableView.contentOffset.y;
 	CGFloat distanceFromBottom = oldContentHeight - oldOffsetY;
 	
-	[tableView reloadData];
-	
 	if (distanceFromBottom < 2000)
 		[self performSelector:@selector(scrollToBottom) withObject:nil afterDelay:0];
 }
 
+- (void)onAddedRowAtIndex:(size_t)index animated:(BOOL)animated
+{
+	auto anim = UITableViewRowAnimationNone;
+	if (animated)
+		anim = UITableViewRowAnimationRight;
+	
+	NSIndexPath* indexPath = [NSIndexPath indexPathForRow:(NSInteger)index inSection:0];
+	[tableView insertRowsAtIndexPaths:@[indexPath] withRowAnimation:anim];
+}
+
+- (void)onUpdatedRowAtIndex:(size_t)index animated:(BOOL)animated
+{
+	auto anim = UITableViewRowAnimationNone;
+	if (animated)
+		anim = UITableViewRowAnimationRight;
+	
+	NSIndexPath* indexPath = [NSIndexPath indexPathForRow:(NSInteger)index inSection:0];
+	[tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:anim];
+}
+
+- (void)onRemovedRowAtIndex:(size_t) index animated:(BOOL)animated
+{
+	auto anim = UITableViewRowAnimationNone;
+	if (animated)
+		anim = UITableViewRowAnimationRight;
+	
+	NSIndexPath* indexPath = [NSIndexPath indexPathForRow:(NSInteger)index inSection:0];
+	[tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:anim];
+}
+
 - (void)addMessage:(MessagePtr)message
 {
-	DbgPrintF("addMessage messageAnchor:%lld", message->m_anchor);
 	if (message->m_anchor)
-		[self removeMessage:message->m_anchor];
+	{
+		// if the message can't be found come back here with anchor reset
+		[self updateMessageById:message->m_anchor message:message];
+		return;
+	}
 	
 	m_messages.push_back(message);
-	
-	[self reloadDataAndScrollToBottomIfNeeded];
+	[self onAddedRowAtIndex:m_messages.size() - 1 animated:YES];
+	[self scrollToBottomIfNeeded];
 }
 
 - (void)removeMessage:(Snowflake)messageID
@@ -337,14 +372,15 @@ ChannelController* GetChannelController() {
 		return;
 	}
 	
+	size_t index = std::distance(m_messages.begin(), iter);
 	m_messages.erase(iter);
 	
-	[self reloadDataAndScrollToBottomIfNeeded];
+	[self onRemovedRowAtIndex:index animated:YES];
+	[self scrollToBottomIfNeeded];
 }
 
-- (void)updateMessage:(MessagePtr)message
+- (void)updateMessageById:(Snowflake)messageID message:(MessagePtr)message
 {
-	Snowflake messageID = message->m_snowflake;
 	auto iter = std::find_if(m_messages.begin(), m_messages.end(), [messageID] (MessagePtr ptr) {
 		return ptr->m_snowflake == messageID;
 	});
@@ -352,18 +388,35 @@ ChannelController* GetChannelController() {
 	if (iter == m_messages.end())
 	{
 		DbgPrintF("Message with id %lld not found for update, resorting to add", messageID);
+		
+		// reset anchor to avoid recursion
+		if (message->m_anchor == messageID)
+			message->m_anchor = 0;
+		
 		[self addMessage:message];
 		return;
 	}
 	
 	*iter = message;
-	[self reloadDataAndScrollToBottomIfNeeded];
+	
+	size_t index = std::distance(m_messages.begin(), iter);
+	[self onUpdatedRowAtIndex:index animated:NO];
+	[self scrollToBottomIfNeeded];
 }
 
+- (void)updateMessage:(MessagePtr)message
+{
+	[self updateMessageById:message->m_snowflake message:message];
+}
 
 - (void)update
 {
 	[self refreshMessages:ScrollDir::AROUND withGapCulprit:0];
+}
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+	[inputView closeKeyboard];
 }
 
 - (NSInteger)tableView:(UITableView *)tv numberOfRowsInSection:(NSInteger)section
@@ -392,15 +445,13 @@ ChannelController* GetChannelController() {
 	if (indexPath.row < 0 || indexPath.row >= (int) m_messages.size())
 		return nil;
 	
-	static NSString *cellId = @"MessageItem";
-	MessageItem* item = (MessageItem*) [tv dequeueReusableCellWithIdentifier:cellId];
-	if (!item)
-		item = [[[MessageItem alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId] autorelease];
-	
 	MessagePtr message = m_messages[indexPath.row];
-	[item configureWithMessage:message];
+	if (message->m_cachedHeight)
+		return message->m_cachedHeight;
 	
-	return item.height;
+	CGFloat height = [MessageItem computeHeightForMessage:message];
+	message->m_cachedHeight = height;
+	return height;
 }
 
 - (void)tableView:(UITableView*)tv willDisplayCell:(UITableViewCell*)cell forRowAtIndexPath:(NSIndexPath*)indexPath

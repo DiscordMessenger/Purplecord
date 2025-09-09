@@ -69,6 +69,10 @@
 		[_delegate messageInputView:self didSendMessage:textField.text];
 	
 	textField.text = @"";
+}
+
+- (void)closeKeyboard
+{
 	[textField resignFirstResponder];
 }
 

@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include "WebsocketClient_curl.h"
 #include "HTTPClient_curl.h"
 #include "../discord/Frontend.hpp"
@@ -151,10 +152,41 @@ void WebsocketClient_curl::WSConnection::ConnectInternal()
 	m_recvThread = std::thread(ReceiveThread, this);
 }
 
+void WebsocketClient_curl::WSConnection::SetNonBlockingHack()
+{
+	curl_socket_t sockfd;
+	curl_easy_getinfo(m_easy, CURLINFO_ACTIVESOCKET, &sockfd);
+	
+	int flags = fcntl(sockfd, F_GETFL, 0);
+	if (flags == -1)
+	{
+		DbgPrintF(
+			"WebsocketClient_curl: fcntl(F_GETFL) failed (%s) - sockets will be blocking and the app WILL be slow",
+			strerror(errno)
+		);
+		return;
+	}
+	
+	if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
+	{
+		DbgPrintF(
+			"WebsocketClient_curl: fcntl(F_SETFL) failed (%s) - sockets will be blocking and the app WILL be slow",
+			strerror(errno)
+		);
+		return;
+	}
+}
+
 void WebsocketClient_curl::WSConnection::ReceiveThread2()
 {
 	std::vector<uint8_t> currentMessage;
 	DbgPrintF("ReceiveThread active");
+	
+	// this is a hack because we are deliberately bypassing libcurl
+	//
+	// it turns out, for some reason, the sockets become blocking after logging in,
+	// so we gotta force them to be non-blocking even if this doesn't seem necessary
+	SetNonBlockingHack();
 
 	while (m_bIsOpen)
 	{
@@ -166,11 +198,7 @@ void WebsocketClient_curl::WSConnection::ReceiveThread2()
 		// Read data
 		{
 			m_mutex.lock();
-			
-			auto x = GetTimeMsProfiling();
 			rc = curl_ws_recv(m_easy, m_buffer, m_bufferSize, &bytesRead, &meta);
-			DbgPrintF("curl_ws_recv took %lld ms.", GetTimeMsProfiling() - x);
-			
 			m_mutex.unlock();
 		}
 

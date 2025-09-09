@@ -54,6 +54,7 @@ private:
 		void Connect();
 		void Disconnect(int code);
 		void Send(const std::string& payload);
+		void SetNonBlockingHack();
 
 	private:
 		void ConnectInternal();

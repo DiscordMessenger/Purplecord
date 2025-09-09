@@ -20,4 +20,6 @@
 
 - (void)configureWithMessage:(MessagePtr)message;
 
++ (CGFloat)computeHeightForMessage:(MessagePtr)message;
+
 @end

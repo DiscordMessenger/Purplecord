@@ -120,6 +120,9 @@ public:
 	Snowflake m_webhookId = 0;
 	std::shared_ptr<MessagePoll> m_pMessagePoll;
 	std::shared_ptr<ReferenceMessage> m_pReferencedMessage;
+	
+	// look, I know I'm not really supposed to add this here, but who cares?
+	float m_cachedHeight = 0.0f;
 
 public:
 	Message() {}

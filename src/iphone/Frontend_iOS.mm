@@ -79,6 +79,20 @@ void Frontend_iOS::OnAddMessage(Snowflake channelID, const Message& msg)
 		[GetChannelController() addMessage:message];
 }
 
+void Frontend_iOS::OnUpdateMessage(Snowflake channelID, const Message& msg)
+{
+	MessagePtr message = GetMessageCache()->EditMessage(channelID, msg);
+	
+	if (GetChannelController() && [GetChannelController() isChannelIDActive:channelID])
+		[GetChannelController() updateMessage:message];
+}
+
+void Frontend_iOS::OnDeleteMessage(Snowflake messageInCurrentChannel)
+{
+	if (GetChannelController())
+		[GetChannelController() removeMessage:messageInCurrentChannel];
+}
+
 std::string Frontend_iOS::GetDirectMessagesText()
 {
 	return "Direct Messages";
@@ -167,16 +181,6 @@ void Frontend_iOS::OnSessionClosed(int errorCode)
 }
 
 void Frontend_iOS::OnConnecting()
-{
-	//TODO
-}
-
-void Frontend_iOS::OnUpdateMessage(Snowflake channelID, const Message& msg)
-{
-	//TODO
-}
-
-void Frontend_iOS::OnDeleteMessage(Snowflake messageInCurrentChannel)
 {
 	//TODO
 }
