@@ -28,40 +28,6 @@
 
 using Json = iprog::JsonObject;
 
-/*** PROFILING STUFF ***/
-#include <mach/mach_time.h>
-uint64_t getTimeMsProfiling(void)
-{
-    static mach_timebase_info_data_t timebase = {0,0};
-    if (timebase.denom == 0) {
-        mach_timebase_info(&timebase);
-    }
-    uint64_t t = mach_absolute_time();
-    uint64_t nanoseconds = t * timebase.numer / timebase.denom;
-	
-	// but we actually need milliseconds so
-	return nanoseconds / 1000000;
-}
-
-#define ENABLE_PROFILING
-#ifdef ENABLE_PROFILING
-
-uint64_t lastTime = 0;
-#define PROFILE_DO do { uint64_t newTime = getTimeMsProfiling(); DbgPrintF("%s: Profiling reached line %d at %llu ms (diff of %lld ms).", __func__, __LINE__, newTime, newTime - lastTime); lastTime = newTime; } while (0)
-#define PROFILE_DONE(thing) do { uint64_t newTime = getTimeMsProfiling(); DbgPrintF("%s: Profiling reached line %d at %llu ms (diff of %lld ms).  Did \"%s\".", __func__, __LINE__, newTime, newTime - lastTime, thing); lastTime = newTime; } while (0)
-
-#define PROFILE_START uint64_t __profile = getTimeMsProfiling()
-#define PROFILE_END(thing) do { uint64_t currTime = getTimeMsProfiling(); DbgPrintF("%s: Profiling ended, did \"%s\" in %lld ms.", __func__, thing, currTime - __profile); __profile = currTime; } while (0)
-
-#else
-
-#define PROFILE_DO
-#define PROFILE_DONE(x)
-#define PROFILE_START
-#define PROFILE_END(x)
-
-#endif
-
 /*** PROFILING STUFF END ***/
 
 // Creates a temporary snowflake based on time.
@@ -142,6 +108,7 @@ void DiscordInstance::OnFetchedChannels(Guild* pGld, const std::string& content)
 
 void DiscordInstance::OnSelectChannel(Snowflake sf, bool bSendSubscriptionUpdate)
 {
+	Profiler profiler("DiscordInstance::OnSelectChannel");
 	if (m_CurrentChannel == sf)
 		return;
 
@@ -453,6 +420,7 @@ std::vector<QuickMatch> DiscordInstance::Search(const std::string& query)
 
 void DiscordInstance::OnSelectGuild(Snowflake sf, Snowflake chan)
 {
+	Profiler profiler("DiscordInstance::OnSelectGuild");
 	if (m_CurrentGuild == sf)
 	{
 		if (chan)
@@ -508,6 +476,7 @@ void OnUpdateAvatar(const std::string& resid);
 
 void DiscordInstance::HandleRequest(NetRequest* pRequest)
 {
+	Profiler profiler("DiscordInstance::HandleRequest");
 	if (pRequest->itype == DiscordRequest::UPLOAD_ATTACHMENT) {
 		OnUploadAttachmentFirst(pRequest);
 		return;
@@ -1234,9 +1203,9 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 		// Process a huge payload, typical with READY packets
 		const auto& processHugePayload = [this] (std::string payload)
 		{
-			PROFILE_DO;
+			BeginProfiling("Parse huge payload");
 			Json j = iprog::JsonParser::parse(payload);
-			PROFILE_DONE("Parse Huge Payload");
+			EndProfiling();
 
 			int op = j["op"];
 
@@ -1255,10 +1224,10 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 
 			// WARNING: I'm not sure if this is safe.  If something crashes, it's possible this
 			// is the culprit.  Define 
-			uint64_t timeStart = getTimeMsProfiling();
+			uint64_t timeStart = GetTimeMsProfiling();
 			this->HandleREADY(j);
 
-			DbgPrintF("Handling ready message took %lld ms. (x: %llu, y: %llu)", getTimeMsProfiling() - timeStart, timeStart, getTimeMsProfiling());
+			DbgPrintF("Handling ready message took %lld ms. (x: %llu, y: %llu)", GetTimeMsProfiling() - timeStart, timeStart, GetTimeMsProfiling());
 
 			// N.B. HandleREADY already sends this message: GetFrontend()->OnFinishedHugeMessage();
 		};
@@ -1279,9 +1248,9 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 		return;
 	}
 	
-	PROFILE_DO;
+	BeginProfiling("Parse payload");
 	Json j = iprog::JsonParser::parse(payload);
-	PROFILE_DONE("Parse Payload");
+	EndProfiling();
 
 	int op = j["op"];
 	
@@ -1426,6 +1395,7 @@ bool DiscordInstance::EditMessageInCurrentChannel(const std::string& msg_, Snowf
 
 bool DiscordInstance::SendMessageToCurrentChannel(const std::string& msg_, Snowflake& tempSf, Snowflake replyTo, bool mentionReplied)
 {
+	Profiler profiler("SendMessageToCurrentChannel");
 	if (!GetCurrentChannel() || !GetCurrentGuild())
 		return false;
 
@@ -2140,7 +2110,9 @@ bool DiscordInstance::SortGuilds()
 
 void DiscordInstance::ParseAndAddGuild(iprog::JsonObject& elem)
 {
-	PROFILE_START;
+	BeginProfiling("ParseAndAddGuild");
+	BeginProfiling("parse guild main info");
+	
 	Guild g;
 	g.m_snowflake = GetSnowflake(elem, "id");
 	Json& props = elem["properties"];
@@ -2164,9 +2136,10 @@ void DiscordInstance::ParseAndAddGuild(iprog::JsonObject& elem)
 	if (!g.m_avatarlnk.empty())
 		GetFrontend()->RegisterIcon(g.m_snowflake, g.m_avatarlnk);
 	
-	PROFILE_END("parse channel header");
+	EndProfiling();
 
 	// parse channels
+	BeginProfiling("parse channels");
 	Json& channels = elem["channels"];
 
 	Snowflake currChan = 0;
@@ -2175,19 +2148,21 @@ void DiscordInstance::ParseAndAddGuild(iprog::JsonObject& elem)
 	int order = 1;
 	for (auto& chan : channels)
 	{
-		PROFILE_START;
+		BeginProfiling("parse channel");
 		Channel c;
 		ParseChannel(c, chan, order);
 		c.m_parentGuild = g.m_snowflake;
 		g.m_channels[c.m_snowflake] = c;
 		g.m_channelOrder.push_back(c.m_snowflake);
-		PROFILE_END("load channel");
+		EndProfiling();
 	}
-	PROFILE_END("load channels");
+	EndProfiling();
 	
+	BeginProfiling("sort channels");
 	g.SortChannels();
-	PROFILE_END("sort channels");
+	EndProfiling();
 
+	BeginProfiling("prepare first channel");
 	for (Snowflake chanid : g.m_channelOrder)
 	{
 		Channel* pch = g.GetChannel(chanid);
@@ -2203,9 +2178,10 @@ void DiscordInstance::ParseAndAddGuild(iprog::JsonObject& elem)
 	g.m_bChannelsLoaded = true;
 	g.m_currentChannel = 0;
 
-	PROFILE_END("find first channel");
+	EndProfiling();
 
 	// parse roles
+	BeginProfiling("parse roles");
 	Json& roles = elem["roles"];
 	for (auto& rolej : roles)
 	{
@@ -2213,10 +2189,10 @@ void DiscordInstance::ParseAndAddGuild(iprog::JsonObject& elem)
 		role.Load(rolej);
 		g.m_roles[role.m_id] = role;
 	}
-	
-	PROFILE_END("parse roles");
+	EndProfiling();
 
 	// parse emoji
+	BeginProfiling("parse emoji");
 	Json& emojis = elem["emojis"];
 	for (auto& emojij : emojis)
 	{
@@ -2224,23 +2200,15 @@ void DiscordInstance::ParseAndAddGuild(iprog::JsonObject& elem)
 		emoji.Load(emojij);
 		g.m_emoji[emoji.m_id] = emoji;
 	}
-	
-	PROFILE_END("parse emoji");
+	EndProfiling();
 
-	// Check if the guild already exists.  If it does, replace its contents.
+	// If it already exists, simply replace its contents.
+	//
 	// I'm not totally sure why discord sends a GUILD_CREATE event.  Perhaps
 	// the server I was testing with is considered a "lazy guild"?
-	for (auto& gld : m_guilds)
-	{
-		if (gld.second.m_snowflake == g.m_snowflake) {
-			gld.second = g;
-			return;
-		}
-	}
-
 	m_guilds[g.m_snowflake] = g;
 	m_guildOrder.push_front(g.m_snowflake);
-	PROFILE_END("ParseAndAddGuild done");
+	EndProfiling();
 }
 
 // DISPATCH FUNCTIONS
@@ -2357,14 +2325,15 @@ void DiscordInstance::HandleREADY(Json& j)
 	// THREAD SAFETY: Do not access most of DiscordInstance while doing this, if this is run
 	// from another thread!
 
-	PROFILE_DO;
+	BeginProfiling("parse READY packet");
+	
 	Json& data = j["d"];
 	m_gatewayResumeUrl = data["resume_gateway_url"];
 	m_sessionId = data["session_id"];
 	m_sessionType = data["session_type"];
 
 	// ==== reload user
-	PROFILE_DONE("Copied j.d");
+	BeginProfiling("load user profile");
 	Json& user = data["user"];
 
 	Snowflake oldSnowflake = m_mySnowflake;
@@ -2376,13 +2345,16 @@ void DiscordInstance::HandleREADY(Json& j)
 	Profile* pf = GetProfile();
 
 	m_dmGuild.m_ownerId = pf->m_snowflake;
-	PROFILE_DONE("Load User Profile");
+	EndProfiling();
 
 	// ==== load user settings
+	BeginProfiling("load user settings");
 	LoadUserSettings(data["user_settings_proto"]);
-	PROFILE_DONE("Load User Settings");
+	EndProfiling();
 
 	// ==== reload guild DB
+	BeginProfiling("load guild DB");
+	
 	Json& guilds = data["guilds"];
 	m_guilds.clear();
 
@@ -2394,17 +2366,19 @@ void DiscordInstance::HandleREADY(Json& j)
 	// reverse because that's pretty much the order Discord stores guilds in
 	for (auto& elem : guilds)
 	{
-		PROFILE_START;
+		BeginProfiling("Parse Guild");
 		ParseAndAddGuild(elem);
-		PROFILE_END("Parse Guild");
+		EndProfiling();
 	}
 
-	PROFILE_DONE("Load Guild DB");
+	EndProfiling();
 	
+	BeginProfiling("sort guilds");
 	SortGuilds();
-	PROFILE_DONE("Sort Guilds");
+	EndProfiling();
 
 	// ==== find session object
+	BeginProfiling("find session object");
 	Json sesh;
 	for (auto& se : data["sessions"]) {
 		if (se["session_id"] == m_sessionId) {
@@ -2416,9 +2390,10 @@ void DiscordInstance::HandleREADY(Json& j)
 	if (sesh.empty())
 		DbgPrintF("No session found with id %s!", m_sessionId.c_str());
 	assert(!sesh.empty());
-	PROFILE_DONE("Find Session Object");
+	EndProfiling();
 
 	// ==== load users
+	BeginProfiling("load users");
 	if (data.contains("users") && data["users"].is_array())
 	{
 		auto& membs = data["users"];
@@ -2428,9 +2403,10 @@ void DiscordInstance::HandleREADY(Json& j)
 			GetProfileCache()->LoadProfile(id, memb);
 		}
 	}
-	PROFILE_DONE("Load Users");
+	EndProfiling();
 
 	// ==== load merged members
+	BeginProfiling("load merged members");
 	if (data.contains("merged_members") && data["merged_members"].is_array())
 	{
 		// no meme, this is MErged MEmberS
@@ -2456,9 +2432,10 @@ void DiscordInstance::HandleREADY(Json& j)
 			}
 		}
 	}
-	PROFILE_DONE("Load Merged Members");
+	EndProfiling();
 
 	// ==== load private channels
+	BeginProfiling("load private channels");
 	if (data.contains("private_channels") && data["private_channels"].is_array())
 	{
 		auto& chans = data["private_channels"];
@@ -2482,9 +2459,10 @@ void DiscordInstance::HandleREADY(Json& j)
 		pGld->m_bChannelsLoaded = true;
 		pGld->m_currentChannel = chan;
 	}
-	PROFILE_DONE("Load Private Channels");
+	EndProfiling();
 
 	// ==== load read_state
+	BeginProfiling("load read states");
 	if (data.contains("read_state") && data["read_state"].is_object())
 	{
 		// Members: "entries" (array), "partial" (true/false, for now false), "version"
@@ -2497,9 +2475,10 @@ void DiscordInstance::HandleREADY(Json& j)
 
 		m_ackVersion = GetFieldSafeInt(readStateData, "version");
 	}
-	PROFILE_DONE("Load Read State");
+	EndProfiling();
 
 	// ==== load relationships - friends and blocked
+	BeginProfiling("load relationships");
 	if (data.contains("relationships") && data["relationships"].is_array())
 	{
 		auto& rels = data["relationships"];
@@ -2510,23 +2489,28 @@ void DiscordInstance::HandleREADY(Json& j)
 			m_relationships.push_back(rel);
 		}
 	}
-	PROFILE_DONE("Load Relationships");
+	EndProfiling();
 
 	// ==== load resume_gateway_url
 	// ==== load user_guild_settings
+	BeginProfiling("load user guild settings");
 	if (data.contains("user_guild_settings") && data["user_guild_settings"].is_object())
 	{
 		m_userGuildSettings.Clear();
 		m_userGuildSettings.Load(data["user_guild_settings"]);
 	}
-	PROFILE_DONE("Load User Guild Settings");
+	EndProfiling();
 
 	// Doing this because the contents of all channels might be outdated.
+	BeginProfiling("purge message cache");
 	GetMessageCache()->ClearAllChannels();
-	//GetFrontend()->UpdateSelectedChannel();
+	EndProfiling();
 	
-	PROFILE_DONE("Processing Ready Packet");
+	EndProfiling(); // process READY packet
+	
+	BeginProfiling("calling OnConnected on frontend");
 	GetFrontend()->OnConnected();
+	EndProfiling();
 }
 
 void DiscordInstance::HandleMessageInsertOrUpdate(Json& j, bool bIsUpdate)

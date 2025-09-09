@@ -92,6 +92,7 @@ Purplecord_FILES = \
 	src/discord/UpdateChecker.cpp \
 	src/discord/UserGuildSettings.cpp \
 	src/discord/Util.cpp \
+	src/discord/Profiling.cpp \
 	src/iphone/main.mm \
 	src/iphone/AppDelegate.mm \
 	src/iphone/GuildListController.mm \

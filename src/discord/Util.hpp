@@ -3,6 +3,7 @@
 #include <string>
 #include "iprogsjson.hpp"
 #include "Snowflake.hpp"
+#include "Profiling.hpp"
 
 #ifdef _DEBUG
 #define USE_DEBUG_PRINTS

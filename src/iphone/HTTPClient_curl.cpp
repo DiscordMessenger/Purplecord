@@ -166,6 +166,7 @@ void HTTPClient_curl::PerformRequest(
 	size_t stream_size
 )
 {
+	Profiler profiler("HTTPClient_curl::PerformRequest");
 	HTTPRequest* pRequest = new HTTPRequest;
 	pRequest->netRequest = new NetRequest(0, itype, requestKey, type, url, "", params, authorization, additional_data, pRespFunc, stream_bytes, stream_size);
 	pRequest->easyHandle = curl_easy_init();
