@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <type_traits>
+#include <memory>
 
 // This is iProgramInCpp's JSON parser, which hopes to be faster than nlohmann::json while being
 // semi-compatible with it.
@@ -28,10 +29,18 @@
 //
 // NOTE: This is not going to be very standards-compliant, it'll only support a small subset of JSON.
 
+// Disable exceptions.  Use if using exceptions is not allowed - the program will terminate on error instead.
 //#define IPROG_JSON_DISABLE_EXCEPTIONS
+
+// Enable keeping the original string that determines a JSON object.
+// This substantially increases the memory usage, but allows for easier debugging.
+//#define IPROG_JSON_ENABLE_ORIGINAL_STRING
 
 namespace iprog
 {
+	template<bool B, class T = void>
+	using TEnableIf = typename std::enable_if<B, T>::type;
+
 	enum class eType {
 		Null,
 		Number,
@@ -207,22 +216,36 @@ namespace iprog
 		// Constructors
 
 		// Default constructor
-		JsonObject() : type(eType::Null) {}
+		JsonObject() : type(eType::Null)
+		{
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			fullParsedString = std::make_shared<std::string>("Null created from constructor");
+#endif
+		}
 
 		// Move constructor - can be kept trivial
-		JsonObject(JsonObject&& other)
+		JsonObject(JsonObject&& other) noexcept
 		{
-			// NOTE: All the pointers will be transferred, and then cleared in other,
-			// therefore when other is destroyed nothing is double freed/leaked.
-			memcpy((void*) this, (void*) &other, sizeof(JsonObject));
-			memset((void*) &other, 0, sizeof(JsonObject));
+			type = other.type;
+			data = other.data;
+			memset(&other.data, 0, sizeof(other.data));
 			other.type = eType::Null;
+
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			originalString = std::move(other.originalString);
+			fullParsedString = other.fullParsedString;
+#endif
 		}
 
 		// Copy constructor - a bit more complicated
 		JsonObject(const JsonObject& other)
 		{
 			type = other.type;
+
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			originalString = other.originalString;
+			fullParsedString = other.fullParsedString;
+#endif
 
 			switch (other.type)
 			{
@@ -262,9 +285,9 @@ namespace iprog
 					// fall through
 				case eType::Array:
 					// copy the objects
-					data.structured.array = (JsonObject*) ::operator new[](other.data.structured.itemCount * sizeof(JsonObject));
+					data.structured.array = new JsonObject*[other.data.structured.itemCount];
 					for (size_t i = 0; i < other.data.structured.itemCount; i++)
-						new (&data.structured.array[i]) JsonObject(other.data.structured.array[i]);
+						data.structured.array[i] = new JsonObject(*other.data.structured.array[i]);
 
 					data.structured.itemCount = other.data.structured.itemCount;
 					break;
@@ -312,16 +335,19 @@ namespace iprog
 
 			return *this;
 		}
-		
+
 		// Template assignment equals
-		template<typename T, typename = std::enable_if_t<(std::is_integral_v<T> && !std::is_same_v<T, bool>) || std::is_enum_v<T>>>
+		template<typename T, typename = TEnableIf<(std::is_integral<T>::value && !std::is_same<T, bool>::value) || std::is_enum<T>::value>>
 		JsonObject& operator=(T a)
 		{
 			*this = JsonObject(static_cast<int64_t>(a));
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			fullParsedString = std::make_shared<std::string>("Number created from equals operator");
+#endif
 			return *this;
 		}
 		
-		template<typename T, size_t N, typename = std::enable_if_t<std::is_arithmetic_v<T> || std::is_same_v<T, JsonObject>>>
+		template<typename T, size_t N, typename = TEnableIf<std::is_arithmetic<T>::value || std::is_same<T, JsonObject>::value>>
 		JsonObject& operator=(T (&arr)[N])
 		{
 			*this = JsonObject::array();
@@ -330,6 +356,9 @@ namespace iprog
 			for (size_t i = 0; i < N; ++i)
 				(*this)[i] = JsonObject(arr[i]);
 
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			fullParsedString = std::make_shared<std::string>("Array created from equals operator");
+#endif
 			return *this;
 		}
 		
@@ -348,25 +377,36 @@ namespace iprog
 		}
 
 		// Initialize Number
-		template<typename T, typename = std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>>>
+		template<typename T, TEnableIf<std::is_integral<T>::value && !std::is_same<T, bool>::value, int> = 0>
 		JsonObject(T number)
 		{
 			type = eType::Number;
 			data.number = static_cast<int64_t>(number);
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			fullParsedString = std::make_shared<std::string>("Number created from constructor");
+#endif
 		}
 
 		// Initialize Decimal
-		JsonObject(double decimal)
+		template<typename T, TEnableIf<std::is_floating_point<T>::value, int> = 0>
+		JsonObject(T decimal)
 		{
 			type = eType::Decimal;
-			data.decimal = decimal;
+			data.decimal = static_cast<double>(decimal);
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			fullParsedString = std::make_shared<std::string>("Decimal created from constructor");
+#endif
 		}
 
 		// Initialize Boolean
-		JsonObject(bool boolean)
+		template<typename T, TEnableIf<std::is_same<T, bool>::value, int> = 0>
+		JsonObject(T boolean)
 		{
 			type = eType::Boolean;
-			data.boolean = boolean;
+			data.boolean = static_cast<bool>(boolean);
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			fullParsedString = std::make_shared<std::string>("Boolean created from constructor");
+#endif
 		}
 
 		// Initialize String
@@ -381,12 +421,18 @@ namespace iprog
 				data.string.size = len;
 				data.string.data = new char[len];
 				memcpy(data.string.data, str, len);
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+				fullParsedString = std::make_shared<std::string>("String created from constructor");
+#endif
 			}
 			else
 			{
 				type = eType::StringShort;
 				data.stringShort.size = (char)len;
 				memcpy(data.stringShort.data, str, len);
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+				fullParsedString = std::make_shared<std::string>("StringShort created from constructor");
+#endif
 			}
 		}
 
@@ -400,6 +446,9 @@ namespace iprog
 			obj.data.structured.itemCount = 0;
 			obj.data.structured.array = nullptr;
 			obj.data.structured.names = nullptr;
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			obj.fullParsedString = std::make_shared<std::string>("Array created from array()");
+#endif
 			return obj;
 		}
 
@@ -411,6 +460,9 @@ namespace iprog
 			obj.data.structured.itemCount = 0;
 			obj.data.structured.array = nullptr;
 			obj.data.structured.names = nullptr;
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			obj.fullParsedString = std::make_shared<std::string>("Struct created from object()");
+#endif
 			return obj;
 		}
 
@@ -521,9 +573,26 @@ namespace iprog
 			if (keyLen == 0)
 				keyLen = strlen(key);
 
-			if (!data.structured.names)
+			// If there are no names but there are items in the list
+			if (!data.structured.names && data.structured.itemCount)
 			{
-				fprintf(stderr, "ERROR: No data.structured.names!\nDumping object:\n");
+				fprintf(stderr, "ERROR: No data.structured.names and yet the object has %zu items!\n", data.structured.itemCount);
+				fflush(stderr);
+				
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+				if (fullParsedString) {
+					fprintf(stderr, "Printing full string that this was parsed from: <string>%s</string>\n", fullParsedString->c_str());
+					fflush(stderr);
+				}
+				else {
+					fprintf(stderr, "NO full parsed string was assigned :(\n");
+				}
+				
+				fprintf(stderr, "Printing original string: <string>%s</string>\n", originalString.c_str());
+				fflush(stderr);
+#endif
+				
+				fprintf(stderr, "Dumping object:\n");
 				fflush(stderr);
 				
 				const std::string& obj = dump();
@@ -531,7 +600,7 @@ namespace iprog
 				fflush(stderr);
 			}
 			
-			assert(data.structured.names);
+			assert(data.structured.names || !data.structured.itemCount);
 			for (size_t i = 0; i < data.structured.itemCount; i++)
 			{
 				if (data.structured.names[i].Equals(key, keyLen))
@@ -544,7 +613,7 @@ namespace iprog
 		bool contains(const std::string& str) const { return contains(str.c_str(), str.size()); }
 
 		// Array Access
-		template<typename SizeType, typename = std::enable_if_t<std::is_integral_v<SizeType> && !std::is_same_v<SizeType, bool> && !std::is_pointer_v<SizeType>>>
+		template<typename SizeType, typename = TEnableIf<std::is_integral<SizeType>::value && !std::is_same<SizeType, bool> ::value && !std::is_pointer<SizeType>::value>>
 		JsonObject& operator[](SizeType index)
 		{
 			// note: can't be adapted into an array here since any access
@@ -555,7 +624,7 @@ namespace iprog
 			if (index >= data.structured.itemCount)
 				throw_error("index out of bounds");
 
-			return data.structured.array[index];
+			return *data.structured.array[index];
 		}
 		
 		// Struct Access
@@ -573,13 +642,13 @@ namespace iprog
 			for (size_t i = 0; i < data.structured.itemCount; i++)
 			{
 				if (data.structured.names[i].Equals(key, keyLen))
-					return data.structured.array[i];
+					return *data.structured.array[i];
 			}
 
 			internal_resize(data.structured.itemCount + 1);
 
 			data.structured.names[data.structured.itemCount - 1] = JsonName(key);
-			return data.structured.array[data.structured.itemCount - 1];
+			return *data.structured.array[data.structured.itemCount - 1];
 		}
 
 		const JsonObject& get_key_cst(const char* key, size_t keyLen = 0) const
@@ -593,7 +662,7 @@ namespace iprog
 			for (size_t i = 0; i < data.structured.itemCount; i++)
 			{
 				if (data.structured.names[i].Equals(key, keyLen))
-					return data.structured.array[i];
+					return *data.structured.array[i];
 			}
 
 			throw_error("key does not exist");
@@ -615,12 +684,15 @@ namespace iprog
 
 			size_t sz = data.structured.itemCount;
 			internal_resize(sz + 1);
-			data.structured.array[sz] = object;
+			internal_set_at(sz, object);
 		}
 
 		// Empty
 		bool empty() const
 		{
+			if (is_null())
+				return true;
+
 			if (!is_structured())
 				throw_error("empty() json object must be structured");
 
@@ -628,11 +700,10 @@ namespace iprog
 		}
 
 		// Getters
-		template <typename T, typename = std::enable_if_t<
-			(std::is_integral_v<T> || std::is_enum_v<T>)
-			&& !std::is_same_v<T, bool>
-			&& !std::is_same_v<T, char>
-		>>
+		template <typename T, TEnableIf<
+			(std::is_integral<T>::value || std::is_enum<T>::value)
+			&& !std::is_same<T, bool>::value
+			&& !std::is_same<T, char>::value, int> = 0>
 		operator T() const
 		{
 			if (!is_number_integer())
@@ -641,7 +712,7 @@ namespace iprog
 			return static_cast<T>(data.number);
 		}
 		
-		template <typename T, typename = std::enable_if_t<std::is_same_v<T, bool>>>
+		template <typename T, TEnableIf<std::is_same<T, bool>::value, int> = 0>
 		operator T() const
 		{
 			if (!is_boolean())
@@ -695,10 +766,10 @@ namespace iprog
 			using difference_type = size_t;
 
 		public:
-			iterator(JsonName* namePtr, JsonObject* objectPtr) : name(namePtr), object(objectPtr) {}
+			iterator(JsonName* namePtr, JsonObject** objectPtr) : name(namePtr), object(objectPtr) {}
 
-			reference operator*() const { return *object; }
-			pointer operator->() const { return object; }
+			reference operator*() const { return **object; }
+			pointer operator->() const { return *object; }
 
 			// increments and decrements
 			iterator& operator++()
@@ -742,11 +813,11 @@ namespace iprog
 				return name->Data();
 			}
 
-			reference value() const { return *object; }
+			reference value() const { return **object; }
 
 		private:
 			JsonName* name;
-			JsonObject* object;
+			JsonObject** object;
 		};
 
 		class const_iterator
@@ -759,10 +830,10 @@ namespace iprog
 			using difference_type = size_t;
 
 		public:
-			const_iterator(JsonName* namePtr, JsonObject* objectPtr) : name(namePtr), object(objectPtr) {}
+			const_iterator(JsonName* namePtr, const JsonObject* const* objectPtr) : name(namePtr), object(objectPtr) {}
 
-			reference operator*() const { return *object; }
-			pointer operator->() const { return object; }
+			reference operator*() const { return **object; }
+			pointer operator->() const { return *object; }
 
 			// increments and decrements
 			const_iterator& operator++()
@@ -806,11 +877,11 @@ namespace iprog
 				return name->Data();
 			}
 
-			reference value() const { return *object; }
+			reference value() const { return **object; }
 
 		private:
 			const JsonName* name;
-			const JsonObject* object;
+			const JsonObject* const* object;
 		};
 
 		iterator begin()
@@ -924,7 +995,7 @@ namespace iprog
 
 			for (size_t i = 0; i < data.structured.itemCount; i++)
 			{
-				if (data.structured.array[i] == value)
+				if (*data.structured.array[i] == value)
 				{
 					return iterator(
 						is_object() ? &data.structured.names[i] : nullptr,
@@ -943,7 +1014,7 @@ namespace iprog
 
 			for (size_t i = 0; i < data.structured.itemCount; i++)
 			{
-				if (data.structured.array[i] == value)
+				if (*data.structured.array[i] == value)
 				{
 					return const_iterator(
 						is_object() ? &data.structured.names[i] : nullptr,
@@ -983,7 +1054,7 @@ namespace iprog
 						
 						first = false;
 
-						dump += data.structured.array[i].dump();
+						dump += data.structured.array[i]->dump();
 					}
 
 					dump += "]";
@@ -1009,7 +1080,7 @@ namespace iprog
 						first = false;
 
 						dump += "\"" + data.structured.names[i].Data() + "\":";
-						dump += data.structured.array[i].dump();
+						dump += data.structured.array[i]->dump();
 					}
 
 					dump += "}";
@@ -1136,9 +1207,9 @@ namespace iprog
 			if (data.structured.array)
 			{
 				for (size_t i = 0; i < data.structured.itemCount; i++)
-					data.structured.array[i].~JsonObject();
+					delete data.structured.array[i];
 
-				::operator delete[](data.structured.array);
+				delete[] data.structured.array;
 			}
 			
 			data.structured.array = nullptr;
@@ -1158,7 +1229,7 @@ namespace iprog
 				return;
 			}
 
-			JsonObject* newObjects = nullptr;
+			JsonObject** newObjects = nullptr;
 			JsonName* newNames = nullptr;
 			
 			if (newSize > 50000 || newSize == 0) {
@@ -1166,7 +1237,7 @@ namespace iprog
 				fflush(stderr);
 			}
 
-			newObjects = (JsonObject*) ::operator new[](newSize * sizeof(JsonObject));
+			newObjects = new JsonObject*[newSize];
 			if (is_object())
 				newNames = (JsonName*) ::operator new[](newSize * sizeof(JsonName));
 
@@ -1177,7 +1248,7 @@ namespace iprog
 			// copy the objects we have to copy
 			for (size_t i = 0; i < objectsToCopy; i++)
 			{
-				new (&newObjects[i]) JsonObject(std::move(data.structured.array[i]));
+				newObjects[i] = new JsonObject(std::move(*data.structured.array[i]));
 
 				if (newNames)
 					new (&newNames[i]) JsonName(std::move(data.structured.names[i]));
@@ -1186,7 +1257,7 @@ namespace iprog
 			// and default initialize the rest
 			for (size_t i = objectsToCopy; i < newSize; i++)
 			{
-				new (&newObjects[i]) JsonObject();
+				newObjects[i] = new JsonObject();
 
 				if (newNames)
 					new (&newNames[i]) JsonName();
@@ -1201,14 +1272,19 @@ namespace iprog
 			data.structured.itemCount = newSize;
 		}
 
+		void internal_set_at(size_t index, const JsonObject& object)
+		{
+			*data.structured.array[index] = std::move(object);
+		}
+
 		void internal_set_at(size_t index, JsonObject&& object)
 		{
-			data.structured.array[index] = std::move(object);
+			*data.structured.array[index] = std::move(object);
 		}
 
 		void internal_set_at(size_t index, const std::string& name, JsonObject&& object)
 		{
-			data.structured.array[index] = std::move(object);
+			*data.structured.array[index] = std::move(object);
 			data.structured.names[index] = JsonName(name);
 		}
 
@@ -1244,12 +1320,33 @@ namespace iprog
 			// structured.array and structured.itemCount are valid for eType::Array too
 			struct {
 				size_t itemCount;
-				JsonObject* array;
+				JsonObject** array;
 				JsonName* names;
 			}
 			structured;
 		}
 		data;
+		
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+		std::string originalString;
+		std::shared_ptr<std::string> fullParsedString;
+		
+	public:
+		void set_original_string(const char* str, size_t len = 0)
+		{
+			if (len == 0)
+				len = strlen(str);
+			
+			originalString = std::string(str, len);
+		}
+		
+		void set_original_string(const std::string& str) { set_original_string(str.c_str(), str.size()); }
+		
+		void set_full_parsed_string(std::shared_ptr<std::string> str)
+		{
+			fullParsedString = str;
+		}
+#endif
 	};
 
 	class JsonParser
@@ -1275,7 +1372,11 @@ namespace iprog
 		}
 
 	public:
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+		JsonObject _parse()
+#else
 		JsonObject parse()
+#endif
 		{
 			if (reached_end())
 				JsonObject::throw_error("no object");
@@ -1307,10 +1408,36 @@ namespace iprog
 			JsonObject::throw_error("unexpected character '%c'", firstCharacter);
 		}
 
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+		JsonObject parse()
+		{
+			size_t cursorBeg = cursor;
+			JsonObject object = _parse();
+			size_t cursorEnd = cursor;
+			
+			if (cursorBeg != 0)
+				cursorBeg--; // seems like original string cuts off 1 character?? not sure why.
+			
+			object.set_original_string(data + cursorBeg, cursorEnd - cursorBeg);
+			object.set_full_parsed_string(fullString);
+			return object;
+		}
+		
+		void set_full_parsed_string(std::shared_ptr<std::string> ptr)
+		{
+			fullString = ptr;
+		}
+#endif
+
 		void set_data_input(const char* in_data, size_t in_size)
 		{
 			data = in_data;
 			size = in_size;
+			
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+			if (!fullString)
+				fullString = std::make_shared<std::string>(data, size);
+#endif
 		}
 
 	private:
@@ -1368,8 +1495,15 @@ namespace iprog
 
 				// parse the object
 				JsonParser parser;
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+				parser.set_full_parsed_string(fullString);
+#endif
 				parser.set_data_input(data + cursor, size - cursor);
 				JsonObject object = JsonParser::parse();
+				
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+				object.set_full_parsed_string(fullString);
+#endif
 
 				// skip its size
 				cursor += parser.cursor;
@@ -1458,8 +1592,15 @@ namespace iprog
 			{
 				// parse the object
 				JsonParser parser;
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+				parser.set_full_parsed_string(fullString);
+#endif
 				parser.set_data_input(data + cursor, size - cursor);
 				JsonObject object = JsonParser::parse();
+				
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+				object.set_full_parsed_string(fullString);
+#endif
 
 				// skip its size
 				cursor += parser.cursor;
@@ -1801,6 +1942,9 @@ namespace iprog
 		}
 		
 	private:
+#ifdef IPROG_JSON_ENABLE_ORIGINAL_STRING
+		std::shared_ptr<std::string> fullString;
+#endif
 		const char* data = nullptr;
 		size_t cursor = 0;
 		size_t size = 0;

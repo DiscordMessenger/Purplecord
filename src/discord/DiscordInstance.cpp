@@ -132,6 +132,7 @@ void DiscordInstance::OnSelectChannel(Snowflake sf, bool bSendSubscriptionUpdate
 		(pChan && !pChan->HasPermission(PERM_VIEW_CHANNEL)))
 	{
 		GetFrontend()->OnCantViewChannel(pChan->m_name);
+		EndProfiling();
 		return;
 	}
 	EndProfiling();
@@ -1195,7 +1196,8 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 		return;
 	}
 	
-	if (payload.size() > 100000)
+	// parse the READY packets on a separate thread
+	if (payload.find("\"t\":\"READY\"") != std::string::npos)
 	{
 		std::string fileName = "/var/mobile/Purplecord_HP" + std::to_string(GetTimeMs()) + ".txt";
 		FILE* f = fopen(fileName.c_str(), "w");
@@ -1207,25 +1209,10 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 		// Process a huge payload, typical with READY packets
 		const auto& processHugePayload = [this] (std::string payload)
 		{
-			BeginProfiling("Parse huge payload");
+			BeginProfiling("Parse huge READY payload");
 			Json j = iprog::JsonParser::parse(payload);
 			EndProfiling();
-
-			int op = j["op"];
-
-			if (op != GatewayOp::DISPATCH) {
-				DbgPrintF("Huge payload with op != DISPATCH unsupported.");
-				GetFrontend()->OnFinishedHugeMessage();
-				return;
-			}
-
-			auto dispatchCode = j["t"];
-			if (dispatchCode != "READY") {
-				DbgPrintF("Huge payload with t != READY unsupported.  Dumping: %s[done]", payload.c_str());
-				GetFrontend()->OnFinishedHugeMessage();
-				return;
-			}
-
+			
 			// WARNING: I'm not sure if this is safe.  If something crashes, it's possible this
 			// is the culprit.  Define 
 			uint64_t timeStart = GetTimeMsProfiling();
@@ -1255,6 +1242,9 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 	BeginProfiling("Parse payload");
 	Json j = iprog::JsonParser::parse(payload);
 	EndProfiling();
+	
+	fprintf(stderr, "Payload: <string>%s</string>\n", payload.c_str());
+	fflush(stderr);
 
 	int op = j["op"];
 	
