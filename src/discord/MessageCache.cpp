@@ -12,48 +12,99 @@ MessageCache::MessageCache()
 {
 }
 
+void MessageCache::RefreshChannelMRUQueue(Snowflake channel)
+{
+	auto iter = std::find(m_mruQueue.begin(), m_mruQueue.end(), channel);
+	if (iter != m_mruQueue.end())
+		m_mruQueue.erase(iter);
+	
+	m_mruQueue.push_front(channel);
+}
+
+void MessageCache::DropOneChannelFromMRUQueueIfNeeded()
+{
+	if (m_mruQueue.size() < LOADED_CHANNELS_LIMIT)
+		return;
+	
+	Snowflake sf = m_mruQueue.back();
+	m_mapMessages.erase(sf);
+}
+
+MessageChunkList* MessageCache::GetChannel(Snowflake channel, bool createIfNeeded)
+{
+	auto iter = m_mapMessages.find(channel);
+	if (iter == m_mapMessages.end())
+	{
+#ifdef IGNORE_MESSAGES_TO_UNLOADED_CHANNELS
+		if (createIfNeeded)
+#endif
+		{
+			// create unconditionally otherwise.  It might be useful.
+			DropOneChannelFromMRUQueueIfNeeded();
+			return &m_mapMessages[channel];
+		}
+		
+		return nullptr;
+	}
+	
+	RefreshChannelMRUQueue(channel);
+	return &iter->second;
+}
+
 void MessageCache::GetLoadedMessages(Snowflake channel, Snowflake guild, std::list<MessagePtr>& out)
 {
-	MessageChunkList& lst = m_mapMessages[channel];
-	lst.m_guild = guild;
+	auto chunkList = GetChannel(channel);
+	chunkList->m_guild = guild;
 
-	for (auto& msg : lst.m_messages)
+	for (auto& msg : chunkList->m_messages)
 		out.push_back(msg.second);
 }
 
 void MessageCache::GetLoadedMessages(Snowflake channel, Snowflake guild, std::vector<MessagePtr>& out)
 {
-	MessageChunkList& lst = m_mapMessages[channel];
-	lst.m_guild = guild;
+	auto chunkList = GetChannel(channel);
+	chunkList->m_guild = guild;
 
-	for (auto& msg : lst.m_messages)
+	for (auto& msg : chunkList->m_messages)
 		out.push_back(msg.second);
 }
 
 void MessageCache::ProcessRequest(Snowflake channel, ScrollDir::eScrollDir sd, Snowflake anchor, iprog::JsonObject& j, const std::string& channelName)
 {
-	MessageChunkList& lst = m_mapMessages[channel];
-	lst.ProcessRequest(sd, anchor, j, channelName);
+	auto chunkList = GetChannel(channel);
+	chunkList->ProcessRequest(sd, anchor, j, channelName);
 }
 
 MessagePtr MessageCache::AddMessage(Snowflake channel, const Message& msg)
 {
-	return m_mapMessages[channel].AddMessage(msg);
+	auto chunkList = GetChannel(channel, false);
+	if (!chunkList) return std::make_shared<Message>(msg);
+	
+	return chunkList->AddMessage(msg);
 }
 
 MessagePtr MessageCache::EditMessage(Snowflake channel, const Message& msg)
 {
-	return m_mapMessages[channel].EditMessage(msg);
+	auto chunkList = GetChannel(channel, false);
+	if (!chunkList) return std::make_shared<Message>(msg);
+	
+	return chunkList->EditMessage(msg);
 }
 
 void MessageCache::DeleteMessage(Snowflake channel, Snowflake msg)
 {
-	m_mapMessages[channel].DeleteMessage(msg);
+	auto chunkList = GetChannel(channel, false);
+	if (!chunkList) return;
+	
+	return chunkList->DeleteMessage(msg);
 }
 
 int MessageCache::GetMentionCountSince(Snowflake channel, Snowflake message, Snowflake user)
 {
-	return m_mapMessages[channel].GetMentionCountSince(message, user);
+	auto chunkList = GetChannel(channel, false);
+	if (!chunkList) return 0;
+	
+	return chunkList->GetMentionCountSince(message, user);
 }
 
 void MessageCache::ClearAllChannels()
@@ -72,9 +123,17 @@ bool MessageCache::IsMessageLoaded(Snowflake channel, Snowflake message)
 	return it2 != msgs.end();
 }
 
+bool MessageCache::IsChannelLoaded(Snowflake channel) const
+{
+	return m_mapMessages.find(channel) != m_mapMessages.end();
+}
+
 MessagePtr MessageCache::GetLoadedMessage(Snowflake channel, Snowflake message)
 {
-	return m_mapMessages[channel].GetLoadedMessage(message);
+	auto chunkList = GetChannel(channel, false);
+	if (!chunkList) return nullptr;
+	
+	return chunkList->GetLoadedMessage(message);
 }
 
 MessageCache* GetMessageCache()

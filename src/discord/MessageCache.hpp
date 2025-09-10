@@ -8,6 +8,16 @@
 #include "ScrollDir.hpp"
 #include "Message.hpp"
 
+#ifdef __APPLE__
+
+// to avoid running out of memory, there is a limit of this many channels loaded at once.
+#define LOADED_CHANNELS_LIMIT 10
+
+// if a channels is unloaded, ignore MESSAGE_CREATE events
+#define IGNORE_MESSAGES_TO_UNLOADED_CHANNELS
+
+#endif
+
 struct MessageChunkList
 {
 	// int - Offset. How many messages ago was this message posted
@@ -42,11 +52,17 @@ public:
 	int GetMentionCountSince(Snowflake channel, Snowflake message, Snowflake user);
 	void ClearAllChannels();
 	bool IsMessageLoaded(Snowflake channel, Snowflake message);
+	bool IsChannelLoaded(Snowflake channel) const;
 
 	MessagePtr GetLoadedMessage(Snowflake channel, Snowflake message);
 
 private:
+	MessageChunkList* GetChannel(Snowflake channel, bool createIfNeeded = true);
+	void RefreshChannelMRUQueue(Snowflake channel);
+	void DropOneChannelFromMRUQueueIfNeeded();
+
 	std::map <Snowflake, MessageChunkList> m_mapMessages;
+	std::deque<Snowflake> m_mruQueue;
 };
 
 MessageCache* GetMessageCache();
