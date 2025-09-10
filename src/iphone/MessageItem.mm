@@ -4,11 +4,28 @@
 #include "../discord/DiscordInstance.hpp"
 #include "../discord/Util.hpp"
 
+static const char* const welcomeTexts[] = {
+	"$ joined the party.",
+	"$ is here.",
+	"Welcome, $. We hope you brought pizza.",
+	"A wild $ appeared.",
+	"$ just landed.",
+	"$ just slid into the server!",
+	"$ just showed up!",
+	"Welcome $. Say hi!",
+	"$ hopped into the server.",
+	"Everyone welcome $!",
+	"Glad you're here, $.",
+	"Good to see you, $.",
+	"Yay you made it, $!",
+};
+static const int welcomeTextCount = 13;
+
 bool IsActionMessage(MessageType::eType msgType)
 {
 	switch (msgType)
 	{
-		//case MessageType::USER_JOIN:
+		case MessageType::USER_JOIN:
 		//case MessageType::CHANNEL_PINNED_MESSAGE:
 		//case MessageType::RECIPIENT_ADD:
 		//case MessageType::RECIPIENT_REMOVE:
@@ -127,6 +144,25 @@ bool IsActionMessage(MessageType::eType msgType)
 	return [NSString stringWithUTF8String:("Welcome to the beginning of the " + channelName + " channel.").c_str()];;
 }
 
++ (NSString*)userJoinString:(Snowflake)messageID withAuthor:(const std::string&)author 
+{
+	int welcomeTextIndex = ExtractTimestamp(messageID) % welcomeTextCount;
+	const char* welcomeText = welcomeTexts[welcomeTextIndex];
+	size_t dollarPos = 0;
+	
+	for (size_t i = 0; welcomeText[i] != 0; i++)
+	{
+		if (welcomeText[i] == '$')
+		{
+			dollarPos = i;
+			break;
+		}
+	}
+	
+	std::string message = std::string(welcomeText, dollarPos) + author + std::string(welcomeText + dollarPos + 1);
+	return [NSString stringWithUTF8String:message.c_str()];
+}
+
 // KEEP IN SYNC WITH configureWithMessage!!!
 + (CGFloat)computeHeightForMessage:(MessagePtr)message
 {
@@ -151,7 +187,13 @@ bool IsActionMessage(MessageType::eType msgType)
 			case MessageType::GAP_DOWN:
 			case MessageType::GAP_AROUND:
 				return 80;
-				
+			
+			case MessageType::USER_JOIN:
+			{
+				messageText = [MessageItem userJoinString:message->m_snowflake withAuthor:message->m_author];
+				break;
+			}
+			
 			case MessageType::CHANNEL_HEADER:
 			{
 				minHeight = 40;
@@ -238,6 +280,12 @@ bool IsActionMessage(MessageType::eType msgType)
 				[self makeTransparent];
 				height = 80;
 				return;
+			}
+			
+			case MessageType::USER_JOIN:
+			{
+				messageLabel.text = [MessageItem userJoinString:message->m_snowflake withAuthor:message->m_author];
+				break;
 			}
 			
 			case MessageType::CHANNEL_HEADER:
