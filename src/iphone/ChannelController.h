@@ -1,5 +1,6 @@
 #import <UIKit/UIKit.h>
 #import "MessageInputView.h"
+#include <set>
 #include "../discord/ScrollDir.hpp"
 #include "../discord/Message.hpp"
 
@@ -14,6 +15,7 @@
 - (void)addMessage:(MessagePtr)message;
 - (void)removeMessage:(Snowflake)messageID;
 - (void)updateMessage:(MessagePtr)message;
+- (void)updateMembers:(const std::set<Snowflake>&)members;
 
 @end
 

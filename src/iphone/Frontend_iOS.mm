@@ -79,6 +79,12 @@ void Frontend_iOS::OnAddMessage(Snowflake channelID, const Message& msg)
 		[GetChannelController() addMessage:message];
 }
 
+void Frontend_iOS::RefreshMembers(const std::set<Snowflake>& members)
+{
+	if (GetChannelController())
+		[GetChannelController() updateMembers:members];
+}
+
 void Frontend_iOS::OnUpdateMessage(Snowflake channelID, const Message& msg)
 {
 	MessagePtr message = GetMessageCache()->EditMessage(channelID, msg);
@@ -338,11 +344,6 @@ void Frontend_iOS::RepaintProfile()
 }
 
 void Frontend_iOS::RepaintProfileWithUserID(Snowflake id)
-{
-	//TODO
-}
-
-void Frontend_iOS::RefreshMembers(const std::set<Snowflake>& members)
 {
 	//TODO
 }

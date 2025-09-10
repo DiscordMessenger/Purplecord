@@ -409,6 +409,29 @@ ChannelController* GetChannelController() {
 	[self updateMessageById:message->m_snowflake message:message];
 }
 
+- (void)updateMembers:(const std::set<Snowflake>&)members
+{
+	[tableView beginUpdates];
+	
+	for (size_t i = 0; i < m_messages.size(); i++)
+	{
+		auto& msg = m_messages[i];
+		if (msg->m_author_snowflake == 0 || msg->IsWebHook())
+			continue;
+		
+		auto iter = members.find(msg->m_author_snowflake);
+		if (iter == members.end())
+			continue; // no need to refresh
+		
+		Profile* pf = GetProfileCache()->LookupProfile(*iter, "", "", "", false);
+		msg->m_author = pf->GetName(guildID);
+		
+		[self onUpdatedRowAtIndex:i animated:NO];
+	}
+	
+	[tableView endUpdates];
+}
+
 - (void)update
 {
 	[self refreshMessages:ScrollDir::AROUND withGapCulprit:0];

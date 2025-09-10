@@ -3090,7 +3090,11 @@ void DiscordInstance::HandleGuildMemberListUpdate_Update(Snowflake guild, iprog:
 		return;
 	}
 
-	pGld->m_members[index] = ParseGuildMemberOrGroup(guild, j["item"]);
+	Snowflake sf = ParseGuildMemberOrGroup(guild, j["item"]);
+	pGld->m_members[index] = sf;
+
+	std::set<Snowflake> updates{ sf };
+	GetFrontend()->RefreshMembers(updates);
 }
 
 void DiscordInstance::OnUploadAttachmentSecond(NetRequest* pReq)
