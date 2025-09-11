@@ -1,8 +1,8 @@
 Package: com.iprogramincpp.purplecord
 Name: Purplecord
-Version: 0.0.2
+Version: 0.90
 Architecture: iphoneos-arm
-Description: A Discord client targeting iOS 3!
+Description: A Discord client targeting iOS 3.
 Maintainer: iProgramInCpp
 Author: iProgramInCpp
 Section: Utilities

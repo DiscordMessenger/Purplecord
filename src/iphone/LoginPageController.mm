@@ -146,6 +146,25 @@ void CreateDiscordInstanceIfNeeded();
 	if (self->loggingIn)
 		return;
 	
+	NSString* nsString = tokenTextField.text;
+	const char* utf8String = [nsString cStringUsingEncoding:NSUTF8StringEncoding];
+	std::string token(utf8String ? utf8String : "");
+	
+	if (token.empty())
+	{
+		UIAlertView* alert = [[UIAlertView alloc]
+			initWithTitle:@"No token inserted"
+			message:@"You must log in using a token."
+			delegate:nil
+			cancelButtonTitle:@"Got it"
+			otherButtonTitles:nil
+		];
+		
+		[alert show];
+		[alert release];
+		return;
+	}
+	
 	self->loggingIn = true;
 	logInButton.title = @"Logging in...";
 	logInButton.enabled = NO;
@@ -163,9 +182,6 @@ void CreateDiscordInstanceIfNeeded();
 	[spinner release];
 	
 	// kick-start the login procedure
-	NSString* nsString = tokenTextField.text;
-	std::string token([nsString cStringUsingEncoding:NSUTF8StringEncoding]);
-	
 	GetLocalSettings()->SetToken(token);
 	GetLocalSettings()->Save();
 	CreateDiscordInstanceIfNeeded();

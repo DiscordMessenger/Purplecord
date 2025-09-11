@@ -1,7 +1,9 @@
 #pragma once
 #include <stdint.h>
 
+#ifdef _DEBUG
 #define ENABLE_PROFILING
+#endif
 
 #ifdef ENABLE_PROFILING
 

@@ -1199,10 +1199,12 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 	// parse the READY packets on a separate thread
 	if (payload.find("\"t\":\"READY\"") != std::string::npos)
 	{
+	#ifdef _DEBUG
 		std::string fileName = "/var/mobile/Purplecord_HP" + std::to_string(GetTimeMs()) + ".txt";
 		FILE* f = fopen(fileName.c_str(), "w");
 		fprintf(f, "%s", payload.c_str());
 		fclose(f);
+	#endif
 		
 		m_bProcessingHugePacket = true;
 
@@ -1213,12 +1215,19 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 			Json j = iprog::JsonParser::parse(payload);
 			EndProfiling();
 			
-			// WARNING: I'm not sure if this is safe.  If something crashes, it's possible this
-			// is the culprit.  Define 
+		#ifdef ENABLE_PROFILING
 			uint64_t timeStart = GetTimeMsProfiling();
+		#endif
+			
+			// WARNING: I'm not sure if this is safe.  If something crashes, it's possible this
+			// is the culprit.  Define DISABLE_POTENTIALLY_DANGEROUS_READY_PACKET_DEFERENCE to
+			// disable.
+			
 			this->HandleREADY(j);
 
+		#ifdef ENABLE_PROFILING
 			DbgPrintF("Handling ready message took %lld ms. (x: %llu, y: %llu)", GetTimeMsProfiling() - timeStart, timeStart, GetTimeMsProfiling());
+		#endif
 
 			// N.B. HandleREADY already sends this message: GetFrontend()->OnFinishedHugeMessage();
 		};

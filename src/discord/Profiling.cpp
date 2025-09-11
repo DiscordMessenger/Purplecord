@@ -1,4 +1,7 @@
 #include "Profiling.hpp"
+
+#ifdef ENABLE_PROFILING
+
 #include <string>
 #include <cstdio>
 #include <cstring>
@@ -71,3 +74,5 @@ void EndProfiling()
 	std::string padding(depth, '\t');
 	FPRINTF_TWICE(stderr, profilingFile, "%sTask \"%s\" finished in %lld milliseconds.\n", padding.c_str(), task.what, diff);
 }
+
+#endif

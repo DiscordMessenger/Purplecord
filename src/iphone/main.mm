@@ -31,18 +31,56 @@ void CreateDiscordInstanceIfNeeded()
 	g_pDiscordInstance = new DiscordInstance(GetLocalSettings()->GetToken());
 }
 
+std::string GetBasePathFromIPhoneOS()
+{
+	@autoreleasepool
+	{
+		NSString* path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+		std::string str([path UTF8String]);
+		DbgPrintF("Base path is %s\n", str.c_str());
+		return str;
+	}
+}
+
+void PrepareSaveDirectories()
+{
+	int ret;
+	
+	//std::string path = "/var/mobile/Documents";
+	std::string path = GetBasePathFromIPhoneOS();
+	
+	SetBasePath(path);
+	
+	ret = mkdir(path.c_str(), 0775);
+	if (ret == -1 && errno != EEXIST) goto error;
+	
+	ret = mkdir(GetBasePath().c_str(), 0775);
+	if (ret == -1 && errno != EEXIST) goto error;
+	
+	ret = mkdir(GetCachePath().c_str(), 0775);
+	if (ret == -1 && errno != EEXIST) goto error;
+	
+	return;
+error:
+	DbgPrintF("ERROR: Cannot create directories for Purplecord: %s\nYou will likely be unable to save.", strerror(errno));
+}
+
 int main(int argc, char *argv[])
 {
-	HTTPClient_curl::InitializeCABlob();
+	g_pFrontend = new Frontend_iOS();
+	
+#ifdef _DEBUG
 	freopen("/var/mobile/Purplecord.log", "w", stderr);
+	DbgPrintF("Purplecord v%.2f - Copyright (C) 2025 iProgramInCpp", GetAppVersion());
+#endif
+	
+	HTTPClient_curl::InitializeCABlob();
 	
 	g_pHttpClient = new HTTPClient_curl();
 	g_pHttpClient->Init();
-	g_pFrontend = new Frontend_iOS();
 	
-	mkdir("/var/mobile/Documents/Purplecord", 0775);
-	mkdir("/var/mobile/Documents/Purplecord/cache", 0775);
-	SetBasePath("/var/mobile/Documents/Purplecord");
+	
+	PrepareSaveDirectories();
 	GetLocalSettings()->Load();
 	
 	GetWebsocketClient()->Init();

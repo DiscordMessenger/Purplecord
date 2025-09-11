@@ -9,6 +9,15 @@ ARCHS = armv6
 PURPLECORD_MBEDTLS_PATH ?= /mnt/c/DiscordMessenger/mbedtls-apple
 PURPLECORD_LIBCURL_PATH ?= /mnt/c/DiscordMessenger/libcurl-apple
 
+# It is not recommended to build with debug mode.
+#FINALPACKAGE ?= 1
+
+ifeq ($(FINALPACKAGE),1)
+	DEBUGSW = -DNDEBUG
+else
+	DEBUGSW = -D_DEBUG
+endif
+
 include $(THEOS)/makefiles/common.mk
 
 APPLICATION_NAME = Purplecord
@@ -51,13 +60,13 @@ WARNINGDISABLES = \
 	-Wno-switch
 	
 SWITCHES = \
+	$(DEBUGSW)                    \
 	-DMINGW_SPECIFIC_HACKS        \
 	-DASIO_STANDALONE             \
 	-DASIO_HAS_THREADS            \
 	-DASIO_DISABLE_STD_FUTURE     \
 	-DASIO_DISABLE_GETADDRINFO    \
-	-DASIO_SEPARATE_COMPILATION   \
-	-DUSE_DEBUG_PRINTS
+	-DASIO_SEPARATE_COMPILATION
 
 INCLUDES = -Ideps -Ideps/asio -Ideps/zlib
 
@@ -109,7 +118,7 @@ Purplecord_FILES = \
 	src/iphone/UIColorScheme.mm
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics
-Purplecord_CFLAGS = -fno-objc-arc -O3 $(INCLUDES) $(CPPHACKS) $(WARNINGDISABLES) $(SWITCHES)
+Purplecord_CFLAGS = -fno-objc-arc $(INCLUDES) $(CPPHACKS) $(WARNINGDISABLES) $(SWITCHES)
 Purplecord_LDFLAGS = $(LDHACKS)
 
 include $(THEOS_MAKE_PATH)/application.mk

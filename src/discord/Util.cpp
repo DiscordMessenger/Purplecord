@@ -14,6 +14,11 @@ std::string g_BasePath = "";
 void SetBasePath(const std::string& path)
 {
 	g_BasePath = path;
+	
+	if (!g_BasePath.empty() && *g_BasePath.rbegin() != '/')
+		g_BasePath += '/';
+	
+	g_BasePath += "Purplecord";
 }
 
 std::string GetBasePath()
@@ -499,7 +504,7 @@ float CompareFuzzy(const std::string& item, const char* query)
 
 float GetAppVersion()
 {
-	return 1.09f;
+	return 0.90f;
 }
 
 // C/C++ macro memes
@@ -509,9 +514,9 @@ float GetAppVersion()
 const char* GetAppVersionString()
 {
 #ifdef GIT_COMMIT_HASH
-	return "V1.09 [Nightly " STRINGIFY(GIT_COMMIT_HASH) "]";
+	return "V0.90 [Nightly " STRINGIFY(GIT_COMMIT_HASH) "]";
 #else
-	return "V1.09";
+	return "V0.90";
 #endif
 }
 
