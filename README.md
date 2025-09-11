@@ -8,6 +8,12 @@ This can log in (which takes about 50 seconds on my iPhone 3G over Wi-Fi), view 
 and send simple messages. But it is not fully featured yet! And also, it's really slow and
 drains your battery fast, so probably not very practical either.
 
+## Name Choice
+
+The name was chosen because the original iPhone was known during development as "Project Purple". Since this
+client runs on iOS 3, and iOS 3.1.3 is the last version that will run on the original iPhone, the name "Purplecord"
+was chosen.
+
 ## Attributions
 
 Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on such ancient iOS versions!
