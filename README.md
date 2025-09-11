@@ -1,6 +1,6 @@
 # Purplecord
 
-This is an attempt to create a Discord client for iOS 2 and 3.
+This is an attempt to create a Discord client for iOS 3 and later.
 
 Support for newer versions of iOS is not guaranteed because I do not own any newer devices.
 
@@ -79,7 +79,7 @@ PURPLECORD_MBEDTLS_PATH=[your mbedtls checkout path]
 
 ### Building Libcurl
 
-After building OpenSSL you will need to build libcurl too.
+After building MbedTLS you will need to build libcurl too.
 
 Download:
 ```
@@ -88,14 +88,14 @@ tar xf curl-7.88.1.tar.gz
 cd curl-7.88.1
 ```
 
-Then open `lib/vtls/mbed.tls` and move this line:
+Open `lib/vtls/mbed.tls` and move this line:
 ```c
   mbedtls_ssl_conf_rng(&backend->config, mbedtls_ctr_drbg_random,
                        &backend->ctr_drbg);
 ```
 to between `mbedtls_ssl_init` and `mbedtls_ssl_setup`.
 
-Then configure and make:
+Copy `iphoneos.cmake` from the mbedtls checkout directory, then configure and make:
 ```bash
 cmake .. -DCMAKE_TOOLCHAIN_FILE=../iphoneos.cmake \
   -DCMAKE_BUILD_TYPE=Release \
