@@ -244,7 +244,10 @@ public:
 		return m_gatewayConnId;
 	}
 
-	// TODO optimize this stuff
+	bool ReceivedForbiddenForChannelID(Snowflake channel) const {
+		return m_channelDenyList.find(channel) != m_channelDenyList.end();
+	}
+
 	Guild* GetGuild(Snowflake sf)
 	{
 		assert(sf != 1);

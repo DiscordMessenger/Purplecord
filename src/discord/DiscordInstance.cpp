@@ -761,7 +761,7 @@ void DiscordInstance::HandleRequest(NetRequest* pRequest)
 					sd,
 					(Snowflake)GetIntFromString(pRequest->additional_data.substr(1)),
 					j,
-					pChan->GetTypeSymbol() + pChan->m_name
+					pChan->GetFullName()
 				);
 				uint64_t te = GetTimeUs();
 				DbgPrintF("Total process took %lld us", te - ts);
@@ -2087,12 +2087,11 @@ bool DiscordInstance::SortGuilds()
 		std::string name, avatar;
 		if (!gld) {
 			DbgPrintF("Guild %lld in guild folders doesn't actually exist", guild.second);
-			name = "Unknown guild";
+			continue;
 		}
-		else {
-			name = gld->m_name;
-			avatar = gld->m_avatarlnk;
-		}
+		
+		name = gld->m_name;
+		avatar = gld->m_avatarlnk;
 
 		guildAdded[guild.second] = true;
 		m_guildItemList.AddGuild(guild.first, guild.second, name, avatar);

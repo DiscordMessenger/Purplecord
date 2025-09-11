@@ -265,12 +265,12 @@ void ShowMessageBox(const std::string& title, const std::string& message)
 
 void Frontend_iOS::OnGenericError(const std::string& message)
 {
-	ShowMessageBox("Generic Error", message);
+	ShowMessageBox("Error", message);
 }
 
 void Frontend_iOS::OnJsonException(const std::string& message)
 {
-	ShowMessageBox("JSON Exception", message);
+	ShowMessageBox("JSON Exception", "The following JSON exception was received: " + message);
 }
 
 void Frontend_iOS::OnCantViewChannel(const std::string& channelName)

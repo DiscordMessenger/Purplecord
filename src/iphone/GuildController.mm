@@ -1,6 +1,7 @@
 #import "GuildController.h"
 #import "ChannelController.h"
 #import "UIColorScheme.h"
+#import "Frontend_iOS.h"
 #include "../discord/DiscordInstance.hpp"
 
 struct ChannelMember
@@ -71,7 +72,7 @@ static std::string GetChannelString(const Channel& ch)
 		unreadMarker = " *";
 	}
 
-	return mentions + ch.GetTypeSymbol() + ch.m_name + unreadMarker;
+	return mentions + ch.GetFullName() + unreadMarker;
 }
 
 GuildController* g_pGuildController;
@@ -293,6 +294,8 @@ GuildController* GetGuildController() {
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+	[tableView deselectRowAtIndexPath:indexPath animated:YES];
+	
 	if (![self ensureGuildPointerExists])
 		return;
 	
@@ -308,6 +311,12 @@ GuildController* GetGuildController() {
 	
 	if (pChan->IsCategory())
 		return;
+	
+	if (GetDiscordInstance()->ReceivedForbiddenForChannelID(channelID))
+	{
+		GetFrontend()->OnCantViewChannel(pChan->GetFullName());
+		return;
+	}
 	
 	ChannelController *channelVC = [[ChannelController alloc] initWithChannelID:channelID andGuildID:guildID];
 	channelVC.view.backgroundColor = [UIColorScheme getTextBackgroundColor];

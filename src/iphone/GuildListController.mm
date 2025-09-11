@@ -123,6 +123,8 @@ void TestFunction();
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+	[tableView deselectRowAtIndexPath:indexPath animated:YES];
+	
 	int index = indexPath.row;
 	if (index < 0 || index > (int) m_guilds.size())
 		return;

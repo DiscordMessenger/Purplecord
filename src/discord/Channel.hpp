@@ -129,6 +129,8 @@ struct Channel
 		}
 	}
 
+	std::string GetFullName() const { return GetTypeSymbol() + m_name; }
+
 	// Gets the recipient count of a DM or group DM channel.  Note that the current
 	// user is not included in this count.
 	int GetRecipientCount() const {

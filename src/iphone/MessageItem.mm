@@ -140,7 +140,7 @@ bool IsActionMessage(MessageType::eType msgType)
 
 + (NSString*)channelHeaderString:(Channel*)channel
 {
-	std::string channelName = channel->GetTypeSymbol() + channel->m_name;
+	std::string channelName = channel->GetFullName();
 	return [NSString stringWithUTF8String:("Welcome to the beginning of the " + channelName + " channel.").c_str()];;
 }
 

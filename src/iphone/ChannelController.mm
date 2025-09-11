@@ -167,7 +167,7 @@ ChannelController* GetChannelController() {
 	tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
 	[self.view addSubview:tableView];
 	
-	self.title = [NSString stringWithUTF8String:(pChannel->GetTypeSymbol() + pChannel->m_name).c_str()];
+	self.title = [NSString stringWithUTF8String:pChannel->GetFullName().c_str()];
 	
 	//UIBarButtonItem *toggleButton = [[UIBarButtonItem alloc] initWithTitle:@"Toggle Data Set" style:UIBarButtonItemStylePlain target:self action:@selector(toggleFlag)];
 	//self.navigationItem.rightBarButtonItem = toggleButton;
@@ -511,8 +511,10 @@ ChannelController* GetChannelController() {
 	}
 }
 
-- (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+- (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
 	// TODO
+	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
 - (void)dealloc {

@@ -51,8 +51,8 @@ void PrepareSaveDirectories()
 	
 	SetBasePath(path);
 	
+	// make sure that path exists
 	ret = mkdir(path.c_str(), 0775);
-	if (ret == -1 && errno != EEXIST) goto error;
 	
 	ret = mkdir(GetBasePath().c_str(), 0775);
 	if (ret == -1 && errno != EEXIST) goto error;
@@ -74,25 +74,27 @@ int main(int argc, char *argv[])
 	DbgPrintF("Purplecord v%.2f - Copyright (C) 2025 iProgramInCpp", GetAppVersion());
 #endif
 	
+	PrepareSaveDirectories();
+	GetLocalSettings()->Load();
+	
 	HTTPClient_curl::InitializeCABlob();
 	
 	g_pHttpClient = new HTTPClient_curl();
 	g_pHttpClient->Init();
 	
-	
-	PrepareSaveDirectories();
-	GetLocalSettings()->Load();
-	
 	GetWebsocketClient()->Init();
 	
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	int retVal = UIApplicationMain(argc, argv, nil, @"AppDelegate");
-	[pool release];
+	int retVal;
+	@autoreleasepool
+	{
+		retVal = UIApplicationMain(argc, argv, nil, @"AppDelegate");
+	}
 	
 	GetLocalSettings()->Save();
 	
 	g_pHttpClient->StopAllRequests();
 	g_pHttpClient->Kill();
+	GetWebsocketClient()->Kill();
 	
 	if (g_pDiscordInstance)
 		delete g_pDiscordInstance;
