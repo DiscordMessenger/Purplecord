@@ -7,7 +7,6 @@
 	UILabel* dateLabel;
 	UILabel* messageLabel;
 	UIImageView* imageView;
-	UIImage* imageReference;
 	UIActivityIndicatorView* spinner;
 	MessagePtr message;
 	CGFloat height;

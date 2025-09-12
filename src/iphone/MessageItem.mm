@@ -65,7 +65,6 @@ bool IsActionMessage(MessageType::eType msgType)
 	if (dateLabel) [dateLabel release];
 	if (messageLabel) [messageLabel release];
 	if (imageView) [imageView release];
-	if (imageReference) [imageReference release];
 	if (spinner) [spinner release];
 	[super dealloc];
 }
@@ -148,12 +147,6 @@ bool IsActionMessage(MessageType::eType msgType)
 		[spinner removeFromSuperview];
 		[spinner release];
 		spinner = nil;
-	}
-	
-	if (imageReference)
-	{
-		[imageReference release];
-		imageReference = nil;
 	}
 }
 
@@ -273,6 +266,8 @@ bool IsActionMessage(MessageType::eType msgType)
 	self.textColor = [UIColorScheme getTextColor];
 	self.contentView.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	
+	UIImage* image = nil;
+	
 	CGFloat padding = OUT_MESSAGE_PADDING;
 	CGFloat paddingIn = IN_MESSAGE_PADDING;
 	CGFloat cellWidth = self.contentView.bounds.size.width;
@@ -283,8 +278,6 @@ bool IsActionMessage(MessageType::eType msgType)
 		int minHeight = 0;
 		authorLabel.text = dateLabel.text = @"";
 		height = 0;
-		
-		UIImage* image = nil;
 		
 		switch (message->m_type)
 		{
@@ -387,12 +380,8 @@ bool IsActionMessage(MessageType::eType msgType)
 	
 	[GetAvatarCache() addImagePlace:message->m_avatar imagePlace:eImagePlace::AVATARS place:message->m_avatar imageId:message->m_author_snowflake sizeOverride:0];
 	
-	UIImage* someImage = [GetAvatarCache() getImage:message->m_avatar];
-	DbgPrintF("someImage: %p", someImage);
-	DbgPrintF("someImage.CGImage: %p", someImage.CGImage);
-	
-	imageReference = [someImage retain];
-	imageView = [[UIImageView alloc] initWithImage:someImage];
+	image = [GetAvatarCache() getImage:message->m_avatar];
+	imageView = [[UIImageView alloc] initWithImage:image];
 	imageView.frame = CGRectMake(padding, padding + (authorTextSize.height - pfpSize) / 2, pfpSize, pfpSize);
 	[self.contentView addSubview:imageView];
 }
