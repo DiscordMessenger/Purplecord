@@ -28,6 +28,7 @@ void CreateDiscordInstanceIfNeeded();
 	UITextField* tokenTextField;
 	UIBarButtonItem* logInButton;
 	UILabel* label;
+	UILabel* bottomLabel;
 	bool loggingIn;
 }
 
@@ -67,7 +68,7 @@ void CreateDiscordInstanceIfNeeded();
 	tokenTextField = textField;
 	
 	// Also, a label above that tells you you should log in.
-	label = [[UILabel alloc] initWithFrame: CGRectMake(20, 30, width - 40, 80)];
+	label = [[UILabel alloc] initWithFrame: CGRectMake(21, 30, width - 40, 80)];
 	label.text = @"Welcome to Purplecord!\nBefore you can use this client you must first log in using your token.";
 	label.textAlignment = UITextAlignmentCenter;
 	label.backgroundColor = [UIColorScheme getBackgroundColor];
@@ -75,6 +76,15 @@ void CreateDiscordInstanceIfNeeded();
 	label.numberOfLines = 0;
 	label.lineBreakMode = UILineBreakModeWordWrap;
 	label.font = [UIFont systemFontOfSize:15];
+	
+	bottomLabel = [[UILabel alloc] initWithFrame:CGRectMake(21, 240, width - 40, 80)];
+	bottomLabel.text = @"";
+	bottomLabel.textAlignment = UITextAlignmentCenter;
+	bottomLabel.backgroundColor = [UIColorScheme getBackgroundColor];
+	bottomLabel.textColor = [UIColorScheme getTextColor];
+	bottomLabel.numberOfLines = 0;
+	bottomLabel.lineBreakMode = UILineBreakModeWordWrap;
+	bottomLabel.font = [UIFont systemFontOfSize:15];
 	
 	// And a button
 	logInButton = [
@@ -100,8 +110,7 @@ void CreateDiscordInstanceIfNeeded();
 	
 	[self.view addSubview:textField];
 	[self.view addSubview:label];
-	[logInButton release];
-	[label release];
+	[self.view addSubview:bottomLabel];
 }
 
 - (void)viewDidLoad
@@ -171,7 +180,11 @@ void CreateDiscordInstanceIfNeeded();
 	logInButton.title = @"Logging in...";
 	logInButton.enabled = NO;
 	
-	label.text = @"Please wait...\nThis may take up to a minute. Sorry it isn't faster.";
+#ifdef _DEBUG
+	label.text = @"Logging in...\nThis may take up to two minutes.";
+#else
+	label.text = @"Logging in...\nThis may take up to a minute.";
+#endif
 	
 	// show animation
 	UIActivityIndicatorView* spinner = [
@@ -197,11 +210,18 @@ void CreateDiscordInstanceIfNeeded();
 	);
 }
 
+- (void)setLoginStage:(NSString*)stage
+{
+	bottomLabel.text = stage;
+}
+
 - (void)dealloc
 {
 	g_pLoginPageController = NULL;
 	
 	[label release];
+	[bottomLabel release];
+	[logInButton release];
 	[tokenTextField release];
 	[super dealloc];
 }

@@ -159,4 +159,10 @@ NetworkController* GetNetworkController() {
 	[UIView commitAnimations];
 }
 
+- (void)setLoginStage:(NSString*)stage
+{
+	if (GetLoginPageController())
+		[GetLoginPageController() setLoginStage:stage];
+}
+
 @end

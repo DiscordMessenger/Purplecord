@@ -5,6 +5,7 @@
 }
 
 - (void)sendToGuildList;
+- (void)setLoginStage:(NSString*)stage;
 
 @end
 

@@ -1211,6 +1211,8 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 		// Process a huge payload, typical with READY packets
 		const auto& processHugePayload = [this] (std::string payload)
 		{
+			GetFrontend()->OnSetLogInProgress("Connected, starting log in procedure...");
+			
 			BeginProfiling("Parse huge READY payload");
 			Json j = iprog::JsonParser::parse(payload);
 			EndProfiling();
@@ -2327,6 +2329,13 @@ void DiscordInstance::HandleREADY_SUPPLEMENTAL(Json& j)
 	}
 }
 
+static std::string Progress(size_t howMany, size_t outOf)
+{
+	if (!outOf) return "";
+	
+	return std::to_string(int(ceilf(howMany * 100 / outOf))) + "%";
+}
+
 void DiscordInstance::HandleREADY(Json& j)
 {
 	// THREAD SAFETY: Do not access most of DiscordInstance while doing this, if this is run
@@ -2340,6 +2349,8 @@ void DiscordInstance::HandleREADY(Json& j)
 	m_sessionType = data["session_type"];
 
 	// ==== reload user
+	GetFrontend()->OnSetLogInProgress("Loading user profile...");
+	
 	BeginProfiling("load user profile");
 	Json& user = data["user"];
 
@@ -2355,13 +2366,14 @@ void DiscordInstance::HandleREADY(Json& j)
 	EndProfiling();
 
 	// ==== load user settings
+	GetFrontend()->OnSetLogInProgress("Loading user settings...");
 	BeginProfiling("load user settings");
 	LoadUserSettings(data["user_settings_proto"]);
 	EndProfiling();
 
 	// ==== reload guild DB
 	BeginProfiling("load guild DB");
-	
+	GetFrontend()->OnSetLogInProgress("Loading guilds...");
 	Json& guilds = data["guilds"];
 	m_guilds.clear();
 
@@ -2371,8 +2383,11 @@ void DiscordInstance::HandleREADY(Json& j)
 	}
 
 	// reverse because that's pretty much the order Discord stores guilds in
+	size_t counter = 0;
 	for (auto& elem : guilds)
 	{
+		counter++;
+		GetFrontend()->OnSetLogInProgress("Loading guilds... " + Progress(counter, guilds.size()));
 		BeginProfiling("Parse Guild");
 		ParseAndAddGuild(elem);
 		EndProfiling();
@@ -2400,12 +2415,16 @@ void DiscordInstance::HandleREADY(Json& j)
 	EndProfiling();
 
 	// ==== load users
+	GetFrontend()->OnSetLogInProgress("Loading users...");
 	BeginProfiling("load users");
 	if (data.contains("users") && data["users"].is_array())
 	{
 		auto& membs = data["users"];
-
+		
+		counter = 0;
 		for (auto& memb : membs) {
+			counter++;
+			GetFrontend()->OnSetLogInProgress("Loading users... " + Progress(counter, membs.size()));
 			Snowflake id = GetSnowflake(memb, "id");
 			GetProfileCache()->LoadProfile(id, memb);
 		}
@@ -2413,6 +2432,7 @@ void DiscordInstance::HandleREADY(Json& j)
 	EndProfiling();
 
 	// ==== load merged members
+	GetFrontend()->OnSetLogInProgress("Loading merged members...");
 	BeginProfiling("load merged members");
 	if (data.contains("merged_members") && data["merged_members"].is_array())
 	{
@@ -2423,6 +2443,7 @@ void DiscordInstance::HandleREADY(Json& j)
 		{
 			idx++;
 
+			GetFrontend()->OnSetLogInProgress("Loading merged members... " + Progress(idx + 1, memes.size()));
 			for (auto& memesub : meme)
 			{
 				Snowflake sf = GetSnowflake(memesub, "user_id");
@@ -2442,6 +2463,7 @@ void DiscordInstance::HandleREADY(Json& j)
 	EndProfiling();
 
 	// ==== load private channels
+	GetFrontend()->OnSetLogInProgress("Loading private channels...");
 	BeginProfiling("load private channels");
 	if (data.contains("private_channels") && data["private_channels"].is_array())
 	{
@@ -2452,9 +2474,13 @@ void DiscordInstance::HandleREADY(Json& j)
 
 		Snowflake chan = 0;
 
+		counter = 0;
 		int order = 1;
 		for (auto& elem : chans)
 		{
+			counter++;
+			GetFrontend()->OnSetLogInProgress("Loading private channels... " + Progress(counter, chans.size()));
+			
 			Channel c;
 			ParseChannel(c, elem, order);
 			c.m_parentGuild = pGld->m_snowflake;
@@ -2469,28 +2495,38 @@ void DiscordInstance::HandleREADY(Json& j)
 	EndProfiling();
 
 	// ==== load read_state
+	GetFrontend()->OnSetLogInProgress("Loading read states...");
 	BeginProfiling("load read states");
 	if (data.contains("read_state") && data["read_state"].is_object())
 	{
 		// Members: "entries" (array), "partial" (true/false, for now false), "version"
 		m_ackVersion = 0;
 
+		counter = 0;
 		Json& readStateData = data["read_state"];
 		Json& readStates = readStateData["entries"];
 		for (Json& readState : readStates)
+		{
+			counter++;
+			GetFrontend()->OnSetLogInProgress("Loading read states... " + Progress(counter, readStates.size()));
 			ParseReadStateObject(readState, false);
+		}
 
 		m_ackVersion = GetFieldSafeInt(readStateData, "version");
 	}
 	EndProfiling();
 
 	// ==== load relationships - friends and blocked
+	GetFrontend()->OnSetLogInProgress("Loading relationships...");
 	BeginProfiling("load relationships");
 	if (data.contains("relationships") && data["relationships"].is_array())
 	{
+		counter = 0;
 		auto& rels = data["relationships"];
 		for (auto& elem : rels)
 		{
+			counter++;
+			GetFrontend()->OnSetLogInProgress("Loading relationships... " + Progress(counter, rels.size()));
 			Relationship rel;
 			rel.Load(elem);
 			m_relationships.push_back(rel);
@@ -2500,6 +2536,7 @@ void DiscordInstance::HandleREADY(Json& j)
 
 	// ==== load resume_gateway_url
 	// ==== load user_guild_settings
+	GetFrontend()->OnSetLogInProgress("Loading guild settings...");
 	BeginProfiling("load user guild settings");
 	if (data.contains("user_guild_settings") && data["user_guild_settings"].is_object())
 	{
@@ -2508,6 +2545,7 @@ void DiscordInstance::HandleREADY(Json& j)
 	}
 	EndProfiling();
 
+	GetFrontend()->OnSetLogInProgress("Almost done...");
 	// Doing this because the contents of all channels might be outdated.
 	BeginProfiling("purge message cache");
 	GetMessageCache()->ClearAllChannels();

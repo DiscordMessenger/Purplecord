@@ -22,6 +22,7 @@ struct WebsocketFailParams {
 - (void)setHeartbeatInterval:(NSInteger)timeMs;
 - (void)updateAttachmentByID:(const std::string&)rid;
 - (void)onWebsocketFail:(NSValue*)websocketFailNSValue;
+- (void)setLoginStage:(NSString*)stage;
 
 @end
 

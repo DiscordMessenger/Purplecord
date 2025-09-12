@@ -24,6 +24,7 @@ public:
 	void OnFailedToUploadFile(const std::string& file, int error) override;
 	void OnFailedToCheckForUpdates(int result, const std::string& response) override;
 	void OnStartProgress(Snowflake key, const std::string& fileName, bool isUploading);
+	void OnSetLogInProgress(const std::string& str) override;
 	bool OnUpdateProgress(Snowflake key, size_t offset, size_t length) override;
 	void OnStopProgress(Snowflake key) override;
 	void OnNotification() override;

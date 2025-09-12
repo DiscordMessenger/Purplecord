@@ -166,15 +166,18 @@ std::string Frontend_iOS::GetFormatTimeShorterText()
 
 void Frontend_iOS::OnAttachmentDownloaded(bool bIsProfilePicture, const uint8_t* pData, size_t nSize, const std::string& additData)
 {
-	int nImSize = bIsProfilePicture ? -1 : 0;
-	bool bHasAlpha = false;
-	UIImage* himg = [ImageLoader convertToBitmap:pData size:nSize resizeToWidth:nImSize andHeight:nImSize];
-
-	if (himg)
+	@autoreleasepool
 	{
-		[GetAvatarCache() loadedResource:additData];
-		[GetAvatarCache() setImage:additData image:himg];
-		[GetNetworkController() updateAttachmentByID:additData];
+		int nImSize = bIsProfilePicture ? -1 : 0;
+		bool bHasAlpha = false;
+		UIImage* himg = [ImageLoader convertToBitmap:pData size:nSize resizeToWidth:nImSize andHeight:nImSize];
+
+		if (himg)
+		{
+			[GetAvatarCache() loadedResource:additData];
+			[GetAvatarCache() setImage:additData image:himg];
+			[GetNetworkController() updateAttachmentByID:additData];
+		}
 	}
 
 	// store the cached data..
@@ -216,6 +219,19 @@ void Frontend_iOS::OnWebsocketFail(int gatewayID, int errorCode, const std::stri
 	[GetNetworkController() performSelectorOnMainThread:@selector(onWebsocketFail:)
 		withObject:[NSValue valueWithPointer:&params]
 		waitUntilDone:YES];
+}
+
+void Frontend_iOS::OnSetLogInProgress(const std::string& str)
+{
+	DbgPrintF("OnSetLogInProgress:%s", str.c_str());
+	
+	@autoreleasepool
+	{
+		NSString* string = [NSString stringWithUTF8String:str.c_str()];
+		[GetNetworkController() performSelectorOnMainThread:@selector(setLoginStage:)
+			withObject:string
+			waitUntilDone:NO];
+	}
 }
 
 #ifdef USE_DEBUG_PRINTS
