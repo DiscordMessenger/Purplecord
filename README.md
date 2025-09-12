@@ -14,6 +14,19 @@ The name was chosen because the original iPhone was known during development as 
 client runs on iOS 3, and iOS 3.1.3 is the last version that will run on the original iPhone, the name "Purplecord"
 was chosen.
 
+## Planned features
+
+Purplecord is currently not a full featured client.  The following features are planned:
+
+- Icons in server list
+- Settings menu
+- Options menu for messages
+- Uploading images from camera roll
+- Saving images to camera roll
+- Member list
+- Quick Search similar to Discord Messenger
+- Viewing a member's information
+
 ## Attributions
 
 Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on such ancient iOS versions!
