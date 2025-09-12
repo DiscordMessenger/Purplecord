@@ -129,6 +129,8 @@ void CreateDiscordInstanceIfNeeded();
 	[UIView beginAnimations:nil context:NULL];
 	[UIView setAnimationDuration:0.5];
 	[UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:YES];
+	
+	[self.view removeFromSuperview];
 	[UIView commitAnimations];
 }
 

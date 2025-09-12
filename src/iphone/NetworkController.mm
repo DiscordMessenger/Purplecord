@@ -2,6 +2,7 @@
 #import "LoginPageController.h"
 #import "GuildListController.h"
 #import "ChannelController.h"
+#import "UIColorScheme.h"
 
 #include "HTTPClient_curl.h"
 #include "Frontend_iOS.h"
@@ -82,8 +83,8 @@ NetworkController* GetNetworkController() {
 
 - (void)updateAttachmentByID:(const std::string&)rid
 {
-	//if (GetGuildListController())
-	//	[GetGuildListController() updateAttachmentByID:rid];
+	if (GetGuildListController())
+		[GetGuildListController() updateAttachmentByID:rid];
 
 	if (GetChannelController())
 		[GetChannelController() updateAttachmentByID:rid];
@@ -106,6 +107,56 @@ NetworkController* GetNetworkController() {
 		GetDiscordInstance()->HandleGatewayMessage(message->msg);
 	
 	delete message;
+}
+
+- (void)onWebsocketFail:(NSValue*)websocketFailNSValue
+{
+	WebsocketFailParams* parms = (WebsocketFailParams*) [websocketFailNSValue pointerValue];
+	
+	UIAlertView *alert = [
+		[UIAlertView alloc]
+		initWithTitle:@"Disconnected"
+		message:@"You have been disconnected. Purplecord will attempt to reconnect."
+		delegate:self
+		cancelButtonTitle:@"OK"
+		otherButtonTitles:nil
+	];
+	
+	[alert show];
+	[alert release];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+	if (buttonIndex != alertView.cancelButtonIndex)
+		return;
+	
+	// TODO: Test this
+	LoginPageController* controller = [[LoginPageController alloc] init];
+	UINavigationController* navController = [[UINavigationController alloc] initWithRootViewController:controller];
+	
+	if ([UIColorScheme useDarkMode])
+		navController.navigationBar.barStyle = UIBarStyleBlack;
+	
+	UIWindow* window = [UIApplication sharedApplication].keyWindow;
+	if (!window) {
+		window = [[UIApplication sharedApplication].windows objectAtIndex:0];
+	}
+	
+    NSArray *oldSubviews = [[window.subviews copy] autorelease];
+	
+	[window addSubview:navController.view];
+	[window makeKeyAndVisible];
+	
+	[UIView beginAnimations:nil context:NULL];
+	[UIView setAnimationDuration:0.5];
+	[UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:YES];
+	
+    for (UIView *v in oldSubviews) {
+        [v removeFromSuperview];
+    }
+	
+	[UIView commitAnimations];
 }
 
 @end

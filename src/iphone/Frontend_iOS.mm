@@ -190,6 +190,34 @@ void Frontend_iOS::OnAttachmentDownloaded(bool bIsProfilePicture, const uint8_t*
 	fclose(f);
 }
 
+void Frontend_iOS::RegisterIcon(Snowflake sf, const std::string& avatarlnk)
+{
+	[GetAvatarCache() addImagePlace:avatarlnk imagePlace:eImagePlace::ICONS place:avatarlnk imageId:sf sizeOverride:0];
+}
+
+void Frontend_iOS::RegisterAvatar(Snowflake sf, const std::string& avatarlnk)
+{
+	[GetAvatarCache() addImagePlace:avatarlnk imagePlace:eImagePlace::AVATARS place:avatarlnk imageId:sf sizeOverride:0];
+}
+
+void Frontend_iOS::RegisterAttachment(Snowflake sf, const std::string& avatarlnk)
+{
+	[GetAvatarCache() addImagePlace:avatarlnk imagePlace:eImagePlace::ATTACHMENTS place:avatarlnk imageId:sf sizeOverride:0];
+}
+
+void Frontend_iOS::RegisterChannelIcon(Snowflake sf, const std::string& avatarlnk)
+{
+	[GetAvatarCache() addImagePlace:avatarlnk imagePlace:eImagePlace::CHANNEL_ICONS place:avatarlnk imageId:sf sizeOverride:0];
+}
+
+void Frontend_iOS::OnWebsocketFail(int gatewayID, int errorCode, const std::string& message, bool isTLSError, bool mayRetry)
+{
+	WebsocketFailParams params { gatewayID, errorCode, message, isTLSError, mayRetry };
+	[GetNetworkController() performSelectorOnMainThread:@selector(onWebsocketFail:)
+		withObject:[NSValue valueWithPointer:&params]
+		waitUntilDone:YES];
+}
+
 #ifdef USE_DEBUG_PRINTS
 void Frontend_iOS::DebugPrint(const char* fmt, va_list vl)
 {
@@ -381,32 +409,7 @@ void Frontend_iOS::OnWebsocketClose(int gatewayID, int errorCode, const std::str
 	//TODO
 }
 
-void Frontend_iOS::OnWebsocketFail(int gatewayID, int errorCode, const std::string& message, bool isTLSError, bool mayRetry)
-{
-	//TODO
-}
-
 void Frontend_iOS::LaunchURL(const std::string& url)
-{
-	//TODO
-}
-
-void Frontend_iOS::RegisterIcon(Snowflake sf, const std::string& avatarlnk)
-{
-	//TODO
-}
-
-void Frontend_iOS::RegisterAvatar(Snowflake sf, const std::string& avatarlnk)
-{
-	//TODO
-}
-
-void Frontend_iOS::RegisterAttachment(Snowflake sf, const std::string& avatarlnk)
-{
-	//TODO
-}
-
-void Frontend_iOS::RegisterChannelIcon(Snowflake sf, const std::string& avatarlnk)
 {
 	//TODO
 }

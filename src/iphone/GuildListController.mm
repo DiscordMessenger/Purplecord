@@ -1,6 +1,7 @@
 #import "GuildListController.h"
 #import "GuildController.h"
 #import "UIColorScheme.h"
+#import "AvatarCache.h"
 #include "HTTPClient_curl.h"
 #include "../discord/DiscordInstance.hpp"
 
@@ -118,12 +119,35 @@ void TestFunction();
 		cell.textLabel.textColor = [UIColorScheme getTextColor];
 	}
 	cell.text = guildNameNS;
+	
+	UIImage* image = [GetAvatarCache() getImage:pGuild->m_avatarlnk];
+	cell.imageView.image = image;
+	
 	return cell;
+}
+
+- (void)updateAttachmentByID:(const std::string&)resource
+{
+	[tableView beginUpdates];
+	
+	for (size_t i = 0; i < m_guilds.size(); i++)
+	{
+		Guild* guild = GetDiscordInstance()->GetGuild(m_guilds[i]);
+		if (!guild) continue;
+		
+		if ([GetAvatarCache() makeIdentifier:guild->m_avatarlnk] == resource)
+		{
+			NSIndexPath* indexPath = [NSIndexPath indexPathForRow:(NSInteger)i inSection:0];
+			[tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+		}
+	}
+	
+	[tableView endUpdates];
 }
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	[tableView deselectRowAtIndexPath:indexPath animated:YES];
+	[tableView deselectRowAtIndexPath:indexPath animated:NO];
 	
 	int index = indexPath.row;
 	if (index < 0 || index > (int) m_guilds.size())

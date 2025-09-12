@@ -21,6 +21,7 @@ Purplecord is currently not a full featured client.  The following features are 
 - Icons in server list
 - Settings menu
 - Options menu for messages
+- Typing indicator
 - Uploading images from camera roll
 - Saving images to camera roll
 - Member list
