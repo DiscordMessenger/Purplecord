@@ -1,6 +1,7 @@
 #import "NetworkController.h"
 #import "LoginPageController.h"
 #import "GuildListController.h"
+#import "ChannelController.h"
 
 #include "HTTPClient_curl.h"
 #include "Frontend_iOS.h"
@@ -77,6 +78,15 @@ NetworkController* GetNetworkController() {
 		[GetGuildListController() refreshGuilds];
 	else
 		DbgPrintF("ERROR in refreshGuildList: No guild list controller.");
+}
+
+- (void)updateAttachmentByID:(const std::string&)rid
+{
+	//if (GetGuildListController())
+	//	[GetGuildListController() updateAttachmentByID:rid];
+
+	if (GetChannelController())
+		[GetChannelController() updateAttachmentByID:rid];
 }
 
 - (void)processResponse:(NSValue*)netRequestNSValue

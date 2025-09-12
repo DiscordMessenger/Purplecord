@@ -80,6 +80,7 @@ Purplecord_FILES = \
 	deps/zlib/trees.c \
 	deps/zlib/inftrees.c \
 	deps/zlib/inffast.c \
+	deps/md5/MD5.cpp \
 	src/discord/Channel.cpp \
 	src/discord/DiscordAPI.cpp \
 	src/discord/DiscordClientConfig.cpp \
@@ -115,7 +116,9 @@ Purplecord_FILES = \
 	src/iphone/WebsocketClient_curl.cpp \
 	src/iphone/MessageItem.mm \
 	src/iphone/MessageInputView.mm \
-	src/iphone/UIColorScheme.mm
+	src/iphone/UIColorScheme.mm \
+	src/iphone/ImageLoader.mm \
+	src/iphone/AvatarCache.mm
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics
 Purplecord_CFLAGS = -fno-objc-arc $(INCLUDES) $(CPPHACKS) $(WARNINGDISABLES) $(SWITCHES)

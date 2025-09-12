@@ -1,5 +1,6 @@
 #pragma once
 #import <Foundation/Foundation.h>
+#include <string>
 
 @interface NetworkController : NSObject
 
@@ -11,6 +12,7 @@
 - (void)finishedProcessingHugeMessage;
 - (void)refreshGuildList;
 - (void)setHeartbeatInterval:(NSInteger)timeMs;
+- (void)updateAttachmentByID:(const std::string&)rid;
 
 @end
 

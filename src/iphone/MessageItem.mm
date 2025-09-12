@@ -1,6 +1,7 @@
 #import "MessageItem.h"
 #import "ChannelController.h"
 #import "UIColorScheme.h"
+#import "AvatarCache.h"
 #include "../discord/DiscordInstance.hpp"
 #include "../discord/Util.hpp"
 
@@ -55,7 +56,19 @@ bool IsActionMessage(MessageType::eType msgType)
 
 @implementation MessageItem
 
-@synthesize authorLabel, dateLabel, messageLabel, message, height;
+@synthesize message;
+
+- (void)dealloc
+{
+	[self removeExtraViewsIfNeeded];
+	if (authorLabel) [authorLabel release];
+	if (dateLabel) [dateLabel release];
+	if (messageLabel) [messageLabel release];
+	if (imageView) [imageView release];
+	if (imageReference) [imageReference release];
+	if (spinner) [spinner release];
+	[super dealloc];
+}
 
 + (UIFont*)createAuthorTextFont
 {
@@ -136,6 +149,12 @@ bool IsActionMessage(MessageType::eType msgType)
 		[spinner release];
 		spinner = nil;
 	}
+	
+	if (imageReference)
+	{
+		[imageReference release];
+		imageReference = nil;
+	}
 }
 
 + (NSString*)channelHeaderString:(Channel*)channel
@@ -169,7 +188,8 @@ bool IsActionMessage(MessageType::eType msgType)
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	
 	CGFloat height = 0.0f;
-	CGFloat padding = IN_MESSAGE_PADDING;
+	CGFloat padding = OUT_MESSAGE_PADDING;
+	CGFloat paddingIn = IN_MESSAGE_PADDING;
 	CGFloat cellWidth = screenBounds.size.width;
 	CGSize maxMessageSize = CGSizeMake(cellWidth - padding * 2, 99999.0);
 	
@@ -219,10 +239,12 @@ bool IsActionMessage(MessageType::eType msgType)
 		return height;
 	}
 	
+	CGFloat pfpSize = GetProfilePictureSize();
+	
 	authorText = [NSString stringWithUTF8String:message->m_author.c_str()];
 	messageText = [NSString stringWithUTF8String:message->m_message.c_str()];
 	
-	CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2, 40.0);
+	CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2 - paddingIn - pfpSize, 40.0);
 	CGSize authorTextSize = [
 		authorText
 		sizeWithFont:[MessageItem createAuthorTextFont]
@@ -236,7 +258,7 @@ bool IsActionMessage(MessageType::eType msgType)
 		lineBreakMode:UILineBreakModeWordWrap
 	];
 	
-	height = padding * 3 + authorTextSize.height + messageTextSize.height;
+	height = padding * 2 + paddingIn + authorTextSize.height + messageTextSize.height;
 	return height;
 }
 
@@ -251,7 +273,8 @@ bool IsActionMessage(MessageType::eType msgType)
 	self.textColor = [UIColorScheme getTextColor];
 	self.contentView.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	
-	CGFloat padding = 15.0f;
+	CGFloat padding = OUT_MESSAGE_PADDING;
+	CGFloat paddingIn = IN_MESSAGE_PADDING;
 	CGFloat cellWidth = self.contentView.bounds.size.width;
 	CGSize maxMessageSize = CGSizeMake(cellWidth - padding * 2, 99999.0);
 	
@@ -341,7 +364,8 @@ bool IsActionMessage(MessageType::eType msgType)
 		dateLabel.text = @"";
 	}
 	
-	CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2, 40.0);
+	CGFloat pfpSize = GetProfilePictureSize();
+	CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2 - pfpSize - paddingIn, 40.0);
 	CGSize authorTextSize = [
 		authorLabel.text
 		sizeWithFont:authorLabel.font
@@ -355,20 +379,22 @@ bool IsActionMessage(MessageType::eType msgType)
 		lineBreakMode:UILineBreakModeWordWrap
 	];
 	
-	height = padding * 3 + authorTextSize.height + messageTextSize.height;
+	height = padding * 2 + paddingIn + authorTextSize.height + messageTextSize.height;
 	
-	authorLabel.frame = CGRectMake(padding, padding, authorTextSize.width, authorTextSize.height);
-	dateLabel.frame = CGRectMake(padding * 2 + authorTextSize.width, padding, cellWidth - padding * 3 - authorTextSize.width, authorTextSize.height);
-	messageLabel.frame = CGRectMake(padding, padding * 2 + authorTextSize.height, messageTextSize.width, messageTextSize.height);
-}
-
-- (void)dealloc
-{
-	[self removeExtraViewsIfNeeded];
-	[authorLabel release];
-	[dateLabel release];
-	[messageLabel release];
-	[super dealloc];
+	authorLabel.frame = CGRectMake(padding + pfpSize + paddingIn, padding, authorTextSize.width, authorTextSize.height);
+	dateLabel.frame = CGRectMake(padding + pfpSize + paddingIn * 2 + authorTextSize.width, padding, cellWidth - padding * 3 - authorTextSize.width, authorTextSize.height);
+	messageLabel.frame = CGRectMake(padding, padding + paddingIn + authorTextSize.height, messageTextSize.width, messageTextSize.height);
+	
+	[GetAvatarCache() addImagePlace:message->m_avatar imagePlace:eImagePlace::AVATARS place:message->m_avatar imageId:message->m_author_snowflake sizeOverride:0];
+	
+	UIImage* someImage = [GetAvatarCache() getImage:message->m_avatar];
+	DbgPrintF("someImage: %p", someImage);
+	DbgPrintF("someImage.CGImage: %p", someImage.CGImage);
+	
+	imageReference = [someImage retain];
+	imageView = [[UIImageView alloc] initWithImage:someImage];
+	imageView.frame = CGRectMake(padding, padding + (authorTextSize.height - pfpSize) / 2, pfpSize, pfpSize);
+	[self.contentView addSubview:imageView];
 }
 
 @end

@@ -1,6 +1,7 @@
 #import "ChannelController.h"
 #import "MessageItem.h"
 #import "UIColorScheme.h"
+#import "AvatarCache.h"
 #include "UIProportions.h"
 #include "../discord/DiscordInstance.hpp"
 
@@ -243,6 +244,7 @@ ChannelController* GetChannelController() {
 - (void)refreshMessages:(ScrollDir::eScrollDir)sd withGapCulprit:(Snowflake)gapCulprit
 {
 	Profiler profiler("- [ChannelController refreshMessages:withGapCulprit:]");
+	tableView.scrollEnabled = NO;
 	
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	
@@ -280,6 +282,7 @@ ChannelController* GetChannelController() {
 	}
 	
 	m_doNotLoadMessages = false;
+	tableView.scrollEnabled = YES;
 }
 
 - (BOOL)isChannelIDActive:(Snowflake)_channelID
@@ -427,6 +430,22 @@ ChannelController* GetChannelController() {
 		msg->m_author = pf->GetName(guildID);
 		
 		[self onUpdatedRowAtIndex:i animated:NO];
+	}
+	
+	[tableView endUpdates];
+}
+
+- (void)updateAttachmentByID:(const std::string&)rid
+{
+	// TODO: check for attachments too
+	[tableView beginUpdates];
+	
+	for (size_t i = 0; i < m_messages.size(); i++)
+	{
+		auto& msg = m_messages[i];
+		
+		if ([GetAvatarCache() makeIdentifier:msg->m_avatar] == rid)
+			[self onUpdatedRowAtIndex:i animated:NO];
 	}
 	
 	[tableView endUpdates];

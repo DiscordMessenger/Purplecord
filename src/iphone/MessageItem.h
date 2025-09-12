@@ -7,16 +7,15 @@
 	UILabel* dateLabel;
 	UILabel* messageLabel;
 	UIImageView* imageView;
+	UIImage* imageReference;
 	UIActivityIndicatorView* spinner;
 	MessagePtr message;
 	CGFloat height;
 }
 
-@property (nonatomic, retain) UILabel *authorLabel;
-@property (nonatomic, retain) UILabel *dateLabel;
-@property (nonatomic, retain) UILabel *messageLabel;
 @property (nonatomic) MessagePtr message;
-@property (nonatomic) CGFloat height;
+
+- (void)dealloc;
 
 - (void)configureWithMessage:(MessagePtr)message;
 

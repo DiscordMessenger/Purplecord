@@ -5,6 +5,8 @@
 #import "GuildListController.h"
 #import "GuildController.h"
 #import "ChannelController.h"
+#import "AvatarCache.h"
+#import "ImageLoader.h"
 
 void Frontend_iOS::OnRequestDone(NetRequest* pRequest)
 {
@@ -162,6 +164,32 @@ std::string Frontend_iOS::GetFormatTimeShorterText()
 	return "%d/%m %H:%M";
 }
 
+void Frontend_iOS::OnAttachmentDownloaded(bool bIsProfilePicture, const uint8_t* pData, size_t nSize, const std::string& additData)
+{
+	int nImSize = bIsProfilePicture ? -1 : 0;
+	bool bHasAlpha = false;
+	UIImage* himg = [ImageLoader convertToBitmap:pData size:nSize resizeToWidth:nImSize andHeight:nImSize];
+
+	if (himg)
+	{
+		[GetAvatarCache() loadedResource:additData];
+		[GetAvatarCache() setImage:additData image:himg];
+		[GetNetworkController() updateAttachmentByID:additData];
+	}
+
+	// store the cached data..
+	std::string final_path = GetCachePath() + "/" + additData;
+	FILE* f = fopen(final_path.c_str(), "wb");
+	if (!f) {
+		DbgPrintF("ERROR: Could not open %s for writing", final_path.c_str());
+		// TODO: error message
+		return;
+	}
+
+	fwrite(pData, 1, nSize, f);
+	fclose(f);
+}
+
 #ifdef USE_DEBUG_PRINTS
 void Frontend_iOS::DebugPrint(const char* fmt, va_list vl)
 {
@@ -286,11 +314,6 @@ void Frontend_iOS::OnGatewayConnectFailure()
 void Frontend_iOS::OnProtobufError(Protobuf::ErrorCode code)
 {
 	ShowMessageBox("Protobuf Error", "Error code " + std::to_string(code));
-}
-
-void Frontend_iOS::OnAttachmentDownloaded(bool bIsProfilePicture, const uint8_t* pData, size_t nSize, const std::string& additData)
-{
-	//TODO
 }
 
 void Frontend_iOS::OnAttachmentFailed(bool bIsProfilePicture, const std::string& additData)

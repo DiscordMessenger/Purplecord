@@ -2,9 +2,11 @@
 #import "LoginPageController.h"
 #import "NetworkController.h"
 #import "UIColorScheme.h"
+#import "AvatarCache.h"
 
 @interface AppDelegate() {
 	NetworkController* networkController;
+	AvatarCache* avatarCache;
 	LoginPageController* mainVC;
 }
 @end
@@ -13,6 +15,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 	networkController = [[NetworkController alloc] init];
+	avatarCache = [[AvatarCache alloc] init];
 	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	window = [[UIWindow alloc] initWithFrame:screenBounds];
@@ -37,6 +40,7 @@
 	[navController release];
 	[window release];
 	[networkController release];
+	[avatarCache release];
 	[super dealloc];
 }
 
