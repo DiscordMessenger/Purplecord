@@ -70,20 +70,20 @@ void CreateDiscordInstanceIfNeeded();
 	// Also, a label above that tells you you should log in.
 	label = [[UILabel alloc] initWithFrame: CGRectMake(21, 30, width - 40, 80)];
 	label.text = @"Welcome to Purplecord!\nBefore you can use this client you must first log in using your token.";
-	label.textAlignment = UITextAlignmentCenter;
+	label.textAlignment = UI_TEXT_ALIGNMENT_CENTER;
 	label.backgroundColor = [UIColorScheme getBackgroundColor];
 	label.textColor = [UIColorScheme getTextColor];
 	label.numberOfLines = 0;
-	label.lineBreakMode = UILineBreakModeWordWrap;
+	label.lineBreakMode = UI_LINE_BREAK_MODE_WORD_WRAP;
 	label.font = [UIFont systemFontOfSize:15];
 	
 	bottomLabel = [[UILabel alloc] initWithFrame:CGRectMake(21, 240, width - 40, 80)];
 	bottomLabel.text = @"";
-	bottomLabel.textAlignment = UITextAlignmentCenter;
+	bottomLabel.textAlignment = UI_TEXT_ALIGNMENT_CENTER;
 	bottomLabel.backgroundColor = [UIColorScheme getBackgroundColor];
 	bottomLabel.textColor = [UIColorScheme getTextColor];
 	bottomLabel.numberOfLines = 0;
-	bottomLabel.lineBreakMode = UILineBreakModeWordWrap;
+	bottomLabel.lineBreakMode = UI_LINE_BREAK_MODE_WORD_WRAP;
 	bottomLabel.font = [UIFont systemFontOfSize:15];
 	
 	// And a button

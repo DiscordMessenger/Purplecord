@@ -221,7 +221,7 @@ bool IsActionMessage(MessageType::eType msgType)
 			messageText
 			sizeWithFont:[MessageItem createMessageTextFont]
 			constrainedToSize:maxMessageSize
-			lineBreakMode:UILineBreakModeWordWrap
+			lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
 		];
 		
 		height += padding * 2 + messageTextSize.height;
@@ -242,13 +242,13 @@ bool IsActionMessage(MessageType::eType msgType)
 		authorText
 		sizeWithFont:[MessageItem createAuthorTextFont]
 		constrainedToSize:maxAuthorSize
-		lineBreakMode:UILineBreakModeClip
+		lineBreakMode:UI_LINE_BREAK_MODE_CLIP
 	];
 	CGSize messageTextSize = [
 		messageText
 		sizeWithFont:[MessageItem createMessageTextFont]
 		constrainedToSize:maxMessageSize
-		lineBreakMode:UILineBreakModeWordWrap
+		lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
 	];
 	
 	height = padding * 2 + paddingIn + authorTextSize.height + messageTextSize.height;
@@ -325,7 +325,7 @@ bool IsActionMessage(MessageType::eType msgType)
 			messageLabel.text
 			sizeWithFont:messageLabel.font
 			constrainedToSize:maxMessageSize
-			lineBreakMode:UILineBreakModeWordWrap
+			lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
 		];
 		
 		messageLabel.frame = CGRectMake(padding, padding, messageTextSize.width, messageTextSize.height);
@@ -363,13 +363,13 @@ bool IsActionMessage(MessageType::eType msgType)
 		authorLabel.text
 		sizeWithFont:authorLabel.font
 		constrainedToSize:maxAuthorSize
-		lineBreakMode:UILineBreakModeClip
+		lineBreakMode:UI_LINE_BREAK_MODE_CLIP
 	];
 	CGSize messageTextSize = [
 		messageLabel.text
 		sizeWithFont:messageLabel.font
 		constrainedToSize:maxMessageSize
-		lineBreakMode:UILineBreakModeWordWrap
+		lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
 	];
 	
 	height = padding * 2 + paddingIn + authorTextSize.height + messageTextSize.height;

@@ -30,7 +30,25 @@ Purplecord is currently not a full featured client.  The following features are 
 
 ## Attributions
 
-Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on such ancient iOS versions!
+Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on iOS 3!
+
+**NOTE**: Replacing "ios3" with "ios6", "iPhoneOS3.0.sdk" with "iPhoneOS6.0.sdk" and "iOS 3" with "iOS 6" in the
+following build guide should work.  However, you must pass `BUILD_FOR_IOS3=no` to this project's makefile to build
+for iOS 6 and later (ARMv7).  AArch64 compilation is currently not supported because I don't have a 64-bit iDevice.
+
+The iOS 3 build was tested on iPhone 3G running iPhone OS 3.1.3.
+The iOS 6 build was tested on iPhone 4 running iOS 7.0.
+
+The **iOS 3 build** should run on the following Apple devices, but currently untested:
+- iPhone (iPhone OS 3.0 to 3.1.3)
+- iPhone 3G (iPhone OS 3.0 to 4.2.1) [tested on iPhone OS 3.1.3]
+- iPhone 3GS (iPhoneOS 3.0 to iOS 6.1.6)
+- iPhone 4 (iOS 4.0 - iOS 6.1.3)
+
+The **iOS 6 build** should run on the following Apple devices, but currently untested:
+- iPhone 3GS (iOS 6.0 to 6.1.6)
+- iPhone 4 (iOS 4.0 to 7.1.2) [tested on iOS 7.0]
+- Any future iPhone running an iOS version lower than iOS 11, because iOS 11 dropped 32-bit app support
 
 ## Building
 
@@ -82,13 +100,13 @@ git clone https://github.com/DiscordMessenger/mbedtls
 
 Then, build it:
 ```
-mkdir build && cd build
+mkdir build-ios3 && cd build-ios3
 cmake .. \
-	-DCMAKE_TOOLCHAIN_FILE=../iphoneos.cmake \
+	-DCMAKE_TOOLCHAIN_FILE=../iphoneos3.cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DENABLE_TESTING=OFF \
 	-DENABLE_PROGRAMS=OFF \
-	-DCMAKE_INSTALL_PREFIX=$CD/../install
+	-DCMAKE_INSTALL_PREFIX=$CD/../install-ios3
 make -j$(nproc)
 ```
 
@@ -117,17 +135,19 @@ to between `mbedtls_ssl_init` and `mbedtls_ssl_setup`.
 
 Copy `iphoneos.cmake` from the mbedtls checkout directory, then configure and make:
 ```bash
-cmake .. -DCMAKE_TOOLCHAIN_FILE=../iphoneos.cmake \
+mkdir build-ios3 && cd build-ios3
+
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../iphoneos3.cmake \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX=$CD/../install \
+  -DCMAKE_INSTALL_PREFIX=$CD/../install-ios3 \
   -DCURL_USE_MBEDTLS=ON \
   -DBUILD_SHARED_LIBS=OFF \
   -DBUILD_CURL_EXE=OFF \
   -DCURL_STATICLIB=ON \
   -DMBEDTLS_INCLUDE_DIRS=$PURPLECORD_MBEDTLS_PATH/include \
-  -DMBEDTLS_LIBRARY=$PURPLECORD_MBEDTLS_PATH/build/library/libmbedtls.a \
-  -DMBEDX509_LIBRARY=$PURPLECORD_MBEDTLS_PATH/build/library/libmbedx509.a \
-  -DMBEDCRYPTO_LIBRARY=$PURPLECORD_MBEDTLS_PATH/build/library/libmbedcrypto.a \
+  -DMBEDTLS_LIBRARY=$PURPLECORD_MBEDTLS_PATH/build-ios3/library/libmbedtls.a \
+  -DMBEDX509_LIBRARY=$PURPLECORD_MBEDTLS_PATH/build-ios3/library/libmbedx509.a \
+  -DMBEDCRYPTO_LIBRARY=$PURPLECORD_MBEDTLS_PATH/build-ios3/library/libmbedcrypto.a \
   -DCURL_DISABLE_FTP=ON \
   -DCURL_DISABLE_FILE=ON \
   -DCURL_DISABLE_LDAP=ON \

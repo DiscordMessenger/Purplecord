@@ -1,10 +1,40 @@
 # Makefile for Purplecord
-TARGET := iphone:clang:3.0:3.0
+BUILD_FOR_IOS3 ?= no
+
 TARGET_CC := clang-22
 TARGET_CXX := clang-22
 TARGET_LD := $(THEOS)/toolchain/linux/iphone/bin/clang++ -v
 INSTALL_TARGET_PROCESSES = Purplecord
-ARCHS = armv6
+
+# This decides what toolchains and includes to use.
+ifeq ($(BUILD_FOR_IOS3), yes)
+	TARGET := iphone:clang:3.0:3.0
+	ARCHS = armv6
+	EXTRA_INCLUDES = \
+		-DIPHONE_OS_3 \
+		-stdlib=libc++ \
+		-I$(THEOS)/sdks/iPhoneOS3.0.sdk/usr/include/c++/4.2.1/$(ARCHS)-apple-darwin9 \
+		-I$(THEOS)/libcxx-hack/usr/include \
+		-I$(THEOS)/libcxx-hack/usr/include/c++/v1
+	EXTRA_LDFLAGS = \
+		-L$(THEOS)/libcxx-hack/usr/lib \
+		-lc++ \
+		-lc++abi
+	BUILD_PATH = build-ios3
+else
+	TARGET := iphone:clang:6.0:6.0
+	ARCHS = armv7
+	EXTRA_INCLUDES = \
+		-DIPHONE_OS_6 \
+		-I$(THEOS)/libcxx-hack-ios6/dest/iphoneos-armv7/libcxx/usr/include \
+		-I$(THEOS)/libcxx-hack-ios6/dest/iphoneos-armv7/libcxx/usr/include/c++/v1
+	EXTRA_LDFLAGS = \
+		-L$(THEOS)/libcxx-hack-ios6/lipo \
+		-lc++ \
+		-lc++abi \
+		-lemutls
+	BUILD_PATH = build-ios6
+endif
 
 PURPLECORD_MBEDTLS_PATH ?= /mnt/c/DiscordMessenger/mbedtls-apple
 PURPLECORD_LIBCURL_PATH ?= /mnt/c/DiscordMessenger/libcurl-apple
@@ -26,11 +56,7 @@ APPLICATION_NAME = Purplecord
 #
 # Hack: Disable the error where libstdc++ headers can't be found.  I'm providing them here:
 CPPHACKS = \
-	-target armv6-apple-darwin9 \
-	-stdlib=libc++ \
-	-I$(THEOS)/sdks/iPhoneOS3.0.sdk/usr/include/c++/4.2.1/$(ARCHS)-apple-darwin9 \
-	-I$(THEOS)/libcxx-hack/usr/include \
-	-I$(THEOS)/libcxx-hack/usr/include/c++/v1 \
+	$(EXTRA_INCLUDES) \
 	-I$(PURPLECORD_MBEDTLS_PATH)/include \
 	-I$(PURPLECORD_LIBCURL_PATH)/include \
 	-fno-tree-vectorize \
@@ -38,11 +64,9 @@ CPPHACKS = \
 
 # NOTE: -Wl,-w hides incompat warnings for now ...
 LDHACKS = \
-	-L$(THEOS)/libcxx-hack/usr/lib \
-	-L$(PURPLECORD_MBEDTLS_PATH)/build/library \
-	-L$(PURPLECORD_LIBCURL_PATH)/build/lib \
-	-lc++ \
-	-lc++abi \
+	$(EXTRA_LDFLAGS) \
+	-L$(PURPLECORD_MBEDTLS_PATH)/$(BUILD_PATH)/library \
+	-L$(PURPLECORD_LIBCURL_PATH)/$(BUILD_PATH)/lib \
 	-lmbedtls \
 	-lmbedx509 \
 	-lmbedcrypto \

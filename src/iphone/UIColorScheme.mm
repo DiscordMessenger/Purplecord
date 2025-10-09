@@ -13,7 +13,11 @@
 	if ([self useDarkMode])
 		return [UIColor blackColor];
 	else
+#ifdef IPHONE_OS_3
 		return [UIColor groupTableViewBackgroundColor];
+#else
+		return [UIColor underPageBackgroundColor];
+#endif
 }
 
 + (UIColor*)getTextBackgroundColor
