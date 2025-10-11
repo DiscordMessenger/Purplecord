@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #import "LoginPageController.h"
 #import "GuildListController.h"
+#import "AppDelegate.h"
 #import "UIColorScheme.h"
 
 #include "../discord/LocalSettings.hpp"
@@ -122,25 +123,23 @@ void CreateDiscordInstanceIfNeeded();
 - (void)sendToGuildList
 {
 	GuildListController* controller = [[GuildListController alloc] init];
-	UINavigationController* navController = [[UINavigationController alloc] initWithRootViewController:controller];
 	
-	if ([UIColorScheme useDarkMode])
-		navController.navigationBar.barStyle = UIBarStyleBlack;
+	AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
+	UINavigationController *navController = appDelegate.navController;
 	
-	UIWindow* window = [UIApplication sharedApplication].keyWindow;
-	if (!window) {
-		window = [[UIApplication sharedApplication].windows objectAtIndex:0];
-	}
-	
-	[window addSubview:navController.view];
-	[window makeKeyAndVisible];
+	[navController setViewControllers:@[controller] animated:NO];
 	
 	[UIView beginAnimations:nil context:NULL];
 	[UIView setAnimationDuration:0.5];
-	[UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:YES];
 	
-	[self.view removeFromSuperview];
+	[UIView
+		setAnimationTransition:UIViewAnimationTransitionFlipFromLeft
+		forView:navController.view
+		cache:YES];
+	
 	[UIView commitAnimations];
+	
+	[controller release];
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {

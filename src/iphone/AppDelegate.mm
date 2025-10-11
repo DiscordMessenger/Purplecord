@@ -13,6 +13,8 @@
 
 @implementation AppDelegate
 
+@synthesize navController;
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 	networkController = [[NetworkController alloc] init];
 	avatarCache = [[AvatarCache alloc] init];

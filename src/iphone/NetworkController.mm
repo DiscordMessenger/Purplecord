@@ -2,6 +2,7 @@
 #import "LoginPageController.h"
 #import "GuildListController.h"
 #import "ChannelController.h"
+#import "AppDelegate.h"
 #import "UIColorScheme.h"
 
 #include "HTTPClient_curl.h"
@@ -133,30 +134,23 @@ NetworkController* GetNetworkController() {
 	
 	// TODO: Test this
 	LoginPageController* controller = [[LoginPageController alloc] init];
-	UINavigationController* navController = [[UINavigationController alloc] initWithRootViewController:controller];
 	
-	if ([UIColorScheme useDarkMode])
-		navController.navigationBar.barStyle = UIBarStyleBlack;
+	AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
+	UINavigationController *navController = appDelegate.navController;
 	
-	UIWindow* window = [UIApplication sharedApplication].keyWindow;
-	if (!window) {
-		window = [[UIApplication sharedApplication].windows objectAtIndex:0];
-	}
-	
-    NSArray *oldSubviews = [[window.subviews copy] autorelease];
-	
-	[window addSubview:navController.view];
-	[window makeKeyAndVisible];
+	[navController setViewControllers:@[controller] animated:NO];
 	
 	[UIView beginAnimations:nil context:NULL];
 	[UIView setAnimationDuration:0.5];
-	[UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:YES];
 	
-    for (UIView *v in oldSubviews) {
-        [v removeFromSuperview];
-    }
+	[UIView
+		setAnimationTransition:UIViewAnimationTransitionFlipFromLeft
+		forView:navController.view
+		cache:YES];
 	
 	[UIView commitAnimations];
+	
+	[controller release];
 }
 
 - (void)setLoginStage:(NSString*)stage
