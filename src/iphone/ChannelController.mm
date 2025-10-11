@@ -72,6 +72,7 @@ ChannelController* GetChannelController() {
 	std::vector<MessagePtr> m_messages;
 	
 	bool m_doNotLoadMessages;
+	bool m_forceReloadAttachments;
 }
 @end
 
@@ -437,16 +438,44 @@ ChannelController* GetChannelController() {
 
 - (void)updateAttachmentByID:(const std::string&)rid
 {
+	DbgPrintF("updateAttachmentByID: %s", rid.c_str());
+	
 	// TODO: check for attachments too
 	[tableView beginUpdates];
+	
+	m_forceReloadAttachments = true;
 	
 	for (size_t i = 0; i < m_messages.size(); i++)
 	{
 		auto& msg = m_messages[i];
+		bool update = false;
 		
 		if ([GetAvatarCache() makeIdentifier:msg->m_avatar] == rid)
+			update = true;
+		
+		for (auto& attach : msg->m_attachments)
+		{
+			if (update)
+				continue;
+			
+			if (!attach.IsImage())
+				continue;
+			
+			std::string crid = [GetAvatarCache() makeIdentifier:(
+				std::to_string(attach.m_id) +
+				attach.m_proxyUrl +
+				attach.m_actualUrl
+			)];
+			
+			if (rid == crid)
+				update = true;
+		}
+		
+		if (update)
 			[self onUpdatedRowAtIndex:i animated:NO];
 	}
+	
+	m_forceReloadAttachments = false;
 	
 	[tableView endUpdates];
 }
@@ -477,7 +506,7 @@ ChannelController* GetChannelController() {
 		item = [[[MessageItem alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId] autorelease];
 	
 	MessagePtr message = m_messages[indexPath.row];
-	[item configureWithMessage:message];
+	[item configureWithMessage:message andReload:m_forceReloadAttachments];
 	
 	item.selectionStyle = UITableViewCellSelectionStyleGray;
 	

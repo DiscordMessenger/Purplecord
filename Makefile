@@ -38,6 +38,7 @@ endif
 
 PURPLECORD_MBEDTLS_PATH ?= /mnt/c/DiscordMessenger/mbedtls-apple
 PURPLECORD_LIBCURL_PATH ?= /mnt/c/DiscordMessenger/libcurl-apple
+PURPLECORD_LIBWEBP_PATH ?= /mnt/c/DiscordMessenger/libwebp
 
 # It is not recommended to build with debug mode.
 #FINALPACKAGE ?= 1
@@ -59,6 +60,7 @@ CPPHACKS = \
 	$(EXTRA_INCLUDES) \
 	-I$(PURPLECORD_MBEDTLS_PATH)/include \
 	-I$(PURPLECORD_LIBCURL_PATH)/include \
+	-I$(PURPLECORD_LIBWEBP_PATH)/src \
 	-fno-tree-vectorize \
 	-fno-vectorize
 
@@ -67,10 +69,12 @@ LDHACKS = \
 	$(EXTRA_LDFLAGS) \
 	-L$(PURPLECORD_MBEDTLS_PATH)/$(BUILD_PATH)/library \
 	-L$(PURPLECORD_LIBCURL_PATH)/$(BUILD_PATH)/lib \
+	-L$(PURPLECORD_LIBWEBP_PATH)/$(BUILD_PATH) \
 	-lmbedtls \
 	-lmbedx509 \
 	-lmbedcrypto \
 	-lcurl \
+	-lwebp \
 	-Wl,-w
 
 WARNINGDISABLES = \

@@ -6,16 +6,33 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image.h>
 #include <stb/stb_image_write.h>
+#include <webp/decode.h>
 
 @implementation ImageLoader
 
 + (UIImage*)decodeWebp:(const uint8_t*)data size:(size_t)size
 {
-#ifdef WEBP_SUP
-#error TODO: Implement webp support
-#else
-	return nil;
-#endif
+	int width = 0, height = 0;
+	uint8_t* dataWebp = WebPDecodeBGRA(data, size, &width, &height);
+	if (!dataWebp)
+		return nil;
+
+	// Annoyingly you can't just create a UIImage with raw data.
+	// Have to do this instead.
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	CGContextRef ctx = CGBitmapContextCreate(
+		(void *)dataWebp, width, height, 8, width * 4,
+		colorSpace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast);
+
+	CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
+	UIImage *image = [UIImage imageWithCGImage:cgImage];
+
+	CGImageRelease(cgImage);
+	CGContextRelease(ctx);
+	CGColorSpaceRelease(colorSpace);
+	
+	WebPFree(dataWebp);
+	return image;
 }
 
 + (UIImage*)decodeWithStbImage:(const uint8_t*)data size:(size_t)size

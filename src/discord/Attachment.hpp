@@ -31,7 +31,7 @@ public:
 		m_previewWidth = m_width;
 		m_previewHeight = m_height;
 		int maxWidth  = 300; // XXX hardcoded
-		int maxHeight = 300; // XXX hardcoded
+		int maxHeight = 200; // XXX hardcoded
 		if (m_previewHeight > maxHeight) {
 			m_previewWidth = m_previewWidth * maxHeight / m_previewHeight;
 			m_previewHeight = maxHeight;

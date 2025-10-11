@@ -170,10 +170,36 @@ make -j$(nproc)
 
 NOTE: If you get an error that says `SystemFramework was not found`, edit CMakeLists.txt and remove the dependency on SystemFramework as we don't have it.
 
-
 Define the environment variables:
 ```
 PURPLECORD_LIBCURL_PATH=[your curl checkout path]
+```
+
+### Building Libwebp
+
+TODO: More Tutorial
+
+```
+mkdir build-ios3 && cd build-ios3
+
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../iphoneos3.cmake \
+	-DWEBP_ENABLE_SIMD=OFF \
+	-DWEBP_BUILD_CWEBP=OFF \
+	-DWEBP_BUILD_DWEBP=OFF \
+	-DWEBP_BUILD_GIF2WEBP=OFF \
+	-DWEBP_BUILD_IMG2WEBP=OFF \
+	-DWEBP_BUILD_VWEBP=OFF \
+	-DWEBP_BUILD_WEBPINFO=OFF \
+	-DWEBP_BUILD_LIBWEBPMUX=OFF \
+	-DWEBP_BUILD_WEBPMUX=OFF \
+	-DWEBP_BUILD_EXTRAS=OFF \
+	-DWEBP_BUILD_WEBP_JS=OFF \
+	-DWEBP_BUILD_FUZZTEST=OFF \
+	-DWEBP_USE_THREAD=OFF
+
+make -j$(nproc)
+
+export PURPLECORD_LIBWEBP_PATH=[your libwebp checkout path]
 ```
 
 ### Hack to make the linker use static libc++

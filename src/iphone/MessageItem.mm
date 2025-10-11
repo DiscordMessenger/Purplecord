@@ -5,6 +5,20 @@
 #include "../discord/DiscordInstance.hpp"
 #include "../discord/Util.hpp"
 
+AttachedImage::~AttachedImage()
+{
+	if (imageView)
+		[imageView release];
+}
+
+void AttachedImage::SetImageView(UIImageView* iv)
+{
+	if (imageView)
+		[imageView release];
+	
+	imageView = [iv retain];
+}
+
 static const char* const welcomeTexts[] = {
 	"$ joined the party.",
 	"$ is here.",
@@ -58,6 +72,15 @@ bool IsActionMessage(MessageType::eType msgType)
 
 @synthesize message;
 
+- (void)tearDownImages
+{
+	if (!attachedImages)
+		return;
+	
+	delete[] attachedImages;
+	attachedImages = nullptr;
+}
+
 - (void)dealloc
 {
 	[self removeExtraViewsIfNeeded];
@@ -66,6 +89,9 @@ bool IsActionMessage(MessageType::eType msgType)
 	if (messageLabel) [messageLabel release];
 	if (imageView) [imageView release];
 	if (spinner) [spinner release];
+	
+	[self tearDownImages];
+	
 	[super dealloc];
 }
 
@@ -252,10 +278,24 @@ bool IsActionMessage(MessageType::eType msgType)
 	];
 	
 	height = padding * 2 + paddingIn + authorTextSize.height + messageTextSize.height;
+	
+	// for each embed inside the message, add its height.
+	for (auto& attach : message->m_attachments)
+	{
+		if (!attach.IsImage())
+		{
+			// TODO: generate an embed for it.  Skip for now
+			continue;
+		}
+		
+		attach.UpdatePreviewSize();
+		height += padding + attach.m_previewHeight;
+	}
+	
 	return height;
 }
 
-- (void)configureWithMessage:(MessagePtr)_message
+- (void)configureWithMessage:(MessagePtr)_message andReload:(bool)reloadAttachments
 {
 	message = _message;
 	
@@ -268,9 +308,11 @@ bool IsActionMessage(MessageType::eType msgType)
 	
 	UIImage* image = nil;
 	
+	CGRect screenBounds = [[UIScreen mainScreen] bounds];
+	
 	CGFloat padding = OUT_MESSAGE_PADDING;
 	CGFloat paddingIn = IN_MESSAGE_PADDING;
-	CGFloat cellWidth = self.contentView.bounds.size.width;
+	CGFloat cellWidth = screenBounds.size.width;
 	CGSize maxMessageSize = CGSizeMake(cellWidth - padding * 2, 99999.0);
 	
 	if (IsActionMessage(message->m_type))
@@ -384,6 +426,94 @@ bool IsActionMessage(MessageType::eType msgType)
 	imageView = [[UIImageView alloc] initWithImage:image];
 	imageView.frame = CGRectMake(padding, padding + (authorTextSize.height - pfpSize) / 2, pfpSize, pfpSize);
 	[self.contentView addSubview:imageView];
+	
+	bool needToRegenerate = reloadAttachments;
+	
+	if (attachedImagesCount != message->m_attachments.size())
+		needToRegenerate = true;
+	
+	if (!needToRegenerate)
+	{
+		size_t idx = 0;
+		for (auto& attach : message->m_attachments)
+		{
+			if (!attach.IsImage())
+				continue;
+			
+			std::string rid = [GetAvatarCache() makeIdentifier:(
+				std::to_string(attach.m_id) +
+				attach.m_proxyUrl +
+				attach.m_actualUrl
+			)];
+			
+			if (attachedImages[idx].hash != rid)
+			{
+				needToRegenerate = true;
+				break;
+			}
+			
+			idx++;
+		}
+	}
+	
+	if (needToRegenerate)
+	{
+		[self tearDownImages];
+		
+		attachedImagesCount = message->m_attachments.size();
+		attachedImages = new AttachedImage[attachedImagesCount];
+		
+		size_t idx = 0;
+		for (auto& attach : message->m_attachments)
+		{
+			if (!attach.IsImage())
+			{
+				// TODO: generate an embed for it.  Skip for now
+				continue;
+			}
+			
+			std::string rid = [GetAvatarCache() makeIdentifier:(
+				std::to_string(attach.m_id) +
+				attach.m_proxyUrl +
+				attach.m_actualUrl
+			)];
+			
+			AttachedImage& atimg = attachedImages[idx];
+			
+			std::string url = attach.m_proxyUrl;
+			if (attach.PreviewDifferent())
+			{
+				bool hasQMark = false;
+				for (auto ch : url) {
+					if (ch == '?') {
+						hasQMark = true;
+						break;
+					}
+				}
+
+				if (url.empty() || url[url.size() - 1] != '&' || url[url.size() - 1] != '?')
+					url += hasQMark ? "&" : "?";
+
+				url += "width=" + std::to_string(attach.m_previewWidth);
+				url += "&height=" + std::to_string(attach.m_previewHeight);
+			}
+
+			DbgPrintF("This image's attachment ID is %s.  Url is %s.", rid.c_str(), attach.m_proxyUrl.c_str());
+			[GetAvatarCache() addImagePlace:rid imagePlace:eImagePlace::ATTACHMENTS place:url imageId:attach.m_id sizeOverride:0];
+			
+			image = [GetAvatarCache() getImage:rid];
+			
+			imageView = [[UIImageView alloc] initWithImage:image];
+			imageView.frame = CGRectMake(padding, height, attach.m_previewWidth, attach.m_previewHeight);
+			[self.contentView addSubview:imageView];
+			
+			atimg.SetImageView(imageView);
+			[imageView release];
+			
+			idx++;
+			height += padding + attach.m_previewHeight;
+		}
+	}
 }
 
 @end

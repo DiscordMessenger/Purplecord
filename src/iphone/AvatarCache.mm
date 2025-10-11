@@ -368,13 +368,8 @@ std::string ImagePlace::GetURL() const
 	if (!useOnlySnowflake)
 		url += "/" + place;
 
-	// Add in the webp / png at the end.
-	url += 
-#ifdef WEBP_SUP
-		".webp";
-#else
-		".png";
-#endif // WEBP_SUB
+	// Add in the webp at the end.
+	url += ".webp";
 
 	// Also the size should reflect the active profile picture size.
 	if (!dontAppendSize)
