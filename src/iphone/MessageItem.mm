@@ -11,14 +11,31 @@ AttachedImage::~AttachedImage()
 		[imageView removeFromSuperview];
 		[imageView release];
 	}
+	
+	if (spinnerView) {
+		[spinnerView removeFromSuperview];
+		[spinnerView release];
+	}
 }
 
 void AttachedImage::SetImageView(UIImageView* iv)
 {
-	if (imageView)
+	if (imageView) {
+		[imageView removeFromSuperview];
 		[imageView release];
+	}
 	
 	imageView = iv ? [iv retain] : nil;
+}
+
+void AttachedImage::SetSpinnerView(UIActivityIndicatorView* av)
+{
+	if (spinnerView) {
+		[spinnerView removeFromSuperview];
+		[spinnerView release];
+	}
+	
+	spinnerView = av ? [av retain] : nil;
 }
 
 static const char* const welcomeTexts[] = {
@@ -503,14 +520,28 @@ bool IsActionMessage(MessageType::eType msgType)
 			DbgPrintF("This image's attachment ID is %s.  Url is %s.", rid.c_str(), attach.m_proxyUrl.c_str());
 			[GetAvatarCache() addImagePlace:rid imagePlace:eImagePlace::ATTACHMENTS place:url imageId:attach.m_id sizeOverride:0];
 			
-			image = [GetAvatarCache() getImage:rid];
-			
-			UIImageView* auxImageView = [[UIImageView alloc] initWithImage:image];
-			auxImageView.frame = CGRectMake(padding, height, attach.m_previewWidth, attach.m_previewHeight);
-			[self.contentView addSubview:auxImageView];
-			
-			atimg.SetImageView(auxImageView);
-			[auxImageView release];
+			UIImage* auxImage = [GetAvatarCache() getImageNullable:rid];
+			if (!auxImage)
+			{
+				// TODO: detect error or loading status
+				UIActivityIndicatorView* auxSpinner;
+				auxSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+				auxSpinner.center = CGPointMake(padding + attach.m_previewWidth / 2, height + attach.m_previewHeight / 2);
+				[self.contentView addSubview:auxSpinner];
+				
+				atimg.SetSpinnerView(auxSpinner);
+				[auxSpinner startAnimating];
+				[auxSpinner release];
+			}
+			else
+			{
+				UIImageView* auxImageView = [[UIImageView alloc] initWithImage:auxImage];
+				auxImageView.frame = CGRectMake(padding, height, attach.m_previewWidth, attach.m_previewHeight);
+				[self.contentView addSubview:auxImageView];
+				
+				atimg.SetImageView(auxImageView);
+				[auxImageView release];
+			}
 			
 			idx++;
 			height += padding + attach.m_previewHeight;

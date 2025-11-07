@@ -5,9 +5,11 @@ struct AttachedImage
 {
 	std::string hash;
 	UIImageView* imageView = nullptr;
+	UIActivityIndicatorView* spinnerView = nullptr;
 	
 	~AttachedImage();
 	void SetImageView(UIImageView* iv);
+	void SetSpinnerView(UIActivityIndicatorView* av);
 };
 
 @interface MessageItem : UITableViewCell
