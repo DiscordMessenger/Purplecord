@@ -76,7 +76,7 @@ ChannelController* GetChannelController() {
 	
 	bool m_bContextMenuActive;
 	NSIndexPath* m_tableIndexPath;
-	Snowflake m_contextMenuMessage;
+	MessagePtr m_contextMenuMessage;
 }
 @end
 
@@ -643,6 +643,7 @@ ChannelController* GetChannelController() {
 	
 	m_tableIndexPath = [indexPath retain];
 	m_bContextMenuActive = true;
+	m_contextMenuMessage = msg;
 	
 	//[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
@@ -659,23 +660,30 @@ ChannelController* GetChannelController() {
 	// TODO: Hard-coded button names.  But I honestly don't care.
 	if ([buttonName isEqualToString:DELETE_NAME])
 	{
-		DbgPrintF("Delete!");
+		// TODO: Add confirmation.  For delete confirmations iOS usually just
+		// shows an action sheet.
+		
+		GetDiscordInstance()->RequestDeleteMessage(self->channelID, m_contextMenuMessage->m_snowflake);
+	}
+	else if ([buttonName isEqualToString:COPY_TEXT_NAME])
+	{
+		UIPasteboard *pb = [UIPasteboard generalPasteboard];
+		pb.string = [NSString stringWithUTF8String:m_contextMenuMessage->m_message.c_str()];
 	}
 	else if ([buttonName isEqualToString:EDIT_NAME])
 	{
+		// TODO
 		DbgPrintF("Edit!");
 	}
 	else if ([buttonName isEqualToString:REPLY_NAME])
 	{
+		// TODO
 		DbgPrintF("Reply!");
 	}
 	else if ([buttonName isEqualToString:PIN_NAME])
 	{
+		// TODO
 		DbgPrintF("Pin!");
-	}
-	else if ([buttonName isEqualToString:COPY_TEXT_NAME])
-	{
-		DbgPrintF("Copy Text!");
 	}
 	
 	m_bContextMenuActive = false;
