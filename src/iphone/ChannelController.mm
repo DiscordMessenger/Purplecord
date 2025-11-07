@@ -838,6 +838,8 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	UITableViewCell* cell = [tableView cellForRowAtIndexPath:indexPath];
 	if (!cell) return;
 	
+	[self.view endEditing:YES];
+	
 	MessageCell* item = (MessageCell*) cell;
 	MessageItemPtr msgItem = item.messageItem;
 	MessagePtr msg = msgItem->m_msg;

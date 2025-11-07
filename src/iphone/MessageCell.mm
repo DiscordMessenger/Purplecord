@@ -339,7 +339,7 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	
 	CGFloat pfpSize = GetProfilePictureSize();
 	CGFloat actualPaddingIn = paddingIn;
-	CGSize authorTextSize = CGSizeMake(0, 0), messageTextSize;
+	CGSize authorTextSize = CGSizeMake(0, 0), messageTextSize = CGSizeMake(0, 0);
 	
 	messageText = [NSString stringWithUTF8String:message->m_message.c_str()];
 	
@@ -355,20 +355,33 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 			lineBreakMode:UI_LINE_BREAK_MODE_CLIP
 		];
 	}
-	else
+	else if (!showAuthorAndDate)
 	{
 		actualPaddingIn = 0.0f;
 		paddingY = paddingIn;
 	}
 	
-	messageTextSize = [
-		messageText
-		sizeWithFont:[MessageCell createMessageTextFont]
-		constrainedToSize:maxMessageSize
-		lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
-	];
+	if (message->m_message.size())
+	{
+		messageTextSize = [
+			messageText
+			sizeWithFont:[MessageCell createMessageTextFont]
+			constrainedToSize:maxMessageSize
+			lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
+		];
+	}
+	else if (!showAuthorAndDate)
+	{
+		actualPaddingIn = 0.0f;
+		paddingEnd = 0.0f;
+	}
 	
-	height = paddingY + paddingEnd + actualPaddingIn + authorTextSize.height + messageTextSize.height;
+	height = paddingY + actualPaddingIn + authorTextSize.height + messageTextSize.height;
+	
+	if (message->m_attachments.size() != 0)
+		height += paddingIn;
+	else
+		height += paddingEnd;
 	
 	// for each embed inside the message, add its height.
 	for (auto& attach : message->m_attachments)
@@ -514,7 +527,7 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	}
 	
 	CGFloat pfpSize = GetProfilePictureSize();
-	CGSize authorTextSize = CGSizeMake(0, 0), messageTextSize;
+	CGSize authorTextSize = CGSizeMake(0, 0), messageTextSize = CGSizeMake(0, 0);
 	
 	if (showAuthorAndDate)
 	{
@@ -528,14 +541,27 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 		];
 	}
 	
-	messageTextSize = [
-		messageLabel.text
-		sizeWithFont:messageLabel.font
-		constrainedToSize:maxMessageSize
-		lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
-	];
+	if (message->m_message.size())
+	{
+		messageTextSize = [
+			messageLabel.text
+			sizeWithFont:messageLabel.font
+			constrainedToSize:maxMessageSize
+			lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
+		];
+	}
+	else if (!showAuthorAndDate)
+	{
+		actualPaddingIn = 0.0f;
+		paddingEnd = 0.0f;
+	}
 	
-	height = paddingY + paddingEnd + actualPaddingIn + authorTextSize.height + messageTextSize.height;
+	height = paddingY + actualPaddingIn + authorTextSize.height + messageTextSize.height;
+	
+	if (message->m_attachments.size() != 0)
+		height += paddingIn;
+	else
+		height += paddingEnd;
 	
 	messageLabel.frame = CGRectMake(padding, paddingY + actualPaddingIn + authorTextSize.height, messageTextSize.width, messageTextSize.height);
 	
