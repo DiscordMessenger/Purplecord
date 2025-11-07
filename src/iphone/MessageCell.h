@@ -1,5 +1,6 @@
 #import <UIKit/UIKit.h>
 #include "../discord/Message.hpp"
+#include "MessageItem.h"
 
 struct AttachedImage
 {
@@ -26,16 +27,16 @@ bool IsReplyableActionMessage(MessageType::eType msgType);
 	AttachedImage* attachedImages;
 	size_t attachedImagesCount;
 	UIActivityIndicatorView* spinner;
-	MessagePtr message;
+	MessageItemPtr messageItem;
 	CGFloat height;
 }
 
-@property (nonatomic) MessagePtr message;
+@property (nonatomic) MessageItemPtr messageItem;
 
 - (void)dealloc;
 
-- (void)configureWithMessage:(MessagePtr)message andReload:(bool)reloadAttachments;
+- (void)configureWithMessage:(MessageItemPtr)messageItem andReload:(bool)reloadAttachments;
 
-+ (CGFloat)computeHeightForMessage:(MessagePtr)message;
++ (CGFloat)computeHeightForMessage:(MessageItemPtr)messageItem;
 
 @end

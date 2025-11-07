@@ -69,14 +69,14 @@ ChannelController* GetChannelController() {
 	
 	Channel* pChannel;
 	
-	std::vector<MessagePtr> m_messages;
+	std::vector<MessageItemPtr> m_messages;
 	
 	bool m_doNotLoadMessages;
 	bool m_forceReloadAttachments;
 	
 	bool m_bContextMenuActive;
 	NSIndexPath* m_tableIndexPath;
-	MessagePtr m_contextMenuMessage;
+	MessageItemPtr m_contextMenuMessage;
 	
 	bool m_bAcknowledgeNow;
 }
@@ -264,8 +264,26 @@ ChannelController* GetChannelController() {
 	
 	// TODO: Keep the scroll position
 	// TODO: Imitate what DM does
+	
+	std::map<Snowflake, MessageItemPtr> oldMessagePointers;
+	for (auto& message : m_messages)
+		oldMessagePointers[message->m_msg->m_snowflake] = message;
+	
 	m_messages.clear();
-	GetMessageCache()->GetLoadedMessages(channelID, guildID, m_messages);
+	
+	std::vector<MessagePtr> messages;
+	GetMessageCache()->GetLoadedMessages(channelID, guildID, messages);
+	
+	for (auto& message : messages)
+	{
+		auto messageItem = oldMessagePointers[message->m_snowflake];
+		if (!messageItem)
+			messageItem = MakeMessageItem(message);
+		
+		m_messages.push_back(messageItem);
+	}
+	
+	messages.clear();
 	
 	m_doNotLoadMessages = true;
 	
@@ -367,15 +385,15 @@ ChannelController* GetChannelController() {
 		return;
 	}
 	
-	m_messages.push_back(message);
+	m_messages.push_back(MakeMessageItem(message));
 	[self onAddedRowAtIndex:m_messages.size() - 1 animated:YES];
 	[self scrollToBottomIfNeeded];
 }
 
 - (void)removeMessage:(Snowflake)messageID
 {
-	auto iter = std::find_if(m_messages.begin(), m_messages.end(), [messageID] (MessagePtr ptr) {
-		return ptr->m_snowflake == messageID;
+	auto iter = std::find_if(m_messages.begin(), m_messages.end(), [messageID] (MessageItemPtr ptr) {
+		return ptr->m_msg->m_snowflake == messageID;
 	});
 	
 	if (iter == m_messages.end())
@@ -393,8 +411,8 @@ ChannelController* GetChannelController() {
 
 - (void)updateMessageById:(Snowflake)messageID message:(MessagePtr)message
 {
-	auto iter = std::find_if(m_messages.begin(), m_messages.end(), [messageID] (MessagePtr ptr) {
-		return ptr->m_snowflake == messageID;
+	auto iter = std::find_if(m_messages.begin(), m_messages.end(), [messageID] (MessageItemPtr ptr) {
+		return ptr->m_msg->m_snowflake == messageID;
 	});
 	
 	if (iter == m_messages.end())
@@ -409,7 +427,7 @@ ChannelController* GetChannelController() {
 		return;
 	}
 	
-	*iter = message;
+	*iter = MakeMessageItem(message);
 	
 	size_t index = std::distance(m_messages.begin(), iter);
 	[self onUpdatedRowAtIndex:index animated:NO];
@@ -427,7 +445,7 @@ ChannelController* GetChannelController() {
 	
 	for (size_t i = 0; i < m_messages.size(); i++)
 	{
-		auto& msg = m_messages[i];
+		auto& msg = m_messages[i]->m_msg;
 		if (msg->m_author_snowflake == 0 || msg->IsWebHook())
 			continue;
 		
@@ -452,7 +470,7 @@ ChannelController* GetChannelController() {
 	
 	for (size_t i = 0; i < m_messages.size(); i++)
 	{
-		auto& msg = m_messages[i];
+		auto& msg = m_messages[i]->m_msg;
 		bool update = false;
 		
 		if ([GetAvatarCache() makeIdentifier:msg->m_avatar] == rid)
@@ -510,7 +528,7 @@ ChannelController* GetChannelController() {
 	if (!item)
 		item = [[[MessageCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId] autorelease];
 	
-	MessagePtr message = m_messages[indexPath.row];
+	MessageItemPtr message = m_messages[indexPath.row];
 	[item configureWithMessage:message andReload:m_forceReloadAttachments];
 	
 	item.selectionStyle = UITableViewCellSelectionStyleGray;
@@ -523,7 +541,7 @@ ChannelController* GetChannelController() {
 	if (indexPath.row < 0 || indexPath.row >= (int) m_messages.size())
 		return nil;
 	
-	MessagePtr message = m_messages[indexPath.row];
+	MessageItemPtr message = m_messages[indexPath.row];
 	if (message->m_cachedHeight)
 		return message->m_cachedHeight;
 	
@@ -540,11 +558,9 @@ ChannelController* GetChannelController() {
 	// If the message is a gap, request it
 	MessageCell* item = (MessageCell*) cell;
 	
-	MessagePtr msg = item.message;
+	MessagePtr msg = item.messageItem->m_msg;
 	if (msg->IsLoadGap())
 	{
-		DbgPrintF("Load gap %lld being rendered!", msg->m_snowflake);
-		
 		ScrollDir::eScrollDir sd;
 		switch (msg->m_type) {
 			default:
@@ -578,7 +594,8 @@ ChannelController* GetChannelController() {
 	if (!cell) return;
 	
 	MessageCell* item = (MessageCell*) cell;
-	MessagePtr msg = item.message;
+	MessageItemPtr msgItem = item.messageItem;
+	MessagePtr msg = msgItem->m_msg;
 	
 	Profile* ourPf = GetDiscordInstance()->GetProfile();
 	Channel* pChan = GetDiscordInstance()->GetCurrentChannel();
@@ -646,7 +663,7 @@ ChannelController* GetChannelController() {
 	
 	m_tableIndexPath = [indexPath retain];
 	m_bContextMenuActive = true;
-	m_contextMenuMessage = msg;
+	m_contextMenuMessage = msgItem;
 	
 	//[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
@@ -666,12 +683,12 @@ ChannelController* GetChannelController() {
 		// TODO: Add confirmation.  For delete confirmations iOS usually just
 		// shows an action sheet.
 		
-		GetDiscordInstance()->RequestDeleteMessage(self->channelID, m_contextMenuMessage->m_snowflake);
+		GetDiscordInstance()->RequestDeleteMessage(self->channelID, m_contextMenuMessage->m_msg->m_snowflake);
 	}
 	else if ([buttonName isEqualToString:COPY_TEXT_NAME])
 	{
 		UIPasteboard *pb = [UIPasteboard generalPasteboard];
-		pb.string = [NSString stringWithUTF8String:m_contextMenuMessage->m_message.c_str()];
+		pb.string = [NSString stringWithUTF8String:m_contextMenuMessage->m_msg->m_message.c_str()];
 	}
 	else if ([buttonName isEqualToString:MARK_UNREAD_NAME])
 	{
@@ -679,19 +696,20 @@ ChannelController* GetChannelController() {
 		
 		for (auto iter = m_messages.rbegin(); iter != m_messages.rend(); ++iter)
 		{
-			if ((*iter)->m_snowflake == m_contextMenuMessage->m_snowflake)
+			if ((*iter)->m_msg->m_snowflake == m_contextMenuMessage->m_msg->m_snowflake)
 			{
-				MessagePtr pMsg = *iter;
+				MessageItemPtr pMsg = *iter;
 
 				++iter;
 				if (iter != m_messages.rend())
-					messageBeforeContextMessage = (*iter)->m_snowflake;
+					messageBeforeContextMessage = (*iter)->m_msg->m_snowflake;
 				break;
 			}
 		}
 	
-		if (messageBeforeContextMessage == 0) {
-			uint64_t timeStamp = m_contextMenuMessage->m_snowflake >> 22;
+		if (messageBeforeContextMessage == 0)
+		{
+			uint64_t timeStamp = m_contextMenuMessage->m_msg->m_snowflake >> 22;
 			timeStamp--; // in milliseconds since Discord epoch - irrelevant because we just want to take ONE millisecond
 			messageBeforeContextMessage = timeStamp << 22;
 		}

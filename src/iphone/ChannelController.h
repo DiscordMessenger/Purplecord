@@ -4,6 +4,7 @@
 #include <string>
 #include "../discord/ScrollDir.hpp"
 #include "../discord/Message.hpp"
+#include "MessageItem.h"
 
 @interface ChannelController : UIViewController<
 	UITableViewDataSource,

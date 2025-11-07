@@ -129,7 +129,7 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 
 @implementation MessageCell
 
-@synthesize message;
+@synthesize messageItem;
 
 - (void)tearDownImages
 {
@@ -267,8 +267,10 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 }
 
 // KEEP IN SYNC WITH configureWithMessage!!!
-+ (CGFloat)computeHeightForMessage:(MessagePtr)message
++ (CGFloat)computeHeightForMessage:(MessageItemPtr)messageItem
 {
+	MessagePtr message = messageItem->m_msg;
+	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	
 	CGFloat height = 0.0f;
@@ -366,9 +368,10 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	return height;
 }
 
-- (void)configureWithMessage:(MessagePtr)_message andReload:(bool)reloadAttachments
+- (void)configureWithMessage:(MessageItemPtr)_messageItem andReload:(bool)reloadAttachments
 {
-	message = _message;
+	messageItem = _messageItem;
+	MessagePtr message = messageItem->m_msg;
 	
 	[self removeExtraViewsIfNeeded];
 	
