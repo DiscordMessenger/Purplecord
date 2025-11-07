@@ -561,8 +561,73 @@ ChannelController* GetChannelController() {
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	// TODO
-	[tableView deselectRowAtIndexPath:indexPath animated:YES];
+	UITableViewCell* cell = [tableView cellForRowAtIndexPath:indexPath];
+	if (!cell) return;
+	
+	MessageItem* item = (MessageItem*) cell;
+	MessagePtr msg = item.message;
+	
+	Profile* ourPf = GetDiscordInstance()->GetProfile();
+	Channel* pChan = GetDiscordInstance()->GetCurrentChannel();
+	if (!pChan) return;
+	
+	// Determine the dialog's properties based on the message.
+	std::string messageCutoff = msg->m_message;
+	if (messageCutoff.size() > 50)
+		messageCutoff = messageCutoff.substr(0, 50) + "...";
+	std::string dialogTitle = msg->m_author + ": \"" + messageCutoff + "\"";
+	
+	bool isThisMyMessage   = msg->m_author_snowflake == ourPf->m_snowflake;
+	bool mayManageMessages = pChan->HasPermission(PERM_MANAGE_MESSAGES);
+	bool isActionMessage   = IsActionMessage(msg->m_type) || IsClientSideMessage(msg->m_type);
+	bool isForward         = msg->m_bIsForward;
+
+	bool mayCopy   = !isForward && !isActionMessage;
+	bool mayDelete = isThisMyMessage || mayManageMessages;
+	bool mayEdit   = isThisMyMessage && !isForward && !isActionMessage;
+	bool mayPin    = mayManageMessages;
+	bool maySpeak  = !isActionMessage && !msg->m_message.empty();
+	bool mayReply  = !isActionMessage || IsReplyableActionMessage(msg->m_type);
+
+	// Generate the action sheet for this message.
+	NSString* cancelOption = @"Cancel";
+	NSString* deleteOption = nil;
+	std::vector<NSString*> options;
+	
+	if (mayDelete) deleteOption = @"Delete";
+	if (mayCopy)   options.push_back(@"Copy Text");
+	if (mayEdit)   options.push_back(@"Edit");
+	if (mayPin)    options.push_back(@"Pin");
+	if (mayReply)  options.push_back(@"Reply");
+	
+	options.push_back(@"Cancel");
+	
+	NSString* dialogTitleN = [NSString stringWithUTF8String:dialogTitle.c_str()];
+	
+	UIActionSheet* actionSheet = [[UIActionSheet alloc]
+		initWithTitle:dialogTitleN
+		delegate:self
+		cancelButtonTitle:nil
+		destructiveButtonTitle:deleteOption
+		otherButtonTitles:nil
+	];
+	
+	for (auto& item : options)
+		[actionSheet addButtonWithTitle:item];
+	
+	actionSheet.cancelButtonIndex = [actionSheet numberOfButtons] - 1;
+	
+	[actionSheet showInView:self.view];
+	[actionSheet release];
+	
+	//[tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+	NSString *title = [actionSheet buttonTitleAtIndex:buttonIndex];
+	const char *utf8String = [title UTF8String];
+	DbgPrintF("Clicked: %s", utf8String);
 }
 
 - (void)dealloc {

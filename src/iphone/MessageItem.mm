@@ -87,6 +87,38 @@ bool IsActionMessage(MessageType::eType msgType)
 	return false;
 }
 
+bool IsClientSideMessage(MessageType::eType msgType)
+{
+	switch (msgType)
+	{
+		case MessageType::GAP_UP:
+		case MessageType::GAP_DOWN:
+		case MessageType::GAP_AROUND:
+		case MessageType::CANT_VIEW_MSG_HISTORY:
+		case MessageType::LOADING_PINNED_MESSAGES:
+		case MessageType::NO_PINNED_MESSAGES:
+		case MessageType::NO_NOTIFICATIONS:
+		case MessageType::CHANNEL_HEADER:
+			return true;
+	}
+
+	return false;
+}
+
+bool IsReplyableActionMessage(MessageType::eType msgType)
+{
+	if (!IsActionMessage(msgType))
+		return true;
+
+	switch (msgType)
+	{
+		case MessageType::USER_JOIN:
+			return true;
+	}
+
+	return false;
+}
+
 @implementation MessageItem
 
 @synthesize message;

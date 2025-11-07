@@ -5,7 +5,13 @@
 #include "../discord/ScrollDir.hpp"
 #include "../discord/Message.hpp"
 
-@interface ChannelController : UIViewController <UITableViewDataSource, UITableViewDelegate, MessageInputViewDelegate> {
+@interface ChannelController : UIViewController<
+	UITableViewDataSource,
+	UITableViewDelegate,
+	UIActionSheetDelegate,
+	MessageInputViewDelegate
+>
+{
 	UITableView* tableView;
 }
 
