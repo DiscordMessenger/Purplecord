@@ -35,8 +35,8 @@ bool IsReplyableActionMessage(MessageType::eType msgType);
 
 - (void)dealloc;
 
-- (void)configureWithMessage:(MessageItemPtr)messageItem andReload:(bool)reloadAttachments;
+- (void)configureWithMessage:(MessageItemPtr)messageItem andReload:(bool)reloadAttachments isEndOfChain:(bool)isEndOfChain;
 
-+ (CGFloat)computeHeightForMessage:(MessageItemPtr)messageItem;
++ (CGFloat)computeHeightForMessage:(MessageItemPtr)messageItem isEndOfChain:(bool)isEndOfChain;
 
 @end

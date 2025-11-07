@@ -267,22 +267,28 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 }
 
 // KEEP IN SYNC WITH configureWithMessage!!!
-+ (CGFloat)computeHeightForMessage:(MessageItemPtr)messageItem
++ (CGFloat)computeHeightForMessage:(MessageItemPtr)messageItem isEndOfChain:(bool)isEndOfChain
 {
 	MessagePtr message = messageItem->m_msg;
+	
+	bool isActionMessage = IsActionMessage(message->m_type);
 	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	
 	CGFloat height = 0.0f;
 	CGFloat padding = OUT_MESSAGE_PADDING;
 	CGFloat paddingIn = IN_MESSAGE_PADDING;
+	CGFloat paddingY = padding;
+	CGFloat paddingEnd = isEndOfChain ? padding : paddingIn;
 	CGFloat cellWidth = screenBounds.size.width;
 	CGSize maxMessageSize = CGSizeMake(cellWidth - padding * 2, 99999.0);
 	
 	NSString* authorText = @"";
 	NSString* messageText = @"";
 	
-	if (IsActionMessage(message->m_type))
+	bool showAuthorAndDate = isActionMessage || messageItem->m_placeInChain == 0;
+	
+	if (isActionMessage)
 	{
 		int minHeight = 0;
 		height = 0;
@@ -332,25 +338,37 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	}
 	
 	CGFloat pfpSize = GetProfilePictureSize();
+	CGFloat actualPaddingIn = paddingIn;
+	CGSize authorTextSize = CGSizeMake(0, 0), messageTextSize;
 	
-	authorText = [NSString stringWithUTF8String:message->m_author.c_str()];
 	messageText = [NSString stringWithUTF8String:message->m_message.c_str()];
 	
-	CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2 - paddingIn - pfpSize, 40.0);
-	CGSize authorTextSize = [
-		authorText
-		sizeWithFont:[MessageCell createAuthorTextFont]
-		constrainedToSize:maxAuthorSize
-		lineBreakMode:UI_LINE_BREAK_MODE_CLIP
-	];
-	CGSize messageTextSize = [
+	if (showAuthorAndDate)
+	{
+		authorText = [NSString stringWithUTF8String:message->m_author.c_str()];
+		
+		CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2 - paddingIn - pfpSize, 40.0);
+		authorTextSize = [
+			authorText
+			sizeWithFont:[MessageCell createAuthorTextFont]
+			constrainedToSize:maxAuthorSize
+			lineBreakMode:UI_LINE_BREAK_MODE_CLIP
+		];
+	}
+	else
+	{
+		actualPaddingIn = 0.0f;
+		paddingY = paddingIn;
+	}
+	
+	messageTextSize = [
 		messageText
 		sizeWithFont:[MessageCell createMessageTextFont]
 		constrainedToSize:maxMessageSize
 		lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
 	];
 	
-	height = padding * 2 + paddingIn + authorTextSize.height + messageTextSize.height;
+	height = paddingY + paddingEnd + actualPaddingIn + authorTextSize.height + messageTextSize.height;
 	
 	// for each embed inside the message, add its height.
 	for (auto& attach : message->m_attachments)
@@ -362,18 +380,20 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 		}
 		
 		attach.UpdatePreviewSize();
-		height += padding + attach.m_previewHeight;
+		height += paddingIn + attach.m_previewHeight;
 	}
 	
 	return height;
 }
 
-- (void)configureWithMessage:(MessageItemPtr)_messageItem andReload:(bool)reloadAttachments
+- (void)configureWithMessage:(MessageItemPtr)_messageItem andReload:(bool)reloadAttachments isEndOfChain:(bool)isEndOfChain
 {
 	messageItem = _messageItem;
 	MessagePtr message = messageItem->m_msg;
 	
 	[self removeExtraViewsIfNeeded];
+	
+	bool isActionMessage = IsActionMessage(message->m_type);
 	
 	self.opaque = YES;
 	self.backgroundColor = [UIColorScheme getTextBackgroundColor];
@@ -386,10 +406,14 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	
 	CGFloat padding = OUT_MESSAGE_PADDING;
 	CGFloat paddingIn = IN_MESSAGE_PADDING;
+	CGFloat paddingY = padding;
+	CGFloat paddingEnd = isEndOfChain ? padding : paddingIn;
 	CGFloat cellWidth = screenBounds.size.width;
 	CGSize maxMessageSize = CGSizeMake(cellWidth - padding * 2, 99999.0);
 	
-	if (IsActionMessage(message->m_type))
+	bool showAuthorAndDate = isActionMessage || messageItem->m_placeInChain == 0;
+	
+	if (isActionMessage)
 	{
 		int minHeight = 0;
 		authorLabel.text = dateLabel.text = @"";
@@ -465,47 +489,73 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 		return;
 	}
 	
-	authorLabel.text = [NSString stringWithUTF8String:message->m_author.c_str()];
 	messageLabel.text = [NSString stringWithUTF8String:message->m_message.c_str()];
 	
-	if (message->m_dateTime > 0) {
-		std::string date = FormatTimeLong(message->m_dateTime);
-		if (message->m_timeEdited)
-			date += " (Edited " + FormatTimeLong(message->m_timeEdited) + ")";
+	CGFloat actualPaddingIn = paddingIn;
+	if (showAuthorAndDate)
+	{
+		authorLabel.text = [NSString stringWithUTF8String:message->m_author.c_str()];
 		
-		dateLabel.text = [NSString stringWithUTF8String:date.c_str()];
+		if (message->m_dateTime > 0) {
+			std::string date = FormatTimeLong(message->m_dateTime);
+			if (message->m_timeEdited)
+				date += " (Edited " + FormatTimeLong(message->m_timeEdited) + ")";
+			
+			dateLabel.text = [NSString stringWithUTF8String:date.c_str()];
+		}
+		else {
+			dateLabel.text = @"";
+		}
 	}
-	else {
-		dateLabel.text = @"";
+	else
+	{
+		actualPaddingIn = 0;
+		paddingY = paddingIn;
 	}
 	
 	CGFloat pfpSize = GetProfilePictureSize();
-	CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2 - pfpSize - paddingIn, 40.0);
-	CGSize authorTextSize = [
-		authorLabel.text
-		sizeWithFont:authorLabel.font
-		constrainedToSize:maxAuthorSize
-		lineBreakMode:UI_LINE_BREAK_MODE_CLIP
-	];
-	CGSize messageTextSize = [
+	CGSize authorTextSize = CGSizeMake(0, 0), messageTextSize;
+	
+	if (showAuthorAndDate)
+	{
+		CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2 - pfpSize - paddingIn, 40.0);
+		
+		authorTextSize = [
+			authorLabel.text
+			sizeWithFont:authorLabel.font
+			constrainedToSize:maxAuthorSize
+			lineBreakMode:UI_LINE_BREAK_MODE_CLIP
+		];
+	}
+	
+	messageTextSize = [
 		messageLabel.text
 		sizeWithFont:messageLabel.font
 		constrainedToSize:maxMessageSize
 		lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
 	];
 	
-	height = padding * 2 + paddingIn + authorTextSize.height + messageTextSize.height;
+	height = paddingY + paddingEnd + actualPaddingIn + authorTextSize.height + messageTextSize.height;
 	
-	authorLabel.frame = CGRectMake(padding + pfpSize + paddingIn, padding, authorTextSize.width, authorTextSize.height);
-	dateLabel.frame = CGRectMake(padding + pfpSize + paddingIn * 2 + authorTextSize.width, padding, cellWidth - padding * 3 - authorTextSize.width, authorTextSize.height);
-	messageLabel.frame = CGRectMake(padding, padding + paddingIn + authorTextSize.height, messageTextSize.width, messageTextSize.height);
+	messageLabel.frame = CGRectMake(padding, paddingY + actualPaddingIn + authorTextSize.height, messageTextSize.width, messageTextSize.height);
 	
-	[GetAvatarCache() addImagePlace:message->m_avatar imagePlace:eImagePlace::AVATARS place:message->m_avatar imageId:message->m_author_snowflake sizeOverride:0];
-	
-	image = [GetAvatarCache() getImage:message->m_avatar];
-	imageView = [[UIImageView alloc] initWithImage:image];
-	imageView.frame = CGRectMake(padding, padding + (authorTextSize.height - pfpSize) / 2, pfpSize, pfpSize);
-	[self.contentView addSubview:imageView];
+	if (showAuthorAndDate)
+	{
+		authorLabel.frame = CGRectMake(padding + pfpSize + paddingIn, padding, authorTextSize.width, authorTextSize.height);
+		dateLabel.frame = CGRectMake(padding + pfpSize + paddingIn * 2 + authorTextSize.width, padding, cellWidth - padding * 3 - authorTextSize.width, authorTextSize.height);
+		
+		[GetAvatarCache() addImagePlace:message->m_avatar imagePlace:eImagePlace::AVATARS place:message->m_avatar imageId:message->m_author_snowflake sizeOverride:0];
+		
+		image = [GetAvatarCache() getImage:message->m_avatar];
+		imageView = [[UIImageView alloc] initWithImage:image];
+		imageView.frame = CGRectMake(padding, padding + (authorTextSize.height - pfpSize) / 2, pfpSize, pfpSize);
+		[self.contentView addSubview:imageView];
+	}
+	else
+	{
+		// just hide them from view
+		authorLabel.frame = dateLabel.frame = CGRectMake(0, 0, 0, 0);
+	}
 	
 	bool needToRegenerate = reloadAttachments;
 	
@@ -620,7 +670,7 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 			}
 			
 			idx++;
-			height += padding + attach.m_previewHeight;
+			height += paddingIn + attach.m_previewHeight;
 		}
 	}
 }

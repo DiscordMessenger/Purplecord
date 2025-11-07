@@ -61,6 +61,54 @@ ChannelController* GetChannelController() {
 	return g_pChannelController;
 }
 
+bool ShouldBeDateGap(time_t oldTime, time_t newTime)
+{
+	return oldTime / 86400 != newTime / 86400;
+}
+
+bool ShouldStartNewChain(Snowflake prevAuthor, time_t prevTime, int prevPlaceInChain, MessageType::eType prevType, const std::string& prevAuthorName, const std::string& prevAuthorAvatar, const MessageItem& item, bool ifChainTooLongToo)
+{
+	if (prevPlaceInChain >= 9 && ifChainTooLongToo)
+		return true;
+
+	if (prevAuthor != item.m_msg->m_author_snowflake)
+		return true;
+
+	if (prevTime + 15 * 60 < item.m_msg->m_dateTime)
+		return true;
+
+	if (item.m_msg->IsLoadGap())
+		return true;
+
+	if (item.m_msg->m_pReferencedMessage != nullptr)
+		return true;
+
+	if (item.m_msg->m_type == MessageType::REPLY)
+		return true;
+
+	if (IsActionMessage(prevType))
+		return true;
+
+	if (IsActionMessage(item.m_msg->m_type))
+		return true;
+	
+	if (ShouldBeDateGap(prevTime, item.m_msg->m_dateTime))
+		return true;
+
+	if (prevAuthorName != item.m_msg->m_author)
+		return true;
+
+	if (prevAuthorAvatar != item.m_msg->m_avatar)
+		return true;
+
+	return false;
+}
+
+void MessageItem::UpdateDetails(Snowflake guildID)
+{
+	m_bWasMentioned = m_msg->CheckWasMentioned(GetDiscordInstance()->GetUserID(), guildID);
+}
+
 @interface ChannelController () {
 	MessageInputView* inputView;
 	
@@ -250,6 +298,52 @@ ChannelController* GetChannelController() {
 	[UIView commitAnimations];
 }
 
+- (void)updateMessageChains
+{
+	DbgPrintF("-[ChannelController updateMessageChains]");
+	bool isCompact = false; // TODO
+	Snowflake addedMessagesBeforeThisID = 0; // TODO
+	Snowflake addedMessagesAfterThisID = 0; // TODO
+	
+	time_t prevTime = 0;
+	Snowflake prevAuthor = Snowflake(-1);
+	MessageType::eType prevType = MessageType::DEFAULT;
+	std::string prevAuthorName = "", prevAuthorAvatar = "";
+	int prevPlaceInChain = 0;
+	
+	for (auto iter = m_messages.begin();
+		iter != m_messages.end();
+		++iter)
+	{
+		MessageItemPtr ptr = *iter;
+		bool modifyChainOrder = true; //addedMessagesBeforeThisID == 0 || ptr->m_msg->m_snowflake <= addedMessagesBeforeThisID || ptr->m_msg->m_snowflake >= addedMessagesAfterThisID;
+
+		bool bIsDateGap = ShouldBeDateGap(prevTime, ptr->m_msg->m_dateTime);
+		bool startNewChain = isCompact || ShouldStartNewChain(prevAuthor, prevTime, prevPlaceInChain, prevType, prevAuthorName, prevAuthorAvatar, *ptr, modifyChainOrder);
+
+		bool msgOldIsDateGap = ptr->m_bIsDateGap;
+		bool msgOldWasChainBeg = ptr->m_placeInChain == 0;
+
+		ptr->m_bIsDateGap = bIsDateGap;
+
+		if (modifyChainOrder) {
+			ptr->m_placeInChain = startNewChain ? 0 : 1 + prevPlaceInChain;
+		}
+		else {
+			startNewChain = msgOldWasChainBeg;
+		}
+		
+		ptr->m_cachedHeight = 0;
+		
+		prevPlaceInChain = ptr->m_placeInChain;
+		prevAuthor = ptr->m_msg->m_author_snowflake;
+		prevAuthorName = ptr->m_msg->m_author;
+		prevAuthorAvatar = ptr->m_msg->m_avatar;
+		prevTime = ptr->m_msg->m_dateTime;
+		prevType = ptr->m_msg->m_type;
+	}
+}
+
 - (void)refreshMessages:(ScrollDir::eScrollDir)sd withGapCulprit:(Snowflake)gapCulprit
 {
 	Profiler profiler("- [ChannelController refreshMessages:withGapCulprit:]");
@@ -265,6 +359,7 @@ ChannelController* GetChannelController() {
 	// TODO: Keep the scroll position
 	// TODO: Imitate what DM does
 	
+	BeginProfiling("ChannelController: refreshMessages get loaded messages");
 	std::map<Snowflake, MessageItemPtr> oldMessagePointers;
 	for (auto& message : m_messages)
 		oldMessagePointers[message->m_msg->m_snowflake] = message;
@@ -273,19 +368,28 @@ ChannelController* GetChannelController() {
 	
 	std::vector<MessagePtr> messages;
 	GetMessageCache()->GetLoadedMessages(channelID, guildID, messages);
+	EndProfiling();
 	
+	BeginProfiling("ChannelController: refreshMessages sift through messages");
 	for (auto& message : messages)
 	{
 		auto messageItem = oldMessagePointers[message->m_snowflake];
-		if (!messageItem)
+		if (!messageItem) {
 			messageItem = MakeMessageItem(message);
+			messageItem->UpdateDetails(guildID);
+		}
 		
 		m_messages.push_back(messageItem);
 	}
 	
 	messages.clear();
+	EndProfiling();
 	
 	m_doNotLoadMessages = true;
+	
+	BeginProfiling("ChannelController: updateMessageChains in refreshMessages");
+	[self updateMessageChains];
+	EndProfiling();
 	
 	BeginProfiling("ChannelController: reloadData in refreshMessages");
 	[tableView reloadData];
@@ -376,6 +480,119 @@ ChannelController* GetChannelController() {
 	[tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:anim];
 }
 
+- (void)onUpdateMessage:(Snowflake)messageId updateNextMessage:(BOOL)updateNxtMsg updatePreviousMessage:(BOOL)updatePrvMsg updateInTableView:(BOOL)updateInTableView
+{
+	Snowflake prevAuthor = Snowflake(-1);
+	time_t prevDate = 0;
+	int prevPlaceInChain = -1;
+	MessageType::eType prevType = MessageType::DEFAULT;
+	std::string prevAuthorName = "", prevAuthorAvatar = "";
+	
+	// Find the previous ID and next ID of the message, as well as their indices.
+	Snowflake previousPreviousId = 0, previousId = 0, currentId = 0, nextId = 0;
+	size_t previousPreviousIndex = 0, previousIndex = 0, currentIndex = 0, nextIndex = 0;
+	
+	for (size_t i = 0; i < m_messages.size(); i++)
+	{
+		MessageItemPtr item = m_messages[i];
+		
+		if (item->m_msg->m_snowflake == messageId)
+		{
+			if (i + 1 < m_messages.size()) {
+				nextId = m_messages[i + 1]->m_msg->m_snowflake;
+				nextIndex = i + 1;
+			}
+			
+			currentIndex = i;
+			currentId = messageId;
+			break;
+		}
+		
+		previousPreviousId = previousId;
+		previousPreviousIndex = previousIndex;
+		previousId = item->m_msg->m_snowflake;
+		previousIndex = i;
+	}
+	
+	// If the message we're looking for wasn't found, just return.
+	if (currentId < 0)
+		return;
+	
+	MessageItemPtr beginningItem = nullptr;
+	
+	// If we want to update the previous message, then we need to load all the prev* fields
+	// with the pre-previous message.
+	if (updatePrvMsg && previousPreviousId > 0) {
+		beginningItem = m_messages[previousPreviousIndex];
+	}
+	else if (previousId > 0) {
+		beginningItem = m_messages[previousIndex];
+	}
+	
+	// If there is a beginning item, fill its properties, otherwise they'll just be
+	// the default ones because we are near the beginning of the message log.
+	if (beginningItem) {
+		prevAuthor = beginningItem->m_msg->m_author_snowflake;
+		prevDate = beginningItem->m_msg->m_dateTime;
+		prevType = beginningItem->m_msg->m_type;
+		prevPlaceInChain = beginningItem->m_placeInChain;
+		prevAuthorName = beginningItem->m_msg->m_author;
+		prevAuthorAvatar = beginningItem->m_msg->m_avatar;
+	}
+	
+	// Well, using a lambda here was the easiest way for me to do this, because I'm lazy
+	auto updateMessage = [&] (Snowflake msgId, size_t index)
+	{
+		if (msgId == 0)
+			return;
+		
+		MessageItemPtr item = m_messages[index];
+		MessagePtr message = item->m_msg;
+		
+		assert(message->m_snowflake == msgId);
+		
+		if (ShouldBeDateGap(prevDate, message->m_dateTime))
+			item->m_bIsDateGap = true;
+
+		if (prevPlaceInChain < 0 || ShouldStartNewChain(prevAuthor, prevDate, prevPlaceInChain, prevType, prevAuthorName, prevAuthorAvatar, *item, true))
+			item->m_placeInChain = 0;
+		else
+			item->m_placeInChain = prevPlaceInChain + 1;
+		
+		// reset cached height
+		item->m_cachedHeight = 0.0f;
+		
+		if (updateInTableView)
+			[self onUpdatedRowAtIndex:index animated:NO];
+		
+		prevAuthor = message->m_author_snowflake;
+		prevDate = message->m_dateTime;
+		prevType = message->m_type;
+		prevAuthorName = message->m_author;
+		prevAuthorAvatar = message->m_avatar;
+		prevPlaceInChain = item->m_placeInChain;
+	};
+	
+	if (updatePrvMsg && previousId > 0)
+		updateMessage(previousId, previousIndex);
+	
+	updateMessage(currentId, currentIndex);
+	
+	if (updateNxtMsg && nextId > 0)
+		updateMessage(nextId, nextIndex);
+	
+	DbgPrintF("Updating messages. PrevID: %lld CurrID: %lld NextID: %lld", previousId, currentId, nextId);
+}
+
+- (void)onUpdateLastMessage
+{
+	if (m_messages.empty())
+		return;
+	
+	auto item = *m_messages.rbegin();
+	[self onUpdateMessage:item->m_msg->m_snowflake updateNextMessage:NO updatePreviousMessage:YES updateInTableView:YES];
+}
+
 - (void)addMessage:(MessagePtr)message
 {
 	if (message->m_anchor)
@@ -386,6 +603,7 @@ ChannelController* GetChannelController() {
 	}
 	
 	m_messages.push_back(MakeMessageItem(message));
+	[self onUpdateMessage:message->m_snowflake updateNextMessage:NO updatePreviousMessage:YES updateInTableView:NO];
 	[self onAddedRowAtIndex:m_messages.size() - 1 animated:YES];
 	[self scrollToBottomIfNeeded];
 }
@@ -404,8 +622,18 @@ ChannelController* GetChannelController() {
 	
 	size_t index = std::distance(m_messages.begin(), iter);
 	m_messages.erase(iter);
-	
 	[self onRemovedRowAtIndex:index animated:YES];
+	
+	// what message occupies this index now?
+	if (index >= m_messages.size()) {
+		// none, update the last message
+		[self onUpdateLastMessage];
+	}
+	else {
+		MessageItemPtr item = m_messages[index];
+		[self onUpdateMessage:item->m_msg->m_snowflake updateNextMessage:NO updatePreviousMessage:YES updateInTableView:YES];
+	}
+	
 	[self scrollToBottomIfNeeded];
 }
 
@@ -427,10 +655,15 @@ ChannelController* GetChannelController() {
 		return;
 	}
 	
-	*iter = MakeMessageItem(message);
+	MessageItemPtr ptr = *iter;
 	
-	size_t index = std::distance(m_messages.begin(), iter);
-	[self onUpdatedRowAtIndex:index animated:NO];
+	ptr->m_msg = message;
+	ptr->m_placeInChain = 0;
+	ptr->m_cachedHeight = 0;
+	ptr->m_bIsDateGap = false;
+	
+	[self onUpdateMessage:messageID updateNextMessage:YES updatePreviousMessage:YES updateInTableView:YES];
+	[self onUpdateMessage:message->m_snowflake updateNextMessage:YES updatePreviousMessage:YES updateInTableView:YES];
 	[self scrollToBottomIfNeeded];
 }
 
@@ -529,7 +762,13 @@ ChannelController* GetChannelController() {
 		item = [[[MessageCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId] autorelease];
 	
 	MessageItemPtr message = m_messages[indexPath.row];
-	[item configureWithMessage:message andReload:m_forceReloadAttachments];
+	bool isEndOfChain = true;
+	if (indexPath.row + 1 < m_messages.size()) {
+		MessageItemPtr nextMessage = m_messages[indexPath.row + 1];
+		isEndOfChain = nextMessage->m_placeInChain == 0;
+	}
+	
+	[item configureWithMessage:message andReload:m_forceReloadAttachments isEndOfChain:isEndOfChain];
 	
 	item.selectionStyle = UITableViewCellSelectionStyleGray;
 	
@@ -545,7 +784,13 @@ ChannelController* GetChannelController() {
 	if (message->m_cachedHeight)
 		return message->m_cachedHeight;
 	
-	CGFloat height = [MessageCell computeHeightForMessage:message];
+	bool isEndOfChain = true;
+	if (indexPath.row + 1 < m_messages.size()) {
+		MessageItemPtr nextMessage = m_messages[indexPath.row + 1];
+		isEndOfChain = nextMessage->m_placeInChain == 0;
+	}
+	
+	CGFloat height = [MessageCell computeHeightForMessage:message isEndOfChain:isEndOfChain];
 	message->m_cachedHeight = height;
 	return height;
 }
