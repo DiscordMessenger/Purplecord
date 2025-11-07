@@ -7,6 +7,7 @@
 #include <stb/stb_image.h>
 #include <stb/stb_image_write.h>
 #include <webp/decode.h>
+#include "../discord/Util.hpp"
 
 @implementation ImageLoader
 
@@ -70,23 +71,21 @@
 	if (width == image.size.width && height == image.size.height)
 		return image;
 	
+#ifdef IPHONE_OS_3
 	UIGraphicsBeginImageContext(CGSizeMake(width, height));
+#else
+	UIGraphicsBeginImageContextWithOptions(
+		CGSizeMake(UnscaleByDPI(width), UnscaleByDPI(height)),
+		NO,
+		[[UIScreen mainScreen] scale]
+	);
+#endif
 	
-	[image drawInRect:CGRectMake(0, 0, width, height)];
+	DbgPrintF("Width: %d   UnscaleByDPI(Width): %d", width, UnscaleByDPI(width));
+	[image drawInRect:CGRectMake(0, 0, UnscaleByDPI(width), UnscaleByDPI(height))];
 	
 	UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
 	UIGraphicsEndImageContext();
-	
-	CGFloat scale = [[UIScreen mainScreen] scale];
-	if (scale != 1.0f) {
-		[newImage autorelease];
-		newImage = [UIImage
-			imageWithCGImage:newImage.CGImage
-			scale: scale
-			orientation: newImage.imageOrientation
-		];
-	}
-	
 	return newImage;
 }
 

@@ -109,3 +109,9 @@ int ScaleByDPI(int size)
 	return (int)(size * [[UIScreen mainScreen] scale]);
 }
 
+int UnscaleByDPI(int size)
+{
+	float scale = [[UIScreen mainScreen] scale];
+	return (int) ceilf(size / scale);
+}
+

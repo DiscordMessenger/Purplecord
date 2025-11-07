@@ -11,3 +11,4 @@ static int GetProfilePictureSize() {
 }
 
 int ScaleByDPI(int size);
+int UnscaleByDPI(int size);
