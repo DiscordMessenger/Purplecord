@@ -114,7 +114,7 @@ void TestFunction();
 	static NSString *cellId = @"Cell";
 	UITableViewCell *cell = [tv dequeueReusableCellWithIdentifier:cellId];
 	if (!cell) {
-		cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0,0,tv.bounds.size.width,44) reuseIdentifier:cellId];
+		cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0, 0, tv.bounds.size.width, 44) reuseIdentifier:cellId];
 		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
 		cell.textLabel.textColor = [UIColorScheme getTextColor];
 	}

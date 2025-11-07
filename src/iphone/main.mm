@@ -103,3 +103,9 @@ int main(int argc, char *argv[])
 	delete g_pFrontend;
 	return retVal;
 }
+
+int ScaleByDPI(int size)
+{
+	return (int)(size * [[UIScreen mainScreen] scale]);
+}
+

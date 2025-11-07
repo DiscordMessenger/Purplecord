@@ -378,7 +378,7 @@ std::string ImagePlace::GetURL() const
 	// Also the size should reflect the active profile picture size.
 	if (!dontAppendSize)
 	{
-		int size = NearestPowerOfTwo(sizeOverride ? sizeOverride : GetProfilePictureSize());
+		int size = NearestPowerOfTwo(sizeOverride ? sizeOverride : ScaleByDPI(GetProfilePictureSize()));
 		// actually increase it a bit to increase quality
 		if (size < 128)
 			size = 128;

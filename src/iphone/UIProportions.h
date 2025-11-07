@@ -9,3 +9,5 @@
 static int GetProfilePictureSize() {
 	return PROFILE_PICTURE_SIZE;
 }
+
+int ScaleByDPI(int size);

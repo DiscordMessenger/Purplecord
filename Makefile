@@ -1,5 +1,5 @@
 # Makefile for Purplecord
-BUILD_FOR_IOS3 ?= yes
+BUILD_FOR_IOS3 ?= no
 
 TARGET_CC := clang-22
 TARGET_CXX := clang-22

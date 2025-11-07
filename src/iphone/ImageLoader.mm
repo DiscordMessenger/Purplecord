@@ -76,6 +76,17 @@
 	
 	UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
 	UIGraphicsEndImageContext();
+	
+	CGFloat scale = [[UIScreen mainScreen] scale];
+	if (scale != 1.0f) {
+		[newImage autorelease];
+		newImage = [UIImage
+			imageWithCGImage:newImage.CGImage
+			scale: scale
+			orientation: newImage.imageOrientation
+		];
+	}
+	
 	return newImage;
 }
 
@@ -93,9 +104,9 @@
 	}
 	
 	if (newWidth < 0)
-		newWidth = GetProfilePictureSize();
+		newWidth = ScaleByDPI(GetProfilePictureSize());
 	if (newHeight < 0)
-		newHeight = GetProfilePictureSize();
+		newHeight = ScaleByDPI(GetProfilePictureSize());
 	
 	if (!newWidth)
 		newWidth = img.size.width;

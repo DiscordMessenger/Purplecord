@@ -571,8 +571,8 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 				if (url.empty() || url[url.size() - 1] != '&' || url[url.size() - 1] != '?')
 					url += hasQMark ? "&" : "?";
 
-				url += "width=" + std::to_string(attach.m_previewWidth);
-				url += "&height=" + std::to_string(attach.m_previewHeight);
+				url += "width=" + std::to_string(ScaleByDPI(attach.m_previewWidth));
+				url += "&height=" + std::to_string(ScaleByDPI(attach.m_previewHeight));
 			}
 
 			DbgPrintF("This image's attachment ID is %s.  Url is %s.", rid.c_str(), attach.m_proxyUrl.c_str());
