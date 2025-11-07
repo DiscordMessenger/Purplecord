@@ -73,6 +73,10 @@ ChannelController* GetChannelController() {
 	
 	bool m_doNotLoadMessages;
 	bool m_forceReloadAttachments;
+	
+	bool m_bContextMenuActive;
+	NSIndexPath* m_tableIndexPath;
+	Snowflake m_contextMenuMessage;
 }
 @end
 
@@ -559,6 +563,13 @@ ChannelController* GetChannelController() {
 	}
 }
 
+#define DELETE_NAME    @"Delete"
+#define COPY_TEXT_NAME @"Copy Text"
+#define PIN_NAME       @"Pin"
+#define EDIT_NAME      @"Edit"
+#define REPLY_NAME     @"Reply"
+#define CANCEL_NAME    @"Cancel"
+
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	UITableViewCell* cell = [tableView cellForRowAtIndexPath:indexPath];
@@ -572,10 +583,21 @@ ChannelController* GetChannelController() {
 	if (!pChan) return;
 	
 	// Determine the dialog's properties based on the message.
-	std::string messageCutoff = msg->m_message;
-	if (messageCutoff.size() > 50)
-		messageCutoff = messageCutoff.substr(0, 50) + "...";
-	std::string dialogTitle = msg->m_author + ": \"" + messageCutoff + "\"";
+	std::string shortenedMessage = msg->m_message;
+	if (shortenedMessage.size() > 50)
+		shortenedMessage = shortenedMessage.substr(0, 50) + "...";
+	
+	if (!shortenedMessage.empty()) {
+		shortenedMessage = "\"" + shortenedMessage + "\"";
+	}
+	else if (!msg->m_attachments.empty()) {
+		shortenedMessage += "(" + std::to_string(msg->m_attachments.size()) + " attachments)";
+	}
+	
+	std::string dialogTitle = msg->m_author;
+	
+	if (!shortenedMessage.empty())
+		dialogTitle += ": " + shortenedMessage;
 	
 	bool isThisMyMessage   = msg->m_author_snowflake == ourPf->m_snowflake;
 	bool mayManageMessages = pChan->HasPermission(PERM_MANAGE_MESSAGES);
@@ -590,17 +612,16 @@ ChannelController* GetChannelController() {
 	bool mayReply  = !isActionMessage || IsReplyableActionMessage(msg->m_type);
 
 	// Generate the action sheet for this message.
-	NSString* cancelOption = @"Cancel";
+	NSString* cancelOption = CANCEL_NAME;
 	NSString* deleteOption = nil;
 	std::vector<NSString*> options;
 	
-	if (mayDelete) deleteOption = @"Delete";
-	if (mayCopy)   options.push_back(@"Copy Text");
-	if (mayEdit)   options.push_back(@"Edit");
-	if (mayPin)    options.push_back(@"Pin");
-	if (mayReply)  options.push_back(@"Reply");
-	
-	options.push_back(@"Cancel");
+	if (mayDelete) deleteOption = DELETE_NAME;
+	if (mayCopy)   options.push_back(COPY_TEXT_NAME);
+	if (mayEdit)   options.push_back(EDIT_NAME);
+	if (mayPin)    options.push_back(PIN_NAME);
+	if (mayReply)  options.push_back(REPLY_NAME);
+	options.push_back(cancelOption);
 	
 	NSString* dialogTitleN = [NSString stringWithUTF8String:dialogTitle.c_str()];
 	
@@ -620,14 +641,45 @@ ChannelController* GetChannelController() {
 	[actionSheet showInView:self.view];
 	[actionSheet release];
 	
+	m_tableIndexPath = [indexPath retain];
+	m_bContextMenuActive = true;
+	
 	//[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-	NSString *title = [actionSheet buttonTitleAtIndex:buttonIndex];
-	const char *utf8String = [title UTF8String];
-	DbgPrintF("Clicked: %s", utf8String);
+	if (!m_bContextMenuActive)
+		return;
+	
+	[tableView deselectRowAtIndexPath:m_tableIndexPath animated:YES];
+	
+	NSString *buttonName = [actionSheet buttonTitleAtIndex:buttonIndex];
+	
+	// TODO: Hard-coded button names.  But I honestly don't care.
+	if ([buttonName isEqualToString:DELETE_NAME])
+	{
+		DbgPrintF("Delete!");
+	}
+	else if ([buttonName isEqualToString:EDIT_NAME])
+	{
+		DbgPrintF("Edit!");
+	}
+	else if ([buttonName isEqualToString:REPLY_NAME])
+	{
+		DbgPrintF("Reply!");
+	}
+	else if ([buttonName isEqualToString:PIN_NAME])
+	{
+		DbgPrintF("Pin!");
+	}
+	else if ([buttonName isEqualToString:COPY_TEXT_NAME])
+	{
+		DbgPrintF("Copy Text!");
+	}
+	
+	m_bContextMenuActive = false;
+	[m_tableIndexPath release];
 }
 
 - (void)dealloc {
