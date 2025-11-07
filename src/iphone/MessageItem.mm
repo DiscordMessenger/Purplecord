@@ -7,8 +7,10 @@
 
 AttachedImage::~AttachedImage()
 {
-	if (imageView)
+	if (imageView) {
+		[imageView removeFromSuperview];
 		[imageView release];
+	}
 }
 
 void AttachedImage::SetImageView(UIImageView* iv)
@@ -16,7 +18,7 @@ void AttachedImage::SetImageView(UIImageView* iv)
 	if (imageView)
 		[imageView release];
 	
-	imageView = [iv retain];
+	imageView = iv ? [iv retain] : nil;
 }
 
 static const char* const welcomeTexts[] = {
@@ -503,12 +505,12 @@ bool IsActionMessage(MessageType::eType msgType)
 			
 			image = [GetAvatarCache() getImage:rid];
 			
-			imageView = [[UIImageView alloc] initWithImage:image];
-			imageView.frame = CGRectMake(padding, height, attach.m_previewWidth, attach.m_previewHeight);
-			[self.contentView addSubview:imageView];
+			UIImageView* auxImageView = [[UIImageView alloc] initWithImage:image];
+			auxImageView.frame = CGRectMake(padding, height, attach.m_previewWidth, attach.m_previewHeight);
+			[self.contentView addSubview:auxImageView];
 			
-			atimg.SetImageView(imageView);
-			[imageView release];
+			atimg.SetImageView(auxImageView);
+			[auxImageView release];
 			
 			idx++;
 			height += padding + attach.m_previewHeight;
