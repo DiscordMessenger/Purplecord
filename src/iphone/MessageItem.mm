@@ -520,18 +520,33 @@ bool IsActionMessage(MessageType::eType msgType)
 			DbgPrintF("This image's attachment ID is %s.  Url is %s.", rid.c_str(), attach.m_proxyUrl.c_str());
 			[GetAvatarCache() addImagePlace:rid imagePlace:eImagePlace::ATTACHMENTS place:url imageId:attach.m_id sizeOverride:0];
 			
-			UIImage* auxImage = [GetAvatarCache() getImageNullable:rid];
+			BOOL isError = NO;
+			UIImage* auxImage = [GetAvatarCache() getImageNullable:rid andCheckIfError:&isError];
 			if (!auxImage)
 			{
-				// TODO: detect error or loading status
-				UIActivityIndicatorView* auxSpinner;
-				auxSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
-				auxSpinner.center = CGPointMake(padding + attach.m_previewWidth / 2, height + attach.m_previewHeight / 2);
-				[self.contentView addSubview:auxSpinner];
-				
-				atimg.SetSpinnerView(auxSpinner);
-				[auxSpinner startAnimating];
-				[auxSpinner release];
+				if (isError)
+				{
+					auxImage = [UIImage imageNamed:@"error.png"];
+					
+					UIImageView* auxImageView = [[UIImageView alloc] initWithImage:auxImage];
+					auxImageView.frame = CGRectMake(0, 0, 16, 16);
+					auxImageView.center = CGPointMake(padding + attach.m_previewWidth / 2, height + attach.m_previewHeight / 2);
+					[self.contentView addSubview:auxImageView];
+					
+					atimg.SetImageView(auxImageView);
+					[auxImageView release];
+				}
+				else
+				{
+					UIActivityIndicatorView* auxSpinner;
+					auxSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+					auxSpinner.center = CGPointMake(padding + attach.m_previewWidth / 2, height + attach.m_previewHeight / 2);
+					[self.contentView addSubview:auxSpinner];
+					
+					atimg.SetSpinnerView(auxSpinner);
+					[auxSpinner startAnimating];
+					[auxSpinner release];
+				}
 			}
 			else
 			{

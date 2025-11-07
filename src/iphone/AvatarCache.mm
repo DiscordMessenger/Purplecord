@@ -230,12 +230,16 @@ static int NearestPowerOfTwo(int x) {
 	return [self getImageSpecial:myId];
 }
 
-- (UIImage*)getImageNullable:(const std::string&)resource
+- (UIImage*)getImageNullable:(const std::string&)resource andCheckIfError:(BOOL*)errorState
 {
 	UIImage* him = [self getImageSpecial:resource];
 	
+	*errorState = false;
 	if (him == HIMAGE_ERROR || him == HIMAGE_LOADING)
+	{
 		him = nil;
+		*errorState = him == HIMAGE_ERROR;
+	}
 	
 	return him;
 }

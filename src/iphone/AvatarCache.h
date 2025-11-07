@@ -129,7 +129,7 @@ public:
 - (UIImage*)getImage:(const std::string&)resource;
 
 // Get the bitmap associated with the resource.  If it isn't loaded, request it, and return NULL.
-- (UIImage*)getImageNullable:(const std::string&)resource;
+- (UIImage*)getImageNullable:(const std::string&)resource andCheckIfError:(BOOL*)errorState;
 
 // Delete all bitmaps.
 - (void)wipeBitmaps;
