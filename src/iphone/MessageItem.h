@@ -14,6 +14,7 @@ struct AttachedImage
 
 bool IsActionMessage(MessageType::eType msgType);
 bool IsClientSideMessage(MessageType::eType msgType);
+bool IsPinnableActionMessage(MessageType::eType msgType);
 bool IsReplyableActionMessage(MessageType::eType msgType);
 
 @interface MessageItem : UITableViewCell

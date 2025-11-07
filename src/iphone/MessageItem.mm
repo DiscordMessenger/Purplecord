@@ -60,7 +60,7 @@ bool IsActionMessage(MessageType::eType msgType)
 	switch (msgType)
 	{
 		case MessageType::USER_JOIN:
-		//case MessageType::CHANNEL_PINNED_MESSAGE:
+		case MessageType::CHANNEL_PINNED_MESSAGE:
 		//case MessageType::RECIPIENT_ADD:
 		//case MessageType::RECIPIENT_REMOVE:
 		//case MessageType::CHANNEL_NAME_CHANGE:
@@ -116,6 +116,14 @@ bool IsReplyableActionMessage(MessageType::eType msgType)
 			return true;
 	}
 
+	return false;
+}
+
+bool IsPinnableActionMessage(MessageType::eType msgType)
+{
+	if (!IsActionMessage(msgType)) return true;
+	
+	// no action message pinnable for now.
 	return false;
 }
 
@@ -252,6 +260,12 @@ bool IsReplyableActionMessage(MessageType::eType msgType)
 	return [NSString stringWithUTF8String:message.c_str()];
 }
 
++ (NSString*)messagePinString:(Snowflake)messageID withAuthor:(const std::string&)author 
+{
+	std::string message = author + " pinned a message to this channel.";
+	return [NSString stringWithUTF8String:message.c_str()];
+}
+
 // KEEP IN SYNC WITH configureWithMessage!!!
 + (CGFloat)computeHeightForMessage:(MessagePtr)message
 {
@@ -281,6 +295,12 @@ bool IsReplyableActionMessage(MessageType::eType msgType)
 			case MessageType::USER_JOIN:
 			{
 				messageText = [MessageItem userJoinString:message->m_snowflake withAuthor:message->m_author];
+				break;
+			}
+			
+			case MessageType::CHANNEL_PINNED_MESSAGE:
+			{
+				messageText = [MessageItem messagePinString:message->m_snowflake withAuthor:message->m_author];
 				break;
 			}
 			
@@ -394,6 +414,12 @@ bool IsReplyableActionMessage(MessageType::eType msgType)
 			case MessageType::USER_JOIN:
 			{
 				messageLabel.text = [MessageItem userJoinString:message->m_snowflake withAuthor:message->m_author];
+				break;
+			}
+			
+			case MessageType::CHANNEL_PINNED_MESSAGE:
+			{
+				messageLabel.text = [MessageItem messagePinString:message->m_snowflake withAuthor:message->m_author];
 				break;
 			}
 			

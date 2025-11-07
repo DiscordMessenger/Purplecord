@@ -77,6 +77,8 @@ ChannelController* GetChannelController() {
 	bool m_bContextMenuActive;
 	NSIndexPath* m_tableIndexPath;
 	MessagePtr m_contextMenuMessage;
+	
+	bool m_bAcknowledgeNow;
 }
 @end
 
@@ -192,6 +194,8 @@ ChannelController* GetChannelController() {
 	
 	GetDiscordInstance()->OnSelectChannel(channelID);
 	GetDiscordInstance()->HandledChannelSwitch();
+	
+	m_bAcknowledgeNow = true;
 	
 	[self update];
 }
@@ -442,9 +446,6 @@ ChannelController* GetChannelController() {
 
 - (void)updateAttachmentByID:(const std::string&)rid
 {
-	DbgPrintF("updateAttachmentByID: %s", rid.c_str());
-	
-	// TODO: check for attachments too
 	[tableView beginUpdates];
 	
 	m_forceReloadAttachments = true;
@@ -563,12 +564,13 @@ ChannelController* GetChannelController() {
 	}
 }
 
-#define DELETE_NAME    @"Delete"
-#define COPY_TEXT_NAME @"Copy Text"
-#define PIN_NAME       @"Pin"
-#define EDIT_NAME      @"Edit"
-#define REPLY_NAME     @"Reply"
-#define CANCEL_NAME    @"Cancel"
+#define DELETE_NAME      @"Delete"
+#define COPY_TEXT_NAME   @"Copy Text"
+#define PIN_NAME         @"Pin"
+#define EDIT_NAME        @"Edit"
+#define REPLY_NAME       @"Reply"
+#define CANCEL_NAME      @"Cancel"
+#define MARK_UNREAD_NAME @"Mark as Unread"
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -607,7 +609,7 @@ ChannelController* GetChannelController() {
 	bool mayCopy   = !isForward && !isActionMessage;
 	bool mayDelete = isThisMyMessage || mayManageMessages;
 	bool mayEdit   = isThisMyMessage && !isForward && !isActionMessage;
-	bool mayPin    = mayManageMessages;
+	bool mayPin    = mayManageMessages && IsPinnableActionMessage(msg->m_type);
 	bool maySpeak  = !isActionMessage && !msg->m_message.empty();
 	bool mayReply  = !isActionMessage || IsReplyableActionMessage(msg->m_type);
 
@@ -619,8 +621,9 @@ ChannelController* GetChannelController() {
 	if (mayDelete) deleteOption = DELETE_NAME;
 	if (mayCopy)   options.push_back(COPY_TEXT_NAME);
 	if (mayEdit)   options.push_back(EDIT_NAME);
-	if (mayPin)    options.push_back(PIN_NAME);
+	// TODO: if (mayPin)    options.push_back(PIN_NAME);
 	if (mayReply)  options.push_back(REPLY_NAME);
+	options.push_back(MARK_UNREAD_NAME);
 	options.push_back(cancelOption);
 	
 	NSString* dialogTitleN = [NSString stringWithUTF8String:dialogTitle.c_str()];
@@ -670,6 +673,34 @@ ChannelController* GetChannelController() {
 		UIPasteboard *pb = [UIPasteboard generalPasteboard];
 		pb.string = [NSString stringWithUTF8String:m_contextMenuMessage->m_message.c_str()];
 	}
+	else if ([buttonName isEqualToString:MARK_UNREAD_NAME])
+	{
+		Snowflake messageBeforeContextMessage = 0;
+		
+		for (auto iter = m_messages.rbegin(); iter != m_messages.rend(); ++iter)
+		{
+			if ((*iter)->m_snowflake == m_contextMenuMessage->m_snowflake)
+			{
+				MessagePtr pMsg = *iter;
+
+				++iter;
+				if (iter != m_messages.rend())
+					messageBeforeContextMessage = (*iter)->m_snowflake;
+				break;
+			}
+		}
+	
+		if (messageBeforeContextMessage == 0) {
+			uint64_t timeStamp = m_contextMenuMessage->m_snowflake >> 22;
+			timeStamp--; // in milliseconds since Discord epoch - irrelevant because we just want to take ONE millisecond
+			messageBeforeContextMessage = timeStamp << 22;
+		}
+
+		GetDiscordInstance()->RequestAcknowledgeMessages(channelID, messageBeforeContextMessage);
+		
+		// block acknowledgements until we switch to the channel again.
+		m_bAcknowledgeNow = false;
+	}
 	else if ([buttonName isEqualToString:EDIT_NAME])
 	{
 		// TODO
@@ -680,13 +711,9 @@ ChannelController* GetChannelController() {
 		// TODO
 		DbgPrintF("Reply!");
 	}
-	else if ([buttonName isEqualToString:PIN_NAME])
-	{
-		// TODO
-		DbgPrintF("Pin!");
-	}
 	
 	m_bContextMenuActive = false;
+	m_contextMenuMessage = nullptr;
 	[m_tableIndexPath release];
 }
 
