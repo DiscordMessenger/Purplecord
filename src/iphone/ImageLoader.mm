@@ -22,7 +22,7 @@
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	CGContextRef ctx = CGBitmapContextCreate(
 		(void *)dataWebp, width, height, 8, width * 4,
-		colorSpace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast);
+		colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
 
 	CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
 	UIImage *image = [UIImage imageWithCGImage:cgImage];
