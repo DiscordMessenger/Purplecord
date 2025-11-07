@@ -1,4 +1,4 @@
-#import "MessageItem.h"
+#import "MessageCell.h"
 #import "ChannelController.h"
 #import "UIColorScheme.h"
 #import "AvatarCache.h"
@@ -127,7 +127,7 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	return false;
 }
 
-@implementation MessageItem
+@implementation MessageCell
 
 @synthesize message;
 
@@ -176,17 +176,17 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	{
 		authorLabel = [[UILabel alloc] initWithFrame:CGRectZero];
 		authorLabel.numberOfLines = 1;
-		authorLabel.font = [MessageItem createAuthorTextFont];
+		authorLabel.font = [MessageCell createAuthorTextFont];
 		[self.contentView addSubview:authorLabel];
 		
 		dateLabel = [[UILabel alloc] initWithFrame:CGRectZero];
 		dateLabel.numberOfLines = 1;
-		dateLabel.font = [MessageItem createMessageTextFont];
+		dateLabel.font = [MessageCell createMessageTextFont];
 		[self.contentView addSubview:dateLabel];
 		
 		messageLabel = [[UILabel alloc] initWithFrame:CGRectZero];
 		messageLabel.numberOfLines = 0;
-		messageLabel.font = [MessageItem createMessageTextFont];
+		messageLabel.font = [MessageCell createMessageTextFont];
 		[self.contentView addSubview:messageLabel];
 		
 		[self applyThemingOn:authorLabel];
@@ -294,13 +294,13 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 			
 			case MessageType::USER_JOIN:
 			{
-				messageText = [MessageItem userJoinString:message->m_snowflake withAuthor:message->m_author];
+				messageText = [MessageCell userJoinString:message->m_snowflake withAuthor:message->m_author];
 				break;
 			}
 			
 			case MessageType::CHANNEL_PINNED_MESSAGE:
 			{
-				messageText = [MessageItem messagePinString:message->m_snowflake withAuthor:message->m_author];
+				messageText = [MessageCell messagePinString:message->m_snowflake withAuthor:message->m_author];
 				break;
 			}
 			
@@ -309,14 +309,14 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 				minHeight = 40;
 				
 				Channel* channel = GetDiscordInstance()->GetCurrentChannel();
-				messageText = [MessageItem channelHeaderString:channel];
+				messageText = [MessageCell channelHeaderString:channel];
 				break;
 			}
 		}
 		
 		CGSize messageTextSize = [
 			messageText
-			sizeWithFont:[MessageItem createMessageTextFont]
+			sizeWithFont:[MessageCell createMessageTextFont]
 			constrainedToSize:maxMessageSize
 			lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
 		];
@@ -337,13 +337,13 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	CGSize maxAuthorSize = CGSizeMake(cellWidth - padding * 2 - paddingIn - pfpSize, 40.0);
 	CGSize authorTextSize = [
 		authorText
-		sizeWithFont:[MessageItem createAuthorTextFont]
+		sizeWithFont:[MessageCell createAuthorTextFont]
 		constrainedToSize:maxAuthorSize
 		lineBreakMode:UI_LINE_BREAK_MODE_CLIP
 	];
 	CGSize messageTextSize = [
 		messageText
-		sizeWithFont:[MessageItem createMessageTextFont]
+		sizeWithFont:[MessageCell createMessageTextFont]
 		constrainedToSize:maxMessageSize
 		lineBreakMode:UI_LINE_BREAK_MODE_WORD_WRAP
 	];
@@ -413,13 +413,13 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 			
 			case MessageType::USER_JOIN:
 			{
-				messageLabel.text = [MessageItem userJoinString:message->m_snowflake withAuthor:message->m_author];
+				messageLabel.text = [MessageCell userJoinString:message->m_snowflake withAuthor:message->m_author];
 				break;
 			}
 			
 			case MessageType::CHANNEL_PINNED_MESSAGE:
 			{
-				messageLabel.text = [MessageItem messagePinString:message->m_snowflake withAuthor:message->m_author];
+				messageLabel.text = [MessageCell messagePinString:message->m_snowflake withAuthor:message->m_author];
 				break;
 			}
 			
@@ -428,7 +428,7 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 				[self makeTransparent];
 				
 				Channel* channel = GetDiscordInstance()->GetCurrentChannel();
-				messageLabel.text = [MessageItem channelHeaderString:channel];
+				messageLabel.text = [MessageCell channelHeaderString:channel];
 				
 				image = [UIImage imageNamed:[self getChannelHeader]];
 				imageView = [[UIImageView alloc] initWithImage:image];

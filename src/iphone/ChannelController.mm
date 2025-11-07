@@ -1,5 +1,5 @@
 #import "ChannelController.h"
-#import "MessageItem.h"
+#import "MessageCell.h"
 #import "UIColorScheme.h"
 #import "AvatarCache.h"
 #include "UIProportions.h"
@@ -505,10 +505,10 @@ ChannelController* GetChannelController() {
 	if (indexPath.row < 0 || indexPath.row >= (int) m_messages.size())
 		return nil;
 	
-	static NSString *cellId = @"MessageItem";
-	MessageItem* item = (MessageItem*) [tv dequeueReusableCellWithIdentifier:cellId];
+	static NSString *cellId = @"MessageCell";
+	MessageCell* item = (MessageCell*) [tv dequeueReusableCellWithIdentifier:cellId];
 	if (!item)
-		item = [[[MessageItem alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId] autorelease];
+		item = [[[MessageCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId] autorelease];
 	
 	MessagePtr message = m_messages[indexPath.row];
 	[item configureWithMessage:message andReload:m_forceReloadAttachments];
@@ -527,7 +527,7 @@ ChannelController* GetChannelController() {
 	if (message->m_cachedHeight)
 		return message->m_cachedHeight;
 	
-	CGFloat height = [MessageItem computeHeightForMessage:message];
+	CGFloat height = [MessageCell computeHeightForMessage:message];
 	message->m_cachedHeight = height;
 	return height;
 }
@@ -538,7 +538,7 @@ ChannelController* GetChannelController() {
 		return;
 	
 	// If the message is a gap, request it
-	MessageItem* item = (MessageItem*) cell;
+	MessageCell* item = (MessageCell*) cell;
 	
 	MessagePtr msg = item.message;
 	if (msg->IsLoadGap())
@@ -577,7 +577,7 @@ ChannelController* GetChannelController() {
 	UITableViewCell* cell = [tableView cellForRowAtIndexPath:indexPath];
 	if (!cell) return;
 	
-	MessageItem* item = (MessageItem*) cell;
+	MessageCell* item = (MessageCell*) cell;
 	MessagePtr msg = item.message;
 	
 	Profile* ourPf = GetDiscordInstance()->GetProfile();

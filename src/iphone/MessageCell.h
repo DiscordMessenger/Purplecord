@@ -17,7 +17,7 @@ bool IsClientSideMessage(MessageType::eType msgType);
 bool IsPinnableActionMessage(MessageType::eType msgType);
 bool IsReplyableActionMessage(MessageType::eType msgType);
 
-@interface MessageItem : UITableViewCell
+@interface MessageCell : UITableViewCell
 {
 	UILabel* authorLabel;
 	UILabel* dateLabel;

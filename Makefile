@@ -142,7 +142,7 @@ Purplecord_FILES = \
 	src/iphone/TextInterface_iOS.cpp \
 	src/iphone/HTTPClient_curl.cpp \
 	src/iphone/WebsocketClient_curl.cpp \
-	src/iphone/MessageItem.mm \
+	src/iphone/MessageCell.mm \
 	src/iphone/MessageInputView.mm \
 	src/iphone/UIColorScheme.mm \
 	src/iphone/ImageLoader.mm \
