@@ -116,7 +116,7 @@ int HTTPClient_curl::PutProgress(void* userp, curl_off_t dltotal, curl_off_t dln
 	
 	netRequest->m_bCancelOp = false;
 	netRequest->m_offset = ulnow;
-	netRequest->m_length = ultotal;
+	netRequest->m_length = ultotal ? ultotal : netRequest->params_bytes.size();
 	netRequest->result = HTTP_PROGRESS;
 	netRequest->pFunc(netRequest);
 	
@@ -137,8 +137,8 @@ size_t HTTPClient_curl::ReadCallback(void* contents, size_t size, size_t nmemb, 
 	NetRequest* netRequest = request->netRequest;
 	
 	size_t byteCount = size * nmemb;
-	size_t startOffset = netRequest->m_offset;
-	size_t endOffset = netRequest->m_offset + byteCount;
+	size_t startOffset = request->m_readOffset;
+	size_t endOffset = request->m_readOffset + byteCount;
 	
 	if (endOffset >= netRequest->params_bytes.size()) {
 		endOffset = netRequest->params_bytes.size();
@@ -148,7 +148,8 @@ size_t HTTPClient_curl::ReadCallback(void* contents, size_t size, size_t nmemb, 
 		byteCount = endOffset - startOffset;
 	}
 	
-	memcpy(contents, netRequest->params_bytes.data(), byteCount);
+	request->m_readOffset = endOffset;
+	memcpy(contents, netRequest->params_bytes.data() + startOffset, byteCount);
 	return byteCount;
 }
 
@@ -198,6 +199,7 @@ void HTTPClient_curl::PerformRequest(
 	{
 		case NetRequest::GET_PROGRESS:
 			curl_easy_setopt(pRequest->easyHandle, CURLOPT_NOPROGRESS, 0L);
+			curl_easy_setopt(pRequest->easyHandle, CURLOPT_XFERINFODATA, pRequest);
 			curl_easy_setopt(pRequest->easyHandle, CURLOPT_XFERINFOFUNCTION, GetProgress);
 		case NetRequest::GET:
 			curl_easy_setopt(pRequest->easyHandle, CURLOPT_HTTPGET, 1L);
@@ -225,6 +227,7 @@ void HTTPClient_curl::PerformRequest(
 		case NetRequest::PUT_OCTETS:
 			curl_easy_setopt(pRequest->easyHandle, CURLOPT_CUSTOMREQUEST, "PUT");
 			curl_easy_setopt(pRequest->easyHandle, CURLOPT_UPLOAD, 1L);
+			curl_easy_setopt(pRequest->easyHandle, CURLOPT_XFERINFODATA, pRequest);
 			curl_easy_setopt(pRequest->easyHandle, CURLOPT_INFILESIZE_LARGE, (curl_off_t) stream_size);
 			break;
 		
@@ -354,10 +357,6 @@ bool HTTPClient_curl::ProcessMultiEvent()
 	// invoke callback now
 	auto func = netRequest->pFunc;
 	func(netRequest);
-
-	// if this is the default handler, then simply transfer ownership
-	if (func == &HTTPClient::DefaultRequestHandler)
-		request->netRequest = nullptr;
 
 	// and then cleanup
 	delete request;

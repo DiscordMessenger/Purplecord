@@ -11,8 +11,9 @@
 void Frontend_iOS::OnRequestDone(NetRequest* pRequest)
 {
 	@autoreleasepool {
+		NetRequest* requestCopy = new NetRequest(*pRequest);
 		[GetNetworkController() performSelectorOnMainThread:@selector(processResponse:)
-			withObject:[NSValue valueWithPointer:pRequest]
+			withObject:[NSValue valueWithPointer:requestCopy]
 			waitUntilDone:NO];
 	}
 }

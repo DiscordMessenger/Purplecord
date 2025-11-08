@@ -11,7 +11,6 @@ using Json = iprog::JsonObject;
 
 void DiscordInstance::OnUploadAttachmentFirst(NetRequest* pReq)
 {
-#ifndef TARGET_IPHONE
 	auto& ups = m_pendingUploads;
 
 	if (pReq->result != HTTP_OK)
@@ -57,7 +56,4 @@ void DiscordInstance::OnUploadAttachmentFirst(NetRequest* pReq)
 
 		GetFrontend()->OnStartProgress(pReq->key, up.m_name, true);
 	}
-#else
-	DbgPrintF("TODO: Bring this back!");
-#endif
 }

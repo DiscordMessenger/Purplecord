@@ -1,4 +1,5 @@
 #import "MessageInputView.h"
+#include "../discord/DiscordInstance.hpp"
 
 @implementation MessageInputView
 
@@ -49,11 +50,13 @@
 		[sendButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateHighlighted];
 		[sendButton setTitleColor:[UIColor grayColor] forState:UIControlStateDisabled];
 		
+		// NOTE: disabled state is probably not necessary.
 		UIImage* photoButtonImageNP = [[UIImage imageNamed:@"photoButton.png"] stretchableImageWithLeftCapWidth:13 topCapHeight:13];
 		UIImage* photoButtonImageP = [[UIImage imageNamed:@"photoButtonPressed.png"] stretchableImageWithLeftCapWidth:13 topCapHeight:13];
 		UIImage* photoButtonImageD = [[UIImage imageNamed:@"photoButtonDisabled.png"] stretchableImageWithLeftCapWidth:13 topCapHeight:13];
 		[photoButton setBackgroundImage:photoButtonImageNP forState:UIControlStateNormal];
 		[photoButton setBackgroundImage:photoButtonImageP forState:UIControlStateHighlighted];
+		[photoButton setBackgroundImage:photoButtonImageD forState:UIControlStateDisabled];
 	}
 	
 	return self;
@@ -63,7 +66,11 @@
 {
 	[super layoutSubviews];
 	
-	bool addPhotoButton = true; // TODO
+	auto channel = GetDiscordInstance()->GetCurrentChannel();
+	if (!channel)
+		return;
+	
+	bool addPhotoButton = channel->HasPermission(PERM_ATTACH_FILES) && channel->HasPermission(PERM_SEND_MESSAGES);
 	
 	CGFloat padding = 8.0f;
 	CGFloat buttonWidth = SEND_BUTTON_WIDTH;
@@ -94,13 +101,14 @@
 	
 	if ([_delegate respondsToSelector:@selector(messageInputView:didSendMessage:)])
 		[_delegate messageInputView:self didSendMessage:textField.text];
-	
+
 	textField.text = @"";
 }
 
 - (void)photoPressed
 {
-	// TODO
+	if ([_delegate respondsToSelector:@selector(messageInputView:didAttachFile:)])
+		[_delegate messageInputView:self didAttachFile:nil];
 }
 
 - (void)closeKeyboard

@@ -1254,8 +1254,8 @@ void DiscordInstance::HandleGatewayMessage(const std::string& payload)
 	Json j = iprog::JsonParser::parse(payload);
 	EndProfiling();
 	
-	fprintf(stderr, "Payload: <string>%s</string>\n", payload.c_str());
-	fflush(stderr);
+	//fprintf(stderr, "Payload: <string>%s</string>\n", payload.c_str());
+	//fflush(stderr);
 
 	int op = j["op"];
 	
@@ -3206,7 +3206,7 @@ void DiscordInstance::OnUploadAttachmentSecond(NetRequest* pReq)
 bool DiscordInstance::SendMessageAndAttachmentToCurrentChannel(
 	const std::string& msg_,
 	Snowflake& tempSf,
-	uint8_t* attData,
+	const void* attData,
 	size_t attSize,
 	const std::string& attName,
 	bool isSpoiler)

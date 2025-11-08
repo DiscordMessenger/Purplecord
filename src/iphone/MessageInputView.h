@@ -5,6 +5,8 @@
 
 @protocol MessageInputViewDelegate <NSObject>
 - (void)messageInputView:(MessageInputView *)inputView didSendMessage:(NSString *)message;
+
+- (void)messageInputView:(MessageInputView *)inputView didAttachFile:(void*)unused;
 @end
 
 @interface MessageInputView : UIView <UITextFieldDelegate> {

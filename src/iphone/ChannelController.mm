@@ -202,6 +202,83 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	[self addMessage:m];
 }
 
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo
+{
+	[self dismissModalViewControllerAnimated:YES];
+	
+	// If the image is smaller than this screen's resolution, then upload it as a PNG.
+	// Else, upload it as a JPG.
+	NSData* imageData = nil;
+	
+	BOOL usePng = YES;
+	std::string fileName;
+	CGRect screenBounds = [[UIScreen mainScreen] bounds];
+	if (image.size.width > ScaleByDPI(screenBounds.size.width) && image.size.height > ScaleByDPI(screenBounds.size.height))
+		usePng = NO;
+	
+	if (usePng) {
+		imageData = UIImagePNGRepresentation(image);
+		fileName = "unknown.png";
+	}
+	else {
+		imageData = UIImageJPEGRepresentation(image, 0.9);
+		fileName = "unknown.jpg";
+	}
+	
+	FILE* f = fopen(("/private/var/mobile/Purplecord_"+std::to_string(time(NULL))+fileName).c_str(), "wb");
+	fwrite(imageData.bytes, 1, imageData.length, f);
+	fclose(f);
+	
+	// TODO: Allow fore more configuration options.
+	Snowflake sf;
+	if (!GetDiscordInstance()->SendMessageAndAttachmentToCurrentChannel(
+			"",
+			sf,
+			imageData.bytes,
+			imageData.length,
+			fileName,
+			false
+		))
+	{
+		return;
+	}
+	
+	// Add a temporary message
+	MessagePtr m = MakeMessage();
+	Profile* pf = GetDiscordInstance()->GetProfile();
+	
+	m->m_snowflake = sf;
+	m->m_author_snowflake = pf->m_snowflake;
+	m->m_author = pf->m_name;
+	m->m_avatar = pf->m_avatarlnk;
+	m->m_message = "(Attachment)";
+	m->m_type = MessageType::SENDING_MESSAGE;
+	m->SetTime(time(NULL));
+	m->m_dateFull = "Sending...";
+	m->m_dateCompact = "Sending...";
+	
+	[self addMessage:m];
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+	[self dismissModalViewControllerAnimated:YES];
+}
+
+- (void)messageInputView:(MessageInputView *)inputView didAttachFile:(void *)unused
+{
+	if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary])
+		return;
+	
+	UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+	picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+	picker.delegate = self;
+	picker.allowsEditing = NO;
+
+	[self presentModalViewController:picker animated:YES];
+	[picker release];
+}
+
 - (void)viewWillAppear:(BOOL)animated
 {
 	[super viewWillAppear:animated];

@@ -401,8 +401,18 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 
 - (void)configureWithMessage:(MessageItemPtr)_messageItem andReload:(bool)reloadAttachments isEndOfChain:(bool)isEndOfChain
 {
+	bool messageChanged = !messageItem || messageItem->m_msg->m_snowflake != _messageItem->m_msg->m_snowflake;
+	
 	messageItem = _messageItem;
 	MessagePtr message = messageItem->m_msg;
+	
+	if (messageChanged)
+	{
+		// any properties that pertain to the message having changed
+		// shall be reset here.
+		
+		reloadAttachments = true;
+	}
 	
 	[self removeExtraViewsIfNeeded];
 	
@@ -602,7 +612,8 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 				attach.m_actualUrl
 			)];
 			
-			if (attachedImages[idx].hash != rid)
+			if (idx >= attachedImagesCount ||
+				attachedImages[idx].hash != rid)
 			{
 				needToRegenerate = true;
 				break;

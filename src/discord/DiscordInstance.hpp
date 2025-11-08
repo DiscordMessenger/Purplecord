@@ -144,7 +144,7 @@ struct PendingUpload
 
 	PendingUpload() { }
 
-	PendingUpload(const std::string& n, uint8_t* d, size_t s, const std::string& c, Snowflake tsf, Snowflake csf) :
+	PendingUpload(const std::string& n, const void* d, size_t s, const std::string& c, Snowflake tsf, Snowflake csf) :
 		m_name(n),
 		m_content(c),
 		m_tempSF(tsf),
@@ -433,7 +433,7 @@ public:
 	bool SendMessageToCurrentChannel(const std::string& msg, Snowflake& tempSf, Snowflake reply = 0, bool mentionReplied = true);
 
 	// Send a message with an attachment to the current channel.
-	bool SendMessageAndAttachmentToCurrentChannel(const std::string& msg, Snowflake& tempSf, uint8_t* pAttData, size_t szAtt, const std::string& attName, bool isSpoiler = false);
+	bool SendMessageAndAttachmentToCurrentChannel(const std::string& msg, Snowflake& tempSf, const void* pAttData, size_t szAtt, const std::string& attName, bool isSpoiler = false);
 
 	// Edit a message in the current channel.
 	bool EditMessageInCurrentChannel(const std::string& msg, Snowflake msgId);

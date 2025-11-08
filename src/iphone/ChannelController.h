@@ -10,6 +10,8 @@
 	UITableViewDataSource,
 	UITableViewDelegate,
 	UIActionSheetDelegate,
+	UINavigationControllerDelegate,
+	UIImagePickerControllerDelegate,
 	MessageInputViewDelegate
 >
 {
