@@ -104,6 +104,8 @@ int main(int argc, char *argv[])
 	return retVal;
 }
 
+#ifndef IPHONE_OS_3
+
 int ScaleByDPI(int size)
 {
 	return (int)(size * [[UIScreen mainScreen] scale]);
@@ -115,3 +117,4 @@ int UnscaleByDPI(int size)
 	return (int) ceilf(size / scale);
 }
 
+#endif

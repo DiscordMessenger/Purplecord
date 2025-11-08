@@ -10,5 +10,14 @@ static int GetProfilePictureSize() {
 	return PROFILE_PICTURE_SIZE;
 }
 
+#ifdef IPHONE_OS_3
+
+static int ScaleByDPI(int size) { return size; }
+static int UnscaleByDPI(int size) { return size; }
+
+#else
+
 int ScaleByDPI(int size);
 int UnscaleByDPI(int size);
+
+#endif
