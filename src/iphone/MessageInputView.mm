@@ -2,6 +2,9 @@
 
 @implementation MessageInputView
 
+#define PHOTO_BUTTON_WIDTH 26
+#define PHOTO_BUTTON_HEIGHT 27
+
 - (id)initWithFrame:(CGRect)frame
 {
 	self = [super initWithFrame:frame];
@@ -30,6 +33,13 @@
 		sendButton.titleLabel.font = [UIFont boldSystemFontOfSize:16];
 		[self addSubview:sendButton];
 		
+		photoButton = [UIButton buttonWithType:UIButtonTypeCustom];
+		[photoButton setTitle:@"" forState:UIControlStateNormal];
+		[photoButton addTarget:self action:@selector(photoPressed) forControlEvents:UIControlEventTouchUpInside];
+		photoButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+		photoButton.titleLabel.font = [UIFont boldSystemFontOfSize:16];
+		[self addSubview:photoButton];
+		
 		// make the button look like the SMS app's send button
 		UIImage* buttonImageNP = [[UIImage imageNamed:@"sendButton.png"] stretchableImageWithLeftCapWidth:13 topCapHeight:13];
 		UIImage* buttonImageP = [[UIImage imageNamed:@"sendButtonPressed.png"] stretchableImageWithLeftCapWidth:13 topCapHeight:13];
@@ -38,6 +48,12 @@
 		[sendButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
 		[sendButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateHighlighted];
 		[sendButton setTitleColor:[UIColor grayColor] forState:UIControlStateDisabled];
+		
+		UIImage* photoButtonImageNP = [[UIImage imageNamed:@"photoButton.png"] stretchableImageWithLeftCapWidth:13 topCapHeight:13];
+		UIImage* photoButtonImageP = [[UIImage imageNamed:@"photoButtonPressed.png"] stretchableImageWithLeftCapWidth:13 topCapHeight:13];
+		UIImage* photoButtonImageD = [[UIImage imageNamed:@"photoButtonDisabled.png"] stretchableImageWithLeftCapWidth:13 topCapHeight:13];
+		[photoButton setBackgroundImage:photoButtonImageNP forState:UIControlStateNormal];
+		[photoButton setBackgroundImage:photoButtonImageP forState:UIControlStateHighlighted];
 	}
 	
 	return self;
@@ -47,12 +63,23 @@
 {
 	[super layoutSubviews];
 	
+	bool addPhotoButton = true; // TODO
+	
 	CGFloat padding = 8.0f;
 	CGFloat buttonWidth = SEND_BUTTON_WIDTH;
+	CGFloat photoButtonWidth = PHOTO_BUTTON_WIDTH;
 	CGFloat height = self.bounds.size.height - padding * 2;
 	
 	sendButton.frame = CGRectMake(self.bounds.size.width - buttonWidth - padding, padding, buttonWidth, height);
-	textField.frame = CGRectMake(padding, padding, self.bounds.size.width - buttonWidth - padding * 3, height);
+	
+	if (addPhotoButton) {
+		photoButton.frame = CGRectMake(padding, padding, PHOTO_BUTTON_WIDTH, PHOTO_BUTTON_HEIGHT);
+		textField.frame = CGRectMake(padding * 2 + photoButtonWidth, padding, self.bounds.size.width - buttonWidth - padding * 4 - photoButtonWidth, height);
+	}
+	else {
+		photoButton.frame = CGRectMake(0, 0, 0, 0);
+		textField.frame = CGRectMake(padding, padding, self.bounds.size.width - buttonWidth - padding * 3, height);
+	}
 }
 
 - (CGSize)sizeThatFits:(CGSize)size
@@ -69,6 +96,11 @@
 		[_delegate messageInputView:self didSendMessage:textField.text];
 	
 	textField.text = @"";
+}
+
+- (void)photoPressed
+{
+	// TODO
 }
 
 - (void)closeKeyboard

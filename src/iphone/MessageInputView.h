@@ -10,6 +10,7 @@
 @interface MessageInputView : UIView <UITextFieldDelegate> {
 	UITextField* textField;
 	UIButton* sendButton;
+	UIButton* photoButton;
 }
 
 @property (nonatomic, assign) id<MessageInputViewDelegate> delegate;
