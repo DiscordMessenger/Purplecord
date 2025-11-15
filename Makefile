@@ -1,9 +1,14 @@
 # Makefile for Purplecord
 BUILD_FOR_IOS3 ?= yes
 
+# It is not recommended to build with debug mode.
+# However, for development purposes, FINALPACKAGE is 0 by default.
+#FINALPACKAGE ?= 1
+
+# Toolchain
 TARGET_CC := clang-22
 TARGET_CXX := clang-22
-TARGET_LD := $(THEOS)/toolchain/linux/iphone/bin/clang++ -v
+TARGET_LD := $(THEOS)/toolchain/linux/iphone/bin/clang++
 INSTALL_TARGET_PROCESSES = Purplecord
 
 # This decides what toolchains and includes to use.
@@ -42,14 +47,14 @@ PURPLECORD_MBEDTLS_PATH ?= /mnt/c/DiscordMessenger/mbedtls-apple
 PURPLECORD_LIBCURL_PATH ?= /mnt/c/DiscordMessenger/libcurl-apple
 PURPLECORD_LIBWEBP_PATH ?= /mnt/c/DiscordMessenger/libwebp
 
-# It is not recommended to build with debug mode.
-#FINALPACKAGE ?= 1
-
 ifeq ($(FINALPACKAGE),1)
 	DEBUGSW = -DNDEBUG
 else
 	DEBUGSW = -D_DEBUG
 endif
+
+# Build an IPA instead of a DEB.
+#PACKAGE_FORMAT ?= ipa
 
 include $(THEOS)/makefiles/common.mk
 
