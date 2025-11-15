@@ -10,7 +10,6 @@ struct ChannelMember
 	Snowflake m_id;
 	Channel::eChannelType m_type;
 	std::string m_name;
-	int m_categIndex;
 	int m_pos;
 	Snowflake m_lastMessageID = 0;
 
@@ -37,26 +36,41 @@ struct ChannelMember
 				return m_lastMessageID > other.m_lastMessageID;
 		}
 
-		// sort by which category we're in
-		if (m_categIndex != other.m_categIndex)
-			return m_categIndex < other.m_categIndex;
-		
-		if (m_category != other.m_category)
-			return m_category < other.m_category;
-		
-		// within this category group, put the category first
-		if (IsCategory() && !other.IsCategory()) return true;
-		if (!IsCategory() && other.IsCategory()) return false;
-		
 		// voice channels are always below text channels
 		if (IsVoice() && !other.IsVoice()) return false;
 		if (!IsVoice() && other.IsVoice()) return true;
 
-		// within each category, sort by position
-		if (!IsCategory() && !other.IsCategory() && m_pos != other.m_pos)
+		// sort by position
+		if (m_pos != other.m_pos)
 			return m_pos < other.m_pos;
 		
 		return m_id < other.m_id;
+	}
+};
+
+struct Category
+{
+	Snowflake m_id;
+	int m_pos;
+	std::string m_name;
+	std::vector<ChannelMember> m_channels;
+	
+	Category(Snowflake theId, int pos, const std::string& name)
+	{
+		m_id = theId;
+		m_pos = pos;
+		m_name = name;
+	}
+	
+	bool operator<(const Category& other) const
+	{
+		if (m_pos != other.m_pos) return m_pos < other.m_pos;
+		return m_id < other.m_id;
+	}
+	
+	void SortChannels()
+	{
+		std::sort(m_channels.begin(), m_channels.end());
 	}
 };
 
@@ -83,8 +97,7 @@ GuildController* GetGuildController() {
 @interface GuildController() {
 	uint64_t guildID;
 	Guild* pGuild;
-	std::map<Snowflake, int> m_idToIdx;
-	std::vector<ChannelMember> m_items;
+	std::vector<Category> m_categories;
 	int m_nextCategIndex;
 }
 @end
@@ -141,10 +154,10 @@ GuildController* GetGuildController() {
 		screenBounds.size.height - statusBarHeight - navBarHeight
 	);
 	
-	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
+	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleGrouped];
 	tableView.dataSource = self;
 	tableView.delegate = self;
-	tableView.backgroundColor = [UIColorScheme getTextBackgroundColor];
+	tableView.backgroundColor = [UIColorScheme getBackgroundColor];
 	[self.view addSubview:tableView];
 	
 	GetDiscordInstance()->OnSelectGuild(guildID);
@@ -159,11 +172,6 @@ GuildController* GetGuildController() {
 		g_pGuildController = nil;
 }
 
-- (void)onClickedSettingsButton
-{
-	// TODO
-}
-
 - (void)addChannel:(const Channel&) ch
 {
 	if (!ch.HasPermissionConst(PERM_VIEW_CHANNEL))
@@ -172,36 +180,60 @@ GuildController* GetGuildController() {
 		if (ch.m_channelType != Channel::CATEGORY)
 			return;
 	}
-
-	// TODO: Implement category order sorting. For now, they're sorted by ID.
-	// 11/06/2025 - Are they!?
-	int categIndex = ch.IsCategory() ? ch.m_pos : 0;
-
-	m_idToIdx[ch.m_snowflake] = (int) m_items.size();
-	m_items.push_back({ ch.m_parentCateg, ch.m_snowflake, ch.m_channelType, GetChannelString(ch), categIndex, ch.m_pos, ch.m_lastSentMsg });
+	
+	if (ch.IsCategory())
+	{
+		// Add this category.
+		m_categories.push_back(Category(ch.m_snowflake, ch.m_pos, ch.m_name));
+		return;
+	}
+	
+	// Add this channel to the category.
+	Category* category = nullptr;
+	
+	for (auto& categ : m_categories)
+	{
+		if (categ.m_id == ch.m_parentCateg) {
+			category = &categ;
+			break;
+		}
+	}
+	
+	if (!category)
+	{
+		m_categories.push_back(Category(ch.m_parentCateg, 0, "Unknown Category"));
+		category = &m_categories[m_categories.size() - 1];
+	}
+	
+	category->m_channels.push_back({ ch.m_parentCateg, ch.m_snowflake, ch.m_channelType, GetChannelString(ch), ch.m_pos, ch.m_lastSentMsg });
 }
 
 - (void)commitChannels
 {
-	// calculate category indices
-	std::map<Snowflake, int> categIdxs;
-	for (auto& item : m_items) {
-		if (item.m_type == Channel::CATEGORY)
-			categIdxs[item.m_id] = item.m_categIndex;
+	for (auto& categ : m_categories)
+	{
+		categ.SortChannels();
 	}
-
-	for (auto& item : m_items) {
-		if (item.m_type != Channel::CATEGORY)
-			item.m_categIndex = categIdxs[item.m_category];
+	
+	std::sort(m_categories.begin(), m_categories.end());
+	
+	for (auto iter = m_categories.begin(); iter != m_categories.end(); )
+	{
+		if (iter->m_channels.size() == 0)
+		{
+			m_categories.erase(iter);
+			iter = m_categories.begin();
+			continue;
+		}
+		
+		++iter;
 	}
-
-	std::sort(m_items.begin(), m_items.end());
 }
 
 - (void)recomputeChannels
 {
-	m_items.clear();
-	m_idToIdx.clear();
+	m_categories.clear();
+	m_categories.push_back(Category(0, 0, "Uncategorized"));
 	
 	if (!pGuild->m_bChannelsLoaded)
 	{
@@ -210,18 +242,18 @@ GuildController* GetGuildController() {
 	}
 	
 	for (auto& ch : pGuild->m_channels)
-		[self addChannel:ch.second];
+	{
+		if (ch.second.IsCategory())
+			[self addChannel:ch.second];
+	}
+	
+	for (auto& ch : pGuild->m_channels)
+	{
+		if (!ch.second.IsCategory())
+			[self addChannel:ch.second];
+	}
 	
 	[self commitChannels];
-	
-	for (size_t i = 0; i < m_items.size(); )
-	{
-		// remove any empty categories.
-		if (m_items[i].IsCategory() && (i + 1 >= m_items.size() || m_items[i + 1].IsCategory()))
-			m_items.erase(m_items.begin() + i);
-		else
-			i++;
-	}
 }
 
 - (void)updateChannelList
@@ -237,26 +269,36 @@ GuildController* GetGuildController() {
 	[tableView reloadData];
 }
 
-- (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section
+- (NSInteger)numberOfSectionsInTableView:(UITableView*)tv
 {
 	if (![self ensureGuildPointerExists])
 		return 0;
 	
-	return m_items.size();
+	return m_categories.size();
+}
+
+- (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section
+{
+	if (![self ensureGuildPointerExists])
+		return 0;
+	if (section < 0 || section >= (NSInteger) m_categories.size())
+		return 0;
+	
+	return (NSInteger) m_categories[section].m_channels.size();
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+	if (![self ensureGuildPointerExists])
+		return nil;
+	if (section < 0 || section >= (NSInteger) m_categories.size())
+		return nil;
+	
+	return [NSString stringWithUTF8String:m_categories[section].m_name.c_str()];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	if (![self ensureGuildPointerExists])
-		return nil;
-	
-	if (indexPath.row < 0 || indexPath.row >= m_items.size())
-		return nil;
-	
-	auto& item = m_items[indexPath.row];
-	if (item.IsCategory())
-		return 28.0f;
-	
 	return 44.0f; // default
 }
 
@@ -265,10 +307,14 @@ GuildController* GetGuildController() {
 	if (![self ensureGuildPointerExists])
 		return nil;
 	
-	if (indexPath.row < 0 || indexPath.row >= m_items.size())
+	if (indexPath.section < 0 || indexPath.section >= m_categories.size())
 		return nil;
 	
-	auto& item = m_items[indexPath.row];
+	auto& categ = m_categories[indexPath.section];
+	if (indexPath.row < 0 || indexPath.row >= categ.m_channels.size())
+		return nil;
+	
+	auto& item = categ.m_channels[indexPath.row];
 	
 	//std::string name = item.m_name + " [" + std::to_string(item.m_categIndex) + "] (" + std::to_string(item.m_pos) + ") {" + std::to_string(item.m_id) + "}";
 	std::string& name = item.m_name;
@@ -299,10 +345,14 @@ GuildController* GetGuildController() {
 	if (![self ensureGuildPointerExists])
 		return;
 	
-	if (indexPath.row < 0 || indexPath.row >= m_items.size())
+	if (indexPath.section < 0 || indexPath.section >= m_categories.size())
 		return;
 	
-	auto& item = m_items[indexPath.row];
+	auto& categ = m_categories[indexPath.section];
+	if (indexPath.row < 0 || indexPath.row >= categ.m_channels.size())
+		return;
+	
+	auto& item = categ.m_channels[indexPath.row];
 	
 	Snowflake channelID = item.m_id;
 	Channel* pChan = pGuild->GetChannel(channelID);
