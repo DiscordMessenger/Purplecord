@@ -225,10 +225,6 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 		fileName = "unknown.jpg";
 	}
 	
-	FILE* f = fopen(("/private/var/mobile/Purplecord_"+std::to_string(time(NULL))+fileName).c_str(), "wb");
-	fwrite(imageData.bytes, 1, imageData.length, f);
-	fclose(f);
-	
 	// TODO: Allow fore more configuration options.
 	Snowflake sf;
 	if (!GetDiscordInstance()->SendMessageAndAttachmentToCurrentChannel(

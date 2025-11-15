@@ -2,9 +2,11 @@
 
 This is an attempt to create a Discord client for iOS 3 and later.
 
+**This project is currently in alpha, meaning you should NOT expect stability or feature-completeness.**
+
 Support for newer versions of iOS is not guaranteed because I do not own any newer devices.
 
-This can log in (which takes about 50 seconds on my iPhone 3G over Wi-Fi), view messages,
+This can log in (which takes about 30 seconds on my iPhone 3G over Wi-Fi), view messages,
 and send simple messages. But it is not fully featured yet! And also, it's really slow and
 drains your battery fast, so probably not very practical either.
 
@@ -18,11 +20,8 @@ was chosen.
 
 Purplecord is currently not a full featured client.  The following features are planned:
 
-- Icons in server list
 - Settings menu
-- Options menu for messages
 - Typing indicator
-- Uploading images from camera roll
 - Saving images to camera roll
 - Member list
 - Quick Search similar to Discord Messenger
@@ -34,7 +33,7 @@ Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 sup
 
 **NOTE**: Replacing "ios3" with "ios6", "iPhoneOS3.0.sdk" with "iPhoneOS6.0.sdk" and "iOS 3" with "iOS 6" in the
 following build guide should work.  However, you must pass `BUILD_FOR_IOS3=no` to this project's makefile to build
-for iOS 6 and later (ARMv7).  AArch64 compilation is currently not supported because I don't have a 64-bit iDevice.
+for iOS 6 and later (ARMv7).  AArch64 compilation is currently not supported because I don't have a 64-bit iPhone.
 
 The iOS 3 build was tested on iPhone 3G running iPhone OS 3.1.3.
 The iOS 6 build was tested on iPhone 4 running iOS 7.0.
@@ -85,11 +84,13 @@ Download this archive:
 
 Then extract its contents to `$THEOS/sdks/iPhoneOS3.0.sdk`.
 
-### Installing the libc++ hack
+### Installing libc++
 
-Download this archive:
+Download the following archive:
+[iPhone OS 3 libc++ pack for armv6](https://iprogramincpp.com/purplecord/libcxx/libcxx-hack-ios3.tar.gz) or
+[iOS 6 libc++ pack for armv7](https://iprogramincpp.com/purplecord/libcxx/libcxx-hack-ios6.tar.gz).
 
-Extract it to `$THEOS/libcxx-hack`.  It should be picked up by the makefile eventually.
+Extract it to `$THEOS` (your Theos root directory).  It should be picked up by the makefile eventually.
 
 ### Building MbedTLS
 
@@ -202,7 +203,7 @@ make -j$(nproc)
 export PURPLECORD_LIBWEBP_PATH=[your libwebp checkout path]
 ```
 
-### Hack to make the linker use static libc++
+### Hack to make the linker link libc++ statically
 
 This might not be necessary if you know how to make iOS use the required dylibs.
 

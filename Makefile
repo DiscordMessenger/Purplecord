@@ -1,5 +1,5 @@
 # Makefile for Purplecord
-BUILD_FOR_IOS3 ?= no
+BUILD_FOR_IOS3 ?= yes
 
 TARGET_CC := clang-22
 TARGET_CXX := clang-22
@@ -36,6 +36,8 @@ else
 	BUILD_PATH = build-ios6
 endif
 
+# These paths are for iProgramInCpp's use and probably will not work on your end.
+# Make sure to export your replacements for these as environment variables.
 PURPLECORD_MBEDTLS_PATH ?= /mnt/c/DiscordMessenger/mbedtls-apple
 PURPLECORD_LIBCURL_PATH ?= /mnt/c/DiscordMessenger/libcurl-apple
 PURPLECORD_LIBWEBP_PATH ?= /mnt/c/DiscordMessenger/libwebp
@@ -53,9 +55,6 @@ include $(THEOS)/makefiles/common.mk
 
 APPLICATION_NAME = Purplecord
 
-# NOTE: Clang might have ABI incompatibilities so ideally I'd find some GCC patches instead!
-#
-# Hack: Disable the error where libstdc++ headers can't be found.  I'm providing them here:
 CPPHACKS = \
 	$(EXTRA_INCLUDES) \
 	-I$(PURPLECORD_MBEDTLS_PATH)/include \
