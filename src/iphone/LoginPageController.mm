@@ -60,12 +60,6 @@ void CreateDiscordInstanceIfNeeded();
 	textField.backgroundColor = [UIColorScheme getBackgroundColor];
 	textField.borderStyle = UITextBorderStyleRoundedRect;
 	
- 	// Not 100% decided about this.
-	// - If the token already exists, then yes, we definitely want to hide it.
-	// - But do we want to hide it when the user is trying to type it in?
-	// We should make it a checkbo, but I'm lazy.
-	//textField.secureTextEntry = YES;
-	
 	tokenTextField = textField;
 	
 	// Also, a label above that tells you you should log in.
