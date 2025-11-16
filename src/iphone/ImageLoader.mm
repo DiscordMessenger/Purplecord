@@ -14,7 +14,7 @@
 + (UIImage*)decodeWebp:(const uint8_t*)data size:(size_t)size
 {
 	int width = 0, height = 0;
-	uint8_t* dataWebp = WebPDecodeBGRA(data, size, &width, &height);
+	uint8_t* dataWebp = WebPDecodeRGBA(data, size, &width, &height);
 	if (!dataWebp)
 		return nil;
 
@@ -23,7 +23,7 @@
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	CGContextRef ctx = CGBitmapContextCreate(
 		(void *)dataWebp, width, height, 8, width * 4,
-		colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
+		colorSpace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast);
 
 	CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
 	UIImage *image = [UIImage imageWithCGImage:cgImage];
