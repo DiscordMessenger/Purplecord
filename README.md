@@ -18,14 +18,19 @@ was chosen.
 
 ## Planned features
 
-Purplecord is currently not a full featured client.  The following features are planned:
+Purplecord is currently not a full featured client.  The following features will be implemented in the following rough order:
 
-- Settings menu
-- Typing indicator
-- Saving images to camera roll
+- Read states
+- Opening attachments in full screen
+- Downloading attached images
+- Markdown formatting support
+- Multi-line text input
+- Replying to messages
+- Editing messages
+- Typing indicators
 - Member list
-- Quick Search similar to Discord Messenger
-- Viewing a member's information
+- Optimizations and stability fixes
+- Merge the [DiscordMessenger](https://github.com/DiscordMessenger/dm) and Purplecord backends into one common backend
 
 ## Attributions
 
