@@ -141,6 +141,7 @@ Purplecord_FILES = \
 	src/iphone/GuildController.mm \
 	src/iphone/ChannelController.mm \
 	src/iphone/LoginPageController.mm \
+	src/iphone/SettingsController.mm \
 	src/iphone/NetworkController.mm \
 	src/iphone/Frontend_iOS.mm \
 	src/iphone/TextInterface_iOS.cpp \

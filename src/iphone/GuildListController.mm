@@ -1,5 +1,6 @@
 #import "GuildListController.h"
 #import "GuildController.h"
+#import "SettingsController.h"
 #import "UIColorScheme.h"
 #import "AvatarCache.h"
 #include "HTTPClient_curl.h"
@@ -87,7 +88,8 @@ void TestFunction();
 
 - (void)onClickedSettingsButton
 {
-	// TODO
+	SettingsController *settings = [[[SettingsController alloc] init] autorelease];
+	[self.navigationController pushViewController:settings animated:YES];
 }
 
 - (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section
@@ -113,11 +115,11 @@ void TestFunction();
 	
 	static NSString *cellId = @"Cell";
 	UITableViewCell *cell = [tv dequeueReusableCellWithIdentifier:cellId];
-	if (!cell) {
+	if (!cell) 
 		cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0, 0, tv.bounds.size.width, 44) reuseIdentifier:cellId];
-		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
-		cell.textLabel.textColor = [UIColorScheme getTextColor];
-	}
+	
+	cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+	cell.textLabel.textColor = [UIColorScheme getTextColor];
 	cell.text = guildNameNS;
 	
 	UIImage* image = [GetAvatarCache() getImage:pGuild->m_avatarlnk];

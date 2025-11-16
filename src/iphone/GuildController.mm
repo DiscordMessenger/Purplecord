@@ -321,18 +321,11 @@ GuildController* GetGuildController() {
 	NSString* text = [NSString stringWithUTF8String:name.c_str()];
 	UITableViewCell *cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0,0,tv.bounds.size.width,44)];
 	
-	if (item.IsCategory()) {
-		cell.textLabel.textColor = [UIColor lightGrayColor];
-		cell.textLabel.font = [UIFont boldSystemFontOfSize:16.0];
-		cell.selectionStyle = UITableViewCellSelectionStyleNone;
-		cell.userInteractionEnabled = NO;
-	}
-	else {
-		cell.textLabel.textColor = [UIColorScheme getTextColor];
-		cell.textLabel.font = [UIFont boldSystemFontOfSize:20.0];
-		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
-		cell.userInteractionEnabled = YES;
-	}
+	cell.backgroundColor = [UIColorScheme getTextBackgroundColor];
+	cell.textLabel.textColor = [UIColorScheme getTextColor];
+	cell.textLabel.font = [UIFont boldSystemFontOfSize:20.0];
+	cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+	cell.userInteractionEnabled = YES;
 	
 	cell.text = text;
 	return cell;
