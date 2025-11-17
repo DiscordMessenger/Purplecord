@@ -2,6 +2,10 @@
 
 This is an attempt to create a Discord client for iOS 3 and later.
 
+<p align="center">
+![Purplecord running on an iPhone 3G](images/iphone3g.png)
+</p>
+
 **This project is currently in alpha, meaning you should NOT expect stability or feature-completeness.**
 
 Support for newer versions of iOS is not guaranteed because I do not own any newer devices.
