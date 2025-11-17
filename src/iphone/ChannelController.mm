@@ -417,6 +417,11 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	}
 }
 
+- (void)requestMarkRead
+{
+	GetDiscordInstance()->RequestAcknowledgeChannel(channelID);
+}
+
 - (void)refreshMessages:(ScrollDir::eScrollDir)sd withGapCulprit:(Snowflake)gapCulprit
 {
 	Profiler profiler("- [ChannelController refreshMessages:withGapCulprit:]");
@@ -844,6 +849,17 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	[item configureWithMessage:message andReload:m_forceReloadAttachments isEndOfChain:isEndOfChain];
 	
 	item.selectionStyle = UITableViewCellSelectionStyleGray;
+	
+	Channel* channel = GetDiscordInstance()->GetCurrentChannel();
+	if (channel &&
+		m_messages.size() != 0 &&
+		m_messages[m_messages.size() - 1]->m_msg->m_snowflake == message->m_msg->m_snowflake &&
+		channel->m_lastSentMsg != channel->m_lastViewedMsg &&
+		m_bAcknowledgeNow)
+	{
+		[self requestMarkRead];
+		channel->m_lastViewedMsg = channel->m_lastSentMsg;
+	}
 	
 	return item;
 }
