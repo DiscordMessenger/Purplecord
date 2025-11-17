@@ -1,6 +1,6 @@
 #import <UIKit/UIKit.h>
 
-@interface SettingsController : UITableViewController<UITableViewDataSource, UITableViewDelegate>
+@interface SettingsController : UITableViewController<UITableViewDataSource, UITableViewDelegate, UIActionSheetDelegate>
 
 - (instancetype)init;
 

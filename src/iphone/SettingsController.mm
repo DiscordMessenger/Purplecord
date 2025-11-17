@@ -9,7 +9,6 @@
 {
 	[super initWithStyle:UITableViewStyleGrouped];
 	self.tableView.backgroundColor = [UIColorScheme getBackgroundColor];
-	self.tableView.allowsSelection = NO;
 	self.tableView.delegate = self;
 	self.tableView.dataSource = self;
 	self.title = @"Settings";
@@ -18,7 +17,7 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView*)tv
 {
-	return 2;
+	return 4;
 }
 
 - (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section
@@ -26,9 +25,13 @@
 	switch (section)
 	{
 		case 0:
-			return 2;
+			return 1;
 		case 1:
-			return 3;
+			return 2; // Show Embeds does nothing yet.
+		case 2:
+			return 1; // From Links doesn't do anything yet.
+		case 3:
+			return 2;
 	}
 	return 0;
 }
@@ -41,12 +44,20 @@
 			return @"Appearance";
 		case 1:
 			return @"Chat";
+		case 2:
+			return @"Show Images";
+		case 3:
+			return @"Reset";
 	}
 	return nil;
 }
 
 - (void)darkModeToggle:(UISwitch*)sender {
 	GetLocalSettings()->SetDarkMode(sender.on);
+	GetLocalSettings()->Save();
+}
+- (void)replyMentionByDefaultToggle:(UISwitch*)sender {
+	GetLocalSettings()->SetReplyMentionByDefault(sender.on);
 	GetLocalSettings()->Save();
 }
 - (void)disableFormattingToggle:(UISwitch*)sender {
@@ -66,11 +77,56 @@
 	GetLocalSettings()->Save();
 }
 
-- (NSString*)textForRowAtIndexPath:(NSIndexPath*)indexPath andHasSwitch:(BOOL*)hasSwitch andSelector:(SEL*)selector andDefaultState:(BOOL*)defaultState
+#define RESET_TO_DEFAULT @"Reset to Default"
+#define LOG_OUT @"Log Out"
+
+- (void)resetToDefault {
+	UIActionSheet* actionSheet = [[UIActionSheet alloc]
+		initWithTitle:nil
+		delegate:self
+		cancelButtonTitle:@"Cancel"
+		destructiveButtonTitle:RESET_TO_DEFAULT
+		otherButtonTitles:nil
+	];
+	
+	[actionSheet showInView:self.view];
+	[actionSheet release];
+}
+- (void)logOut {
+	UIActionSheet* actionSheet = [[UIActionSheet alloc]
+		initWithTitle:nil
+		delegate:self
+		cancelButtonTitle:@"Cancel"
+		destructiveButtonTitle:LOG_OUT
+		otherButtonTitles:nil
+	];
+	
+	[actionSheet showInView:self.view];
+	[actionSheet release];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
 {
+	NSString *buttonName = [actionSheet buttonTitleAtIndex:buttonIndex];
+	
+	if ([buttonName isEqualToString:RESET_TO_DEFAULT])
+	{
+		DbgPrintF("Reset To Default Confirmed");
+		return;
+	}
+	if ([buttonName isEqualToString:LOG_OUT])
+	{
+		DbgPrintF("Log Out Confirmed");
+		return;
+	}
+}
+
+- (NSString*)textForRowAtIndexPath:(NSIndexPath*)indexPath andHasSwitch:(BOOL*)hasSwitch andSelector:(SEL*)selector andDefaultState:(BOOL*)defaultState andIsButton:(BOOL*)isButton
+{
+	*selector = nil;
+	*isButton = NO;
 	*hasSwitch = NO;
 	*defaultState = NO;
-	*selector = nil;
 	
 	switch (indexPath.section)
 	{
@@ -83,11 +139,6 @@
 					*selector = @selector(darkModeToggle:);
 					*defaultState = GetLocalSettings()->UseDarkMode();
 					return @"Dark Mode";
-				case 1:
-					*hasSwitch = YES;
-					*selector = @selector(disableFormattingToggle:);
-					*defaultState = GetLocalSettings()->DisableFormatting();
-					return @"Disable Formatting";
 			}
 			break;
 		}
@@ -97,19 +148,49 @@
 			{
 				case 0:
 					*hasSwitch = YES;
-					*selector = @selector(showAttachmentsToggle:);
-					*defaultState = GetLocalSettings()->ShowAttachmentImages();
-					return @"Show Attached Images";
+					*selector = @selector(disableFormattingToggle:);
+					*defaultState = GetLocalSettings()->DisableFormatting();
+					return @"Disable Formatting";
 				case 1:
+					*hasSwitch = YES;
+					*selector = @selector(replyMentionByDefaultToggle:);
+					*defaultState = GetLocalSettings()->ReplyMentionByDefault();
+					return @"Mention By Default";
+				case 2:
 					*hasSwitch = YES;
 					*selector = @selector(showEmbedsToggle:);
 					*defaultState = GetLocalSettings()->ShowEmbedContent();
-					return @"Show Embedded Content";
-				case 2:
+					return @"Show Embeds";
+			}
+		}
+		case 2:
+		{
+			switch (indexPath.row)
+			{
+				case 0:
 					*hasSwitch = YES;
-					*selector = @selector(showEmbedImagessToggle:);
+					*selector = @selector(showAttachmentsToggle:);
+					*defaultState = GetLocalSettings()->ShowAttachmentImages();
+					return @"From Attachments";
+				case 1:
+					*hasSwitch = YES;
+					*selector = @selector(showEmbedImagesToggle:);
 					*defaultState = GetLocalSettings()->ShowEmbedImages();
-					return @"Show Embedded Images";
+					return @"From Links";
+			}
+		}
+		case 3:
+		{
+			switch (indexPath.row)
+			{
+				case 0:
+					*isButton = YES;
+					*selector = @selector(resetToDefault);
+					return @"Reset Settings to Defaults";
+				case 1:
+					*isButton = YES;
+					*selector = @selector(logOut);
+					return @"Log Out";
 			}
 		}
 	}
@@ -120,8 +201,8 @@
 - (UITableViewCell*)tableView:(UITableView*)tv cellForRowAtIndexPath:(NSIndexPath*)indexPath
 {
 	SEL sel;
-	BOOL hasSwitch , defaultState;
-	NSString* text = [self textForRowAtIndexPath:indexPath andHasSwitch:&hasSwitch andSelector:&sel andDefaultState:&defaultState];
+	BOOL isButton, hasSwitch, defaultState;
+	NSString* text = [self textForRowAtIndexPath:indexPath andHasSwitch:&hasSwitch andSelector:&sel andDefaultState:&defaultState andIsButton:&isButton];
 	
 	static NSString* cellIdentifier = @"SettingsCell";
 	UITableViewCell* cell = [tv dequeueReusableCellWithIdentifier:cellIdentifier];
@@ -132,8 +213,14 @@
 	cell.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	cell.textLabel.textColor = [UIColorScheme getTextColor];
 	
-	if (hasSwitch)
+	if (isButton)
 	{
+		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+		cell.textLabel.textAlignment = UITextAlignmentCenter;
+	}
+	else if (hasSwitch)
+	{
+		cell.selectionStyle = UITableViewCellSelectionStyleNone;
 		UISwitch* toggle = [[[UISwitch alloc] initWithFrame:CGRectZero] autorelease];
 		
 		if (sel) {
@@ -145,10 +232,24 @@
 	}
 	else
 	{
+		cell.selectionStyle = UITableViewCellSelectionStyleNone;
 		cell.accessoryView = nil;
 	}
 	
 	return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+	SEL sel;
+	BOOL isButton, hasSwitch, defaultState;
+	NSString* text = [self textForRowAtIndexPath:indexPath andHasSwitch:&hasSwitch andSelector:&sel andDefaultState:&defaultState andIsButton:&isButton];
+	
+	if (!isButton)
+		return;
+	
+	[tableView deselectRowAtIndexPath:indexPath animated:NO];
+	[self performSelector:sel];
 }
 
 @end

@@ -3,6 +3,7 @@
 #import "UIColorScheme.h"
 #import "AvatarCache.h"
 #include "../discord/DiscordInstance.hpp"
+#include "../discord/LocalSettings.hpp"
 #include "../discord/Util.hpp"
 
 AttachedImage::~AttachedImage()
@@ -378,22 +379,25 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	
 	height = paddingY + actualPaddingIn + authorTextSize.height + messageTextSize.height;
 	
-	if (message->m_attachments.size() != 0)
+	bool showAttachments = GetLocalSettings()->ShowAttachmentImages();
+	
+	if (showAttachments && message->m_attachments.size() != 0)
 		height += paddingIn;
 	else
 		height += paddingEnd;
 	
 	// for each embed inside the message, add its height.
-	for (auto& attach : message->m_attachments)
+	if (showAttachments)
 	{
-		if (!attach.IsImage())
+		for (auto& attach : message->m_attachments)
 		{
-			// TODO: generate an embed for it.  Skip for now
-			continue;
+			if (!attach.IsImage())
+				// TODO: generate an embed for it.  Skip for now
+				continue;
+			
+			attach.UpdatePreviewSize();
+			height += paddingIn + attach.m_previewHeight;
 		}
-		
-		attach.UpdatePreviewSize();
-		height += paddingIn + attach.m_previewHeight;
 	}
 	
 	return height;
@@ -568,7 +572,11 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	
 	height = paddingY + actualPaddingIn + authorTextSize.height + messageTextSize.height;
 	
-	if (message->m_attachments.size() != 0)
+	bool showAttachments = GetLocalSettings()->ShowAttachmentImages();
+	if (!showAttachments)
+		attachedImagesCount = 0;
+	
+	if (showAttachments && message->m_attachments.size() != 0)
 		height += paddingIn;
 	else
 		height += paddingEnd;
@@ -598,7 +606,7 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 	if (attachedImagesCount != message->m_attachments.size())
 		needToRegenerate = true;
 	
-	if (!needToRegenerate)
+	if (!needToRegenerate && showAttachments)
 	{
 		size_t idx = 0;
 		for (auto& attach : message->m_attachments)
@@ -623,7 +631,11 @@ bool IsPinnableActionMessage(MessageType::eType msgType)
 		}
 	}
 	
-	if (needToRegenerate)
+	if (!showAttachments)
+	{
+		[self tearDownImages];
+	}
+	else if (needToRegenerate)
 	{
 		[self tearDownImages];
 		
