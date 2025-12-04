@@ -1,5 +1,6 @@
 #import "SettingsController.h"
 #import "UIColorScheme.h"
+#import "UIProgressHUD.h"
 #include "../discord/Util.hpp"
 #include "../discord/LocalSettings.hpp"
 
@@ -31,7 +32,7 @@
 		case 2:
 			return 1; // From Links doesn't do anything yet.
 		case 3:
-			return 2;
+			return 3;
 	}
 	return 0;
 }
@@ -47,7 +48,7 @@
 		case 2:
 			return @"Show Images";
 		case 3:
-			return @"Reset";
+			return @"Data Cleanup";
 	}
 	return nil;
 }
@@ -92,6 +93,7 @@
 	[actionSheet showInView:self.view];
 	[actionSheet release];
 }
+
 - (void)logOut {
 	UIActionSheet* actionSheet = [[UIActionSheet alloc]
 		initWithTitle:nil
@@ -119,6 +121,47 @@
 		DbgPrintF("Log Out Confirmed");
 		return;
 	}
+}
+
+- (void)purgeCache
+{
+	UIWindow* window = self.view.window;
+	
+	UIProgressHUD* hud = [[UIProgressHUD alloc] initWithWindow:window];
+	[hud setText:@"Loading"];
+	[hud setShowsText:YES];
+	[hud show:YES];
+	
+	[self performSelectorInBackground:@selector(purgeCacheBGThread:) withObject:hud];
+}
+
+- (void)purgeCacheBGThread:(NSObject*)object
+{
+	UIProgressHUD* hud = (UIProgressHUD*)object;
+	
+	std::string directory = GetCachePath();
+	NSFileManager* fm = [NSFileManager defaultManager];
+	NSString* path = [NSString stringWithUTF8String:directory.c_str()];
+	NSError* error = nil;
+	NSArray* contents = [[fm contentsOfDirectoryAtPath:path error:&error] autorelease];
+	if (!contents) {
+		[hud performSelector:@selector(hide) withObject:nil];
+		[hud release];
+		return;
+	}
+	
+	for (NSString* item in contents) {
+		NSString* fullPath = [path stringByAppendingPathComponent:item];
+		[fm removeItemAtPath:fullPath error:&error];
+	}
+	
+	[hud performSelectorOnMainThread:@selector(done) withObject:nil waitUntilDone:NO];
+	[hud performSelectorOnMainThread:@selector(setText:) withObject:@"Done" waitUntilDone:NO];
+	
+	// hide after 1 second
+	usleep(500000);
+	[hud performSelector:@selector(hide) withObject:nil];
+	[hud release];
 }
 
 - (NSString*)textForRowAtIndexPath:(NSIndexPath*)indexPath andHasSwitch:(BOOL*)hasSwitch andSelector:(SEL*)selector andDefaultState:(BOOL*)defaultState andIsButton:(BOOL*)isButton
@@ -189,6 +232,10 @@
 					return @"Reset Settings to Defaults";
 				case 1:
 					*isButton = YES;
+					*selector = @selector(purgeCache);
+					return @"Purge Cache";
+				case 2:
+					*isButton = YES;
 					*selector = @selector(logOut);
 					return @"Log Out";
 			}
@@ -217,10 +264,12 @@
 	{
 		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
 		cell.textLabel.textAlignment = UITextAlignmentCenter;
+		cell.accessoryView = nil;
 	}
 	else if (hasSwitch)
 	{
 		cell.selectionStyle = UITableViewCellSelectionStyleNone;
+		cell.textLabel.textAlignment = UITextAlignmentLeft;
 		UISwitch* toggle = [[[UISwitch alloc] initWithFrame:CGRectZero] autorelease];
 		
 		if (sel) {
@@ -233,6 +282,7 @@
 	else
 	{
 		cell.selectionStyle = UITableViewCellSelectionStyleNone;
+		cell.textLabel.textAlignment = UITextAlignmentLeft;
 		cell.accessoryView = nil;
 	}
 	
