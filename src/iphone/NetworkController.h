@@ -30,7 +30,7 @@ struct AttachmentDownloadedParams {
 - (void)updateAttachmentByID:(const std::string&)rid;
 - (void)onWebsocketFail:(NSValue*)websocketFailNSValue;
 - (void)setLoginStage:(NSString*)stage;
-- (void)loadedImageFromDataBackgroundThread:(UIImage*)himg withAdditData:(NSString*)additData saveToCache:(BOOL)saveToCache;
+- (void)loadedImageFromDataBackgroundThread:(UIImage*)himg withAdditData:(NSString*)additData;
 - (void)loadImageFromDataBackgroundThread:(NSValue*)attachmentDownloadedParamsNSValue;
 
 @end
