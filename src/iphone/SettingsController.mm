@@ -137,6 +137,7 @@
 
 - (void)purgeCacheBGThread:(NSObject*)object
 {
+@autoreleasepool {
 	UIProgressHUD* hud = (UIProgressHUD*)object;
 	
 	std::string directory = GetCachePath();
@@ -162,6 +163,7 @@
 	usleep(500000);
 	[hud performSelector:@selector(hide) withObject:nil];
 	[hud release];
+}
 }
 
 - (NSString*)textForRowAtIndexPath:(NSIndexPath*)indexPath andHasSwitch:(BOOL*)hasSwitch andSelector:(SEL*)selector andDefaultState:(BOOL*)defaultState andIsButton:(BOOL*)isButton

@@ -1514,7 +1514,7 @@ namespace iprog
 				if (itemPos >= itemCount)
 				{
 					// THIS SHOULD NOT HAPPEN! Severe performance penalty otherwise!
-					fprintf(stderr, "THIS SHOULD NOT HAPPEN!  parse_object() expanding from %zu to %zu", itemCount, itemPos + 1);
+					fprintf(stderr, "THIS SHOULD NOT HAPPEN!  parse_object() expanding from %zu to %zu\n", itemCount, itemPos + 1);
 					fflush(stderr);
 					itemCount = itemPos + 1;
 					mainObject.internal_resize(itemCount);
@@ -1611,7 +1611,7 @@ namespace iprog
 				if (itemPos >= itemCount)
 				{
 					// THIS SHOULD NOT HAPPEN! Severe performance penalty otherwise!
-					fprintf(stderr, "THIS SHOULD NOT HAPPEN!  parse_array() expanding from %zu to %zu", itemCount, itemPos + 1);
+					fprintf(stderr, "THIS SHOULD NOT HAPPEN!  parse_array() expanding from %zu to %zu\n", itemCount, itemPos + 1);
 					fflush(stderr);
 					itemCount = itemPos + 1;
 					array.internal_resize(itemCount);

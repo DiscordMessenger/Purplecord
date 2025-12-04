@@ -166,13 +166,28 @@ NetworkController* GetNetworkController() {
     [inv invoke];
 }
 
-- (void)loadImageFromDataMainThread:(UIImage*)himg withAdditData:(NSString*)additData
+- (void)loadedImageFromDataMainThread:(UIImage*)himg withAdditData:(NSString*)additData
 {
+	// NOTE: himg could be HIMAGE_ERROR!
 	std::string additDataUTF8(additData ? [additData UTF8String] : "");
 	
 	[GetAvatarCache() loadedResource:additDataUTF8];
 	[GetAvatarCache() setImage:additDataUTF8 image:himg];
 	[GetNetworkController() updateAttachmentByID:additDataUTF8];
+}
+
+- (void)loadedImageFromDataBackgroundThread:(UIImage*)himg withAdditData:(NSString*)additData
+{
+	SEL sel = @selector(loadedImageFromDataMainThread:withAdditData:);
+	NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:sel]];
+	
+	[invocation setSelector:sel];
+	[invocation setTarget:self];
+	[invocation setArgument:&himg atIndex:2];
+	[invocation setArgument:&additData atIndex:3];
+	[invocation retainArguments];
+	
+	[self performSelectorOnMainThread:@selector(invoke:) withObject:invocation waitUntilDone:NO];
 }
 
 - (void)loadImageFromDataBackgroundThread:(NSValue*)attachmentDownloadedParamsNSValue
@@ -187,34 +202,19 @@ NetworkController* GetNetworkController() {
 	bool bHasAlpha = false;
 	
 	UIImage* himg = [ImageLoader convertToBitmap:data.data() size:data.size() resizeToWidth:nImSize andHeight:nImSize];
-
-	if (himg)
-	{
-		SEL sel = @selector(loadImageFromDataMainThread:withAdditData:);
-		NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:sel]];
-		
-		UIImage* himg2 = himg;
-		NSString* str = [NSString stringWithUTF8String:additData.c_str()];
-		[invocation setSelector:sel];
-		[invocation setTarget:self];
-		[invocation setArgument:&himg2 atIndex:2];
-		[invocation setArgument:&str atIndex:3];
-		[invocation retainArguments];
-		
-		[self performSelectorOnMainThread:@selector(invoke:) withObject:invocation waitUntilDone:NO];
-	}
+	data.clear();
 	
-	// store the cached data..
-	std::string final_path = GetCachePath() + "/" + additData;
-	FILE* f = fopen(final_path.c_str(), "wb");
-	if (!f) {
-		DbgPrintF("ERROR: Could not open %s for writing", final_path.c_str());
-		// TODO: error message
+	if (!himg)
 		return;
-	}
-
-	fwrite(data.data(), 1, data.size(), f);
-	fclose(f);
+	
+	[self loadedImageFromDataBackgroundThread:himg withAdditData:[NSString stringWithUTF8String:additData.c_str()]];
+	
+	// Write the pre-processed data to cache to load it faster
+	std::string finalPath = GetCachePath() + "/" + additData;
+	NSString* finalPathNS = [NSString stringWithUTF8String:finalPath.c_str()];
+	
+	NSData* pngData = UIImagePNGRepresentation(himg);
+	[pngData writeToFile:finalPathNS atomically:YES];
 }
 
 @end

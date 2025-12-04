@@ -1,6 +1,7 @@
 #import "AvatarCache.h"
 #import "ImageLoader.h"
 #import "UIProportions.h"
+#import "NetworkController.h"
 #include "../discord/HTTPClient.hpp"
 #include "../discord/Frontend.hpp"
 #include "../discord/DiscordAPI.hpp"
@@ -130,6 +131,44 @@ static int NearestPowerOfTwo(int x) {
 		m_loadingResources.erase(iter);
 }
 
+- (void)loadImageFromFile:(NSString*)myIdNS
+{
+	std::string myId([myIdNS UTF8String]);
+	std::string final_path = GetCachePath() + "/" + myId;
+	
+	DbgPrintF("Loading image %s", final_path.c_str());
+	// load that instead.
+	FILE* f = fopen(final_path.c_str(), "rb");
+	if (!f) {
+		[GetNetworkController() loadedImageFromDataBackgroundThread:HIMAGE_ERROR withAdditData:myIdNS];
+		return;
+	}
+
+	fseek(f, 0, SEEK_END);
+	int sz = int(ftell(f));
+	fseek(f, 0, SEEK_SET);
+
+	uint8_t* pData = new uint8_t[sz];
+	fread(pData, 1, sz, f);
+
+	fclose(f);
+	
+	// Note: Assumes no need to resize.  However, the network controller saves the pre-processed
+	// version, so this should be fine.
+	UIImage* himg = [ImageLoader convertToBitmap:pData size:sz resizeToWidth:0 andHeight:0];
+	delete[] pData;
+	
+	if (!himg)
+	{
+		DbgPrintF("Image %s could not be decoded!", myId.c_str());
+		himg = HIMAGE_ERROR;
+	}
+	
+	// I'm too lazy to replicate the same behavior so just reuse it.
+	// It may be a circular reference but I don't care.
+	[GetNetworkController() loadedImageFromDataBackgroundThread:himg withAdditData:myIdNS];
+}
+
 - (UIImage*)getImageSpecial:(const std::string&)resource
 {
 	std::string myId = [self makeIdentifier:resource];
@@ -156,35 +195,12 @@ static int NearestPowerOfTwo(int x) {
 	if (access(final_path.c_str(), R_OK) == 0)
 	{
 #ifndef DISABLE_AVATAR_LOADING_FOR_DEBUGGING
-		DbgPrintF("Loading image %s", final_path.c_str());
-		// load that instead.
-		FILE* f = fopen(final_path.c_str(), "rb");
-		if (!f) {
-			[self setImage:myId image:HIMAGE_ERROR];
-			return [self getImageSpecial:myId];
-		}
+		NSString* idStr = [NSString stringWithUTF8String:myId.c_str()];
+		[self performSelectorInBackground:@selector(loadImageFromFile:) withObject:idStr];
+		[self setImage:myId image:HIMAGE_LOADING];
+		return [self getImageSpecial:myId];
 
-		fseek(f, 0, SEEK_END);
-		int sz = int(ftell(f));
-		fseek(f, 0, SEEK_SET);
 
-		uint8_t* pData = new uint8_t[sz];
-		fread(pData, 1, sz, f);
-
-		fclose(f);
-		
-		int nsz = pla == eImagePlace::ATTACHMENTS ? 0 : -1;
-		bool hasAlpha = false;
-		UIImage* himg = [ImageLoader convertToBitmap:pData size:sz resizeToWidth:nsz andHeight:nsz];
-		delete[] pData;
-		
-		if (himg)
-		{
-			[self setImage:myId image:himg];
-			return himg;
-		}
-		
-		DbgPrintF("Image %s could not be decoded!", myId.c_str());
 #endif
 		[self setImage:myId image:HIMAGE_ERROR];
 		return [self getImageSpecial:myId];
