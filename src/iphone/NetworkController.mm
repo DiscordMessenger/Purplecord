@@ -4,6 +4,8 @@
 #import "ChannelController.h"
 #import "AppDelegate.h"
 #import "UIColorScheme.h"
+#import "AvatarCache.h"
+#import "ImageLoader.h"
 
 #include "HTTPClient_curl.h"
 #include "Frontend_iOS.h"
@@ -157,6 +159,62 @@ NetworkController* GetNetworkController() {
 {
 	if (GetLoginPageController())
 		[GetLoginPageController() setLoginStage:stage];
+}
+
+- (void)invoke:(NSInvocation *)inv
+{
+    [inv invoke];
+}
+
+- (void)loadImageFromDataMainThread:(UIImage*)himg withAdditData:(NSString*)additData
+{
+	std::string additDataUTF8(additData ? [additData UTF8String] : "");
+	
+	[GetAvatarCache() loadedResource:additDataUTF8];
+	[GetAvatarCache() setImage:additDataUTF8 image:himg];
+	[GetNetworkController() updateAttachmentByID:additDataUTF8];
+}
+
+- (void)loadImageFromDataBackgroundThread:(NSValue*)attachmentDownloadedParamsNSValue
+{
+	AttachmentDownloadedParams* parms = (AttachmentDownloadedParams*) [attachmentDownloadedParamsNSValue pointerValue];
+	bool bIsProfilePicture = parms->bIsProfilePicture;
+	std::string additData = std::move(parms->additData);
+	std::vector<uint8_t> data = std::move(parms->data);
+	delete parms;
+	
+	int nImSize = bIsProfilePicture ? -1 : 0;
+	bool bHasAlpha = false;
+	
+	UIImage* himg = [ImageLoader convertToBitmap:data.data() size:data.size() resizeToWidth:nImSize andHeight:nImSize];
+
+	if (himg)
+	{
+		SEL sel = @selector(loadImageFromDataMainThread:withAdditData:);
+		NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:sel]];
+		
+		UIImage* himg2 = himg;
+		NSString* str = [NSString stringWithUTF8String:additData.c_str()];
+		[invocation setSelector:sel];
+		[invocation setTarget:self];
+		[invocation setArgument:&himg2 atIndex:2];
+		[invocation setArgument:&str atIndex:3];
+		[invocation retainArguments];
+		
+		[self performSelectorOnMainThread:@selector(invoke:) withObject:invocation waitUntilDone:NO];
+	}
+	
+	// store the cached data..
+	std::string final_path = GetCachePath() + "/" + additData;
+	FILE* f = fopen(final_path.c_str(), "wb");
+	if (!f) {
+		DbgPrintF("ERROR: Could not open %s for writing", final_path.c_str());
+		// TODO: error message
+		return;
+	}
+
+	fwrite(data.data(), 1, data.size(), f);
+	fclose(f);
 }
 
 @end

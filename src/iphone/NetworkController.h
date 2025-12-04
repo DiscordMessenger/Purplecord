@@ -1,6 +1,7 @@
 #pragma once
 #import <Foundation/Foundation.h>
 #include <string>
+#include <vector>
 
 struct WebsocketFailParams {
 	int gatewayID;
@@ -8,6 +9,12 @@ struct WebsocketFailParams {
 	std::string message;
 	bool isTLSError;
 	bool mayRetry;
+};
+
+struct AttachmentDownloadedParams {
+	std::vector<uint8_t> data;
+	std::string additData;
+	bool bIsProfilePicture;
 };
 
 @interface NetworkController : NSObject <UIAlertViewDelegate>
@@ -23,6 +30,7 @@ struct WebsocketFailParams {
 - (void)updateAttachmentByID:(const std::string&)rid;
 - (void)onWebsocketFail:(NSValue*)websocketFailNSValue;
 - (void)setLoginStage:(NSString*)stage;
+- (void)loadImageFromDataBackgroundThread:(NSValue*)attachmentDownloadedParamsNSValue;
 
 @end
 

@@ -6,7 +6,6 @@
 #import "GuildController.h"
 #import "ChannelController.h"
 #import "AvatarCache.h"
-#import "ImageLoader.h"
 
 void Frontend_iOS::OnRequestDone(NetRequest* pRequest)
 {
@@ -167,31 +166,17 @@ std::string Frontend_iOS::GetFormatTimeShorterText()
 
 void Frontend_iOS::OnAttachmentDownloaded(bool bIsProfilePicture, const uint8_t* pData, size_t nSize, const std::string& additData)
 {
-	@autoreleasepool
-	{
-		int nImSize = bIsProfilePicture ? -1 : 0;
-		bool bHasAlpha = false;
-		UIImage* himg = [ImageLoader convertToBitmap:pData size:nSize resizeToWidth:nImSize andHeight:nImSize];
-
-		if (himg)
-		{
-			[GetAvatarCache() loadedResource:additData];
-			[GetAvatarCache() setImage:additData image:himg];
-			[GetNetworkController() updateAttachmentByID:additData];
-		}
+	@autoreleasepool {
+		AttachmentDownloadedParams* parms = new AttachmentDownloadedParams();
+		parms->bIsProfilePicture = bIsProfilePicture;
+		parms->additData = additData;
+		parms->data = std::vector(pData, pData + nSize);
+		
+		[GetNetworkController()
+			performSelectorInBackground:@selector(loadImageFromDataBackgroundThread:)
+			withObject:[NSValue valueWithPointer:parms]
+		];
 	}
-
-	// store the cached data..
-	std::string final_path = GetCachePath() + "/" + additData;
-	FILE* f = fopen(final_path.c_str(), "wb");
-	if (!f) {
-		DbgPrintF("ERROR: Could not open %s for writing", final_path.c_str());
-		// TODO: error message
-		return;
-	}
-
-	fwrite(pData, 1, nSize, f);
-	fclose(f);
 }
 
 void Frontend_iOS::RegisterIcon(Snowflake sf, const std::string& avatarlnk)
