@@ -8,8 +8,6 @@
 #include <md5/MD5.h>
 #include <unistd.h>
 
-#define MAX_BITMAPS_KEEP_LOADED (16)
-
 //#define DISABLE_AVATAR_LOADING_FOR_DEBUGGING
 
 AvatarCache* g_pAvatarCache;
@@ -93,12 +91,23 @@ static int NearestPowerOfTwo(int x) {
 	return myId;
 }
 
+- (int)maxBitmapsKeepLoaded
+{
+	// TODO: Ideally this would be dynamic and depend
+	// on the amount of memory you have available.
+	//
+	// TODO: Ideally you'd keep profile pictures and attachments
+	// separate to load fewer attachments at a time but more profile
+	// pictures.
+	return 32;
+}
+
 - (void)setImage:(const std::string&)resource image:(UIImage*)image
 {
 	std::string myId = [self makeIdentifier:resource];
 
 	// Remove the least recently used bitmap until the maximum amount is loaded.
-	while (m_profileToBitmap.size() > MAX_BITMAPS_KEEP_LOADED)
+	while (m_profileToBitmap.size() > [self maxBitmapsKeepLoaded])
 	{
 		if (![self trimBitmap])
 			break;
