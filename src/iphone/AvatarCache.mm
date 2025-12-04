@@ -165,18 +165,18 @@ static int NearestPowerOfTwo(int x) {
 	
 	// Note: Assumes no need to resize.  However, the network controller saves the pre-processed
 	// version, so this should be fine.
-	UIImage* himg = [ImageLoader convertToBitmap:pData size:sz resizeToWidth:0 andHeight:0];
+	LoadedImage* loadedimg = ImageLoader::ConvertToBitmap(pData, sz);
 	delete[] pData;
 	
-	if (!himg)
+	if (!loadedimg)
 	{
 		DbgPrintF("Image %s could not be decoded!", myId.c_str());
-		himg = HIMAGE_ERROR;
+		return;
 	}
 	
 	// I'm too lazy to replicate the same behavior so just reuse it.
 	// It may be a circular reference but I don't care.
-	[GetNetworkController() loadedImageFromDataBackgroundThread:himg withAdditData:myIdNS];
+	[GetNetworkController() loadedImageFromDataBackgroundThread:loadedimg withAdditData:myIdNS];
 }
 }
 

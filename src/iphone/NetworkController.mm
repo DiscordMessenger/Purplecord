@@ -166,23 +166,33 @@ NetworkController* GetNetworkController() {
     [inv invoke];
 }
 
-- (void)loadedImageFromDataMainThread:(UIImage*)himg withAdditData:(NSString*)additData
+- (void)loadedImageFromDataMainThread:(NSValue*)loadedImgValue withAdditData:(NSString*)additData
 {
+	LoadedImage* loadedImg = (LoadedImage*) [loadedImgValue pointerValue];
+	UIImage* image = loadedImg->ToUIImage();
+	delete loadedImg;
+	
+	if (!image) {
+		DbgPrintF("error converting LoadedImage to UIImage");
+		return;
+	}
+	
 	std::string additDataUTF8(additData ? [additData UTF8String] : "");
 	
 	[GetAvatarCache() loadedResource:additDataUTF8];
-	[GetAvatarCache() setImage:additDataUTF8 image:himg];
+	[GetAvatarCache() setImage:additDataUTF8 image:image];
 	[GetNetworkController() updateAttachmentByID:additDataUTF8];
 }
 
-- (void)loadedImageFromDataBackgroundThread:(UIImage*)himg withAdditData:(NSString*)additData
+- (void)loadedImageFromDataBackgroundThread:(LoadedImage*)loadedImg withAdditData:(NSString*)additData
 {
 	SEL sel = @selector(loadedImageFromDataMainThread:withAdditData:);
 	NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:sel]];
+	NSValue* loadedImgValue = [NSValue valueWithPointer:loadedImg];
 	
 	[invocation setSelector:sel];
 	[invocation setTarget:self];
-	[invocation setArgument:&himg atIndex:2];
+	[invocation setArgument:&loadedImgValue atIndex:2];
 	[invocation setArgument:&additData atIndex:3];
 	[invocation retainArguments];
 	
@@ -201,20 +211,17 @@ NetworkController* GetNetworkController() {
 	int nImSize = bIsProfilePicture ? -1 : 0;
 	bool bHasAlpha = false;
 	
-	UIImage* himg = [ImageLoader convertToBitmap:data.data() size:data.size() resizeToWidth:nImSize andHeight:nImSize];
+	UIImage* himg = nil;
+	LoadedImage* loadedImg = ImageLoader::ConvertToBitmap(data.data(), data.size(), nImSize, nImSize);
 	data.clear();
 	
-	if (!himg)
+	if (!loadedImg)
 		return;
 	
-	[self loadedImageFromDataBackgroundThread:himg withAdditData:[NSString stringWithUTF8String:additData.c_str()]];
+	[self loadedImageFromDataBackgroundThread:loadedImg withAdditData:[NSString stringWithUTF8String:additData.c_str()]];
 	
 	// Write the pre-processed data to cache to load it faster
-	std::string finalPath = GetCachePath() + "/" + additData;
-	NSString* finalPathNS = [NSString stringWithUTF8String:finalPath.c_str()];
-	
-	NSData* pngData = UIImagePNGRepresentation(himg);
-	[pngData writeToFile:finalPathNS atomically:YES];
+	loadedImg->Save(GetCachePath() + "/" + additData);
 }
 }
 

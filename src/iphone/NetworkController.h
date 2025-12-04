@@ -2,6 +2,7 @@
 #import <Foundation/Foundation.h>
 #include <string>
 #include <vector>
+#import "ImageLoader.h"
 
 struct WebsocketFailParams {
 	int gatewayID;
@@ -30,7 +31,7 @@ struct AttachmentDownloadedParams {
 - (void)updateAttachmentByID:(const std::string&)rid;
 - (void)onWebsocketFail:(NSValue*)websocketFailNSValue;
 - (void)setLoginStage:(NSString*)stage;
-- (void)loadedImageFromDataBackgroundThread:(UIImage*)himg withAdditData:(NSString*)additData;
+- (void)loadedImageFromDataBackgroundThread:(LoadedImage*)loadedImg withAdditData:(NSString*)additData;
 - (void)loadImageFromDataBackgroundThread:(NSValue*)attachmentDownloadedParamsNSValue;
 
 @end

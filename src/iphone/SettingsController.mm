@@ -4,7 +4,9 @@
 #include "../discord/Util.hpp"
 #include "../discord/LocalSettings.hpp"
 
-@implementation SettingsController
+@implementation SettingsController {
+	BOOL purging;
+}
 
 - (instancetype)init
 {
@@ -125,6 +127,9 @@
 
 - (void)purgeCache
 {
+	if (purging)
+		return;
+	
 	UIWindow* window = self.view.window;
 	
 	UIProgressHUD* hud = [[UIProgressHUD alloc] initWithWindow:window];
@@ -138,6 +143,8 @@
 - (void)purgeCacheBGThread:(NSObject*)object
 {
 @autoreleasepool {
+	purging = YES;
+	
 	UIProgressHUD* hud = (UIProgressHUD*)object;
 	
 	std::string directory = GetCachePath();
@@ -148,6 +155,7 @@
 	if (!contents) {
 		[hud performSelector:@selector(hide) withObject:nil];
 		[hud release];
+		purging = NO;
 		return;
 	}
 	
@@ -163,6 +171,7 @@
 	usleep(500000);
 	[hud performSelector:@selector(hide) withObject:nil];
 	[hud release];
+	purging = NO;
 }
 }
 
