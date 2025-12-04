@@ -166,35 +166,38 @@ NetworkController* GetNetworkController() {
     [inv invoke];
 }
 
-- (void)loadedImageFromDataMainThread:(UIImage*)himg withAdditData:(NSString*)additData
+- (void)loadedImageFromDataMainThread:(UIImage*)himg withAdditData:(NSString*)additData saveToCache:(NSNumber*)saveToCacheNumber
 {
 	// NOTE: himg could be HIMAGE_ERROR!
+	bool saveToCache = [saveToCacheNumber boolValue];
 	std::string additDataUTF8(additData ? [additData UTF8String] : "");
 	
 	[GetAvatarCache() loadedResource:additDataUTF8];
 	[GetAvatarCache() setImage:additDataUTF8 image:himg];
 	[GetNetworkController() updateAttachmentByID:additDataUTF8];
 	
-	// Write the pre-processed data to cache to load it faster
-	std::string finalPath = GetCachePath() + "/" + additDataUTF8;
-	NSString* finalPathNS = [NSString stringWithUTF8String:finalPath.c_str()];
-	
-	NSData* pngData = UIImagePNGRepresentation(himg);
-	[pngData writeToFile:finalPathNS atomically:YES];
-	
-	[himg release];
+	if (saveToCache)
+	{
+		// Write the pre-processed data to cache to load it faster
+		std::string finalPath = GetCachePath() + "/" + additDataUTF8;
+		NSString* finalPathNS = [NSString stringWithUTF8String:finalPath.c_str()];
+		
+		NSData* pngData = UIImagePNGRepresentation(himg);
+		[pngData writeToFile:finalPathNS atomically:YES];
+	}
 }
 
-- (void)loadedImageFromDataBackgroundThread:(UIImage*)himg withAdditData:(NSString*)additData
+- (void)loadedImageFromDataBackgroundThread:(UIImage*)himg withAdditData:(NSString*)additData saveToCache:(BOOL)saveToCache
 {
-	SEL sel = @selector(loadedImageFromDataMainThread:withAdditData:);
+	SEL sel = @selector(loadedImageFromDataMainThread:withAdditData:saveToCache:);
 	NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:sel]];
+	NSNumber* saveWithCacheNumber = [NSNumber numberWithBool:saveToCache];
 	
-	[himg retain];
 	[invocation setSelector:sel];
 	[invocation setTarget:self];
 	[invocation setArgument:&himg atIndex:2];
 	[invocation setArgument:&additData atIndex:3];
+	[invocation setArgument:&saveWithCacheNumber atIndex:4];
 	[invocation retainArguments];
 	
 	[self performSelectorOnMainThread:@selector(invoke:) withObject:invocation waitUntilDone:NO];
@@ -218,7 +221,7 @@ NetworkController* GetNetworkController() {
 	if (!himg)
 		return;
 	
-	[self loadedImageFromDataBackgroundThread:himg withAdditData:[NSString stringWithUTF8String:additData.c_str()]];
+	[self loadedImageFromDataBackgroundThread:himg withAdditData:[NSString stringWithUTF8String:additData.c_str()] saveToCache:YES];
 }
 }
 

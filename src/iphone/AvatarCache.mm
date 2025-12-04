@@ -167,7 +167,7 @@ static int NearestPowerOfTwo(int x) {
 	
 	// I'm too lazy to replicate the same behavior so just reuse it.
 	// It may be a circular reference but I don't care.
-	[GetNetworkController() loadedImageFromDataBackgroundThread:himg withAdditData:myIdNS];
+	[GetNetworkController() loadedImageFromDataBackgroundThread:himg withAdditData:myIdNS saveToCache:NO];
 }
 }
 
