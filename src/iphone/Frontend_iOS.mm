@@ -201,10 +201,12 @@ void Frontend_iOS::RegisterChannelIcon(Snowflake sf, const std::string& avatarln
 
 void Frontend_iOS::OnWebsocketFail(int gatewayID, int errorCode, const std::string& message, bool isTLSError, bool mayRetry)
 {
-	WebsocketFailParams params { gatewayID, errorCode, message, isTLSError, mayRetry };
-	[GetNetworkController() performSelectorOnMainThread:@selector(onWebsocketFail:)
-		withObject:[NSValue valueWithPointer:&params]
-		waitUntilDone:YES];
+	@autoreleasepool {
+		WebsocketFailParams params { gatewayID, errorCode, message, isTLSError, mayRetry };
+		[GetNetworkController() performSelectorOnMainThread:@selector(onWebsocketFail:)
+			withObject:[NSValue valueWithPointer:&params]
+			waitUntilDone:YES];
+	}
 }
 
 void Frontend_iOS::OnSetLogInProgress(const std::string& str)
