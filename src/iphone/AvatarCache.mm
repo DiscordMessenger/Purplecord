@@ -133,14 +133,15 @@ static int NearestPowerOfTwo(int x) {
 
 - (void)loadImageFromFile:(NSString*)myIdNS
 {
+@autoreleasepool {
 	std::string myId([myIdNS UTF8String]);
 	std::string final_path = GetCachePath() + "/" + myId;
 	
 	DbgPrintF("Loading image %s", final_path.c_str());
-	// load that instead.
 	FILE* f = fopen(final_path.c_str(), "rb");
 	if (!f) {
-		[GetNetworkController() loadedImageFromDataBackgroundThread:HIMAGE_ERROR withAdditData:myIdNS];
+		// below is broken, I'll fix it at some point
+		//[GetNetworkController() loadedImageFromDataBackgroundThread:HIMAGE_ERROR withAdditData:myIdNS];
 		return;
 	}
 
@@ -167,6 +168,7 @@ static int NearestPowerOfTwo(int x) {
 	// I'm too lazy to replicate the same behavior so just reuse it.
 	// It may be a circular reference but I don't care.
 	[GetNetworkController() loadedImageFromDataBackgroundThread:himg withAdditData:myIdNS];
+}
 }
 
 - (UIImage*)getImageSpecial:(const std::string&)resource

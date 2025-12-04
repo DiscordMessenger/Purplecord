@@ -174,6 +174,15 @@ NetworkController* GetNetworkController() {
 	[GetAvatarCache() loadedResource:additDataUTF8];
 	[GetAvatarCache() setImage:additDataUTF8 image:himg];
 	[GetNetworkController() updateAttachmentByID:additDataUTF8];
+	
+	// Write the pre-processed data to cache to load it faster
+	std::string finalPath = GetCachePath() + "/" + additDataUTF8;
+	NSString* finalPathNS = [NSString stringWithUTF8String:finalPath.c_str()];
+	
+	NSData* pngData = UIImagePNGRepresentation(himg);
+	[pngData writeToFile:finalPathNS atomically:YES];
+	
+	[himg release];
 }
 
 - (void)loadedImageFromDataBackgroundThread:(UIImage*)himg withAdditData:(NSString*)additData
@@ -181,6 +190,7 @@ NetworkController* GetNetworkController() {
 	SEL sel = @selector(loadedImageFromDataMainThread:withAdditData:);
 	NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:sel]];
 	
+	[himg retain];
 	[invocation setSelector:sel];
 	[invocation setTarget:self];
 	[invocation setArgument:&himg atIndex:2];
@@ -192,6 +202,7 @@ NetworkController* GetNetworkController() {
 
 - (void)loadImageFromDataBackgroundThread:(NSValue*)attachmentDownloadedParamsNSValue
 {
+@autoreleasepool {
 	AttachmentDownloadedParams* parms = (AttachmentDownloadedParams*) [attachmentDownloadedParamsNSValue pointerValue];
 	bool bIsProfilePicture = parms->bIsProfilePicture;
 	std::string additData = std::move(parms->additData);
@@ -208,13 +219,7 @@ NetworkController* GetNetworkController() {
 		return;
 	
 	[self loadedImageFromDataBackgroundThread:himg withAdditData:[NSString stringWithUTF8String:additData.c_str()]];
-	
-	// Write the pre-processed data to cache to load it faster
-	std::string finalPath = GetCachePath() + "/" + additData;
-	NSString* finalPathNS = [NSString stringWithUTF8String:finalPath.c_str()];
-	
-	NSData* pngData = UIImagePNGRepresentation(himg);
-	[pngData writeToFile:finalPathNS atomically:YES];
+}
 }
 
 @end
