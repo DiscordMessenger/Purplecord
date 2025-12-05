@@ -101,6 +101,9 @@ void LoadedImage::Resize(int width, int height)
 
 void LoadedImage::Save(const std::string& path)
 {
+	if (!m_pData)
+		return;
+	
 	stbi_write_png(path.c_str(), m_width, m_height, sizeof(uint32_t), m_pData, m_width * sizeof(uint32_t));
 }
 

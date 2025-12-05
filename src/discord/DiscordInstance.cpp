@@ -188,7 +188,7 @@ void DiscordInstance::RequestMessages(Snowflake sf, ScrollDir::eScrollDir dir, S
 
 	GetHTTPClient()->PerformRequest(
 		true,
-		NetRequest::GET,
+		NetRequest::GET_PARSE_JSON,
 		messageUrl,
 		DiscordRequest::MESSAGES,
 		sf,
@@ -661,12 +661,22 @@ void DiscordInstance::HandleRequest(NetRequest* pRequest)
 #endif
 	{
 		//DebugResponse(pRequest);
-		Json j;
+		Json j2, *jptr = &j2;
 		
 		if (pRequest->itype != IMAGE && pRequest->itype != IMAGE_ATTACHMENT)
 		{
-			j = iprog::JsonParser::parse(pRequest->response);
+			if (pRequest->IsParsedJSONAvailable()) {
+				DbgPrintF("Using pre-parsed JSON for this request");
+				jptr = &pRequest->GetParsedJSON();
+			}
+			else {
+				DbgPrintF("Parsing JSON for this request");
+				j2 = iprog::JsonParser::parse(pRequest->response);
+				jptr = &j2;
+			}
 		}
+		
+		Json& j = *jptr;
 
 		switch (pRequest->itype)
 		{

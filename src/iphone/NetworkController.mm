@@ -170,7 +170,6 @@ NetworkController* GetNetworkController() {
 {
 	LoadedImage* loadedImg = (LoadedImage*) [loadedImgValue pointerValue];
 	UIImage* image = loadedImg->ToUIImage();
-	delete loadedImg;
 	
 	if (!image) {
 		DbgPrintF("error converting LoadedImage to UIImage");
@@ -196,7 +195,7 @@ NetworkController* GetNetworkController() {
 	[invocation setArgument:&additData atIndex:3];
 	[invocation retainArguments];
 	
-	[self performSelectorOnMainThread:@selector(invoke:) withObject:invocation waitUntilDone:NO];
+	[self performSelectorOnMainThread:@selector(invoke:) withObject:invocation waitUntilDone:YES];
 }
 
 - (void)loadImageFromDataBackgroundThread:(NSValue*)attachmentDownloadedParamsNSValue
@@ -222,6 +221,7 @@ NetworkController* GetNetworkController() {
 	
 	// Write the pre-processed data to cache to load it faster
 	loadedImg->Save(GetCachePath() + "/" + additData);
+	delete loadedImg;
 }
 }
 

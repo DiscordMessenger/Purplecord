@@ -202,6 +202,7 @@ void HTTPClient_curl::PerformRequest(
 			curl_easy_setopt(pRequest->easyHandle, CURLOPT_XFERINFODATA, pRequest);
 			curl_easy_setopt(pRequest->easyHandle, CURLOPT_XFERINFOFUNCTION, GetProgress);
 		case NetRequest::GET:
+		case NetRequest::GET_PARSE_JSON:
 			curl_easy_setopt(pRequest->easyHandle, CURLOPT_HTTPGET, 1L);
 			break;
 		
@@ -352,6 +353,19 @@ bool HTTPClient_curl::ProcessMultiEvent()
 	else
 	{
 		netRequest->result = httpStatus;
+	}
+	
+	if (netRequest->IsJSONParsingRequest())
+	{
+		try {
+			netRequest->m_parsedJson = iprog::JsonParser::parse(netRequest->response);
+			netRequest->m_parsedJsonAvailable = true;
+		}
+		catch (...) {
+			DbgPrintF("Failed to parse JSON payload in HTTPClient_curl!");
+			netRequest->m_parsedJson = iprog::JsonObject();
+			netRequest->m_parsedJsonAvailable = false;
+		}
 	}
 
 	// invoke callback now

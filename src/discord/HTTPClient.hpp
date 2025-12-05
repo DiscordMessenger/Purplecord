@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cstdint>
 #include "DiscordRequest.hpp"
+#include "iprogsjson.hpp"
 
 enum eHttpResponseCodes
 {
@@ -58,6 +59,7 @@ struct NetRequest
 		PUT_OCTETS_PROGRESS, // (!)
 		GET_PROGRESS,
 		PUT_JSON,
+		GET_PARSE_JSON, // same as GET, but parses the JSON on a background thread
 	};
 	int result = 0;
 	int itype  = 0;
@@ -73,6 +75,8 @@ struct NetRequest
 	size_t m_offset; // used only for *_PROGRESS
 	size_t m_length; // used only for *_PROGRESS
 	bool m_bCancelOp = false; // used only for *_PROGRESS
+	iprog::JsonObject m_parsedJson;
+	bool m_parsedJsonAvailable = false;
 
 	size_t GetOffset() const {
 		return m_offset;
@@ -93,6 +97,18 @@ struct NetRequest
 
 	bool IsOk() const {
 		return result == HTTP_OK || result == HTTP_NOCONTENT;
+	}
+	
+	bool IsJSONParsingRequest() const {
+		return type == GET_PARSE_JSON;
+	}
+	
+	bool IsParsedJSONAvailable() const {
+		return m_parsedJsonAvailable;
+	}
+	
+	iprog::JsonObject& GetParsedJSON() {
+		return m_parsedJson;
 	}
 
 	// NOTE: NetRequest takes ownership of the bytes array we pass!
