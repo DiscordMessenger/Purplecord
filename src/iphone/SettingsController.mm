@@ -1,11 +1,28 @@
 #import "SettingsController.h"
 #import "UIColorScheme.h"
 #import "UIProgressHUD.h"
+#import "NetworkController.h"
 #include "../discord/Util.hpp"
 #include "../discord/LocalSettings.hpp"
+#include "../discord/DiscordInstance.hpp"
 
 @implementation SettingsController {
 	BOOL purging;
+}
+
+- (void)settingsWillApplyAfterRestart
+{
+	UIAlertView *alert = [
+		[UIAlertView alloc]
+		initWithTitle:@"Settings Change"
+		message:@"The changes will completely apply after the app has been restarted. You may see incomplete changes until then."
+		delegate:nil
+		cancelButtonTitle:@"OK"
+		otherButtonTitles:nil
+	];
+	
+	[alert show];
+	[alert release];
 }
 
 - (instancetype)init
@@ -58,7 +75,9 @@
 - (void)darkModeToggle:(UISwitch*)sender {
 	GetLocalSettings()->SetDarkMode(sender.on);
 	GetLocalSettings()->Save();
+	[self settingsWillApplyAfterRestart];
 }
+
 - (void)replyMentionByDefaultToggle:(UISwitch*)sender {
 	GetLocalSettings()->SetReplyMentionByDefault(sender.on);
 	GetLocalSettings()->Save();
@@ -120,7 +139,9 @@
 	}
 	if ([buttonName isEqualToString:LOG_OUT])
 	{
-		DbgPrintF("Log Out Confirmed");
+		GetLocalSettings()->SetToken("");
+		GetDiscordInstance()->CloseGatewaySession();
+		[GetNetworkController() sendToLoginPrompt];
 		return;
 	}
 }

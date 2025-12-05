@@ -129,12 +129,8 @@ NetworkController* GetNetworkController() {
 	[alert release];
 }
 
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+- (void)sendToLoginPrompt
 {
-	if (buttonIndex != alertView.cancelButtonIndex)
-		return;
-	
-	// TODO: Test this
 	LoginPageController* controller = [[LoginPageController alloc] init];
 	
 	AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
@@ -153,6 +149,11 @@ NetworkController* GetNetworkController() {
 	[UIView commitAnimations];
 	
 	[controller release];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+	[self sendToLoginPrompt];
 }
 
 - (void)setLoginStage:(NSString*)stage

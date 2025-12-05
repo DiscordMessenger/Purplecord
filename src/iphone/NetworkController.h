@@ -27,6 +27,7 @@ struct AttachmentDownloadedParams {
 - (void)processWebsocketMessage:(NSValue*)websocketMessageNSValue;
 - (void)finishedProcessingHugeMessage;
 - (void)refreshGuildList;
+- (void)sendToLoginPrompt;
 - (void)setHeartbeatInterval:(NSInteger)timeMs;
 - (void)updateAttachmentByID:(const std::string&)rid;
 - (void)onWebsocketFail:(NSValue*)websocketFailNSValue;
