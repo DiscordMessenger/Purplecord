@@ -20,6 +20,15 @@ The name was chosen because the original iPhone was known during development as 
 client runs on iOS 3, and iOS 3.1.3 is the last version that will run on the original iPhone, the name "Purplecord"
 was chosen.
 
+## Notice
+
+Do not expect this project to be actively maintained, for the following reasons:
+- I am getting swarmed by work as of late
+- This project isn't in the top list of projects to maintain ([Boron](https://github.com/iProgramMC/Boron) takes the spot)
+- My motivation to write Objective-C isn't as high as I had hoped
+
+If you are willing to help me develop this client, then please send me pull requests with your work. I'd really appreciate it!
+
 ## Active Issues
 
 Currently the icons still aren't proper. (for some reason iOS 7 uses the prerendered iOS 6 and older version of the app icon)
@@ -40,6 +49,8 @@ Purplecord is currently not a full featured client.  The following features will
 - Member list
 - Optimizations and stability fixes
 - Merge the [DiscordMessenger](https://github.com/DiscordMessenger/dm) and Purplecord backends into one common backend
+
+Voice chat is **not** planned and will **never** be implemented in this client. So don't even ask.
 
 ## Attributions
 
