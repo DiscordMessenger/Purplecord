@@ -29,9 +29,9 @@ Need to figure this out.
 
 Purplecord is currently not a full featured client.  The following features will be implemented in the following rough order:
 
-- Read states
+- Read states (currently the app always scrolls to the bottom, acknowledges the current channel and that's it)
 - Opening attachments in full screen
-- Downloading attached images
+- Saving attached images to camera roll
 - Markdown formatting support
 - Multi-line text input
 - Replying to messages
@@ -43,7 +43,7 @@ Purplecord is currently not a full featured client.  The following features will
 
 ## Attributions
 
-Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on iOS 3!
+Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on iOS 3 and 6!
 
 **NOTE**: Replacing "ios3" with "ios6", "iPhoneOS3.0.sdk" with "iPhoneOS6.0.sdk" and "iOS 3" with "iOS 6" in the
 following build guide should work.  However, you must pass `BUILD_FOR_IOS3=no` to this project's makefile to build
@@ -55,13 +55,16 @@ The iOS 6 build was tested on iPhone 4 running iOS 7.0.
 The **iOS 3 build** should run on the following Apple devices, but currently untested:
 - iPhone (iPhone OS 3.0 to 3.1.3)
 - iPhone 3G (iPhone OS 3.0 to 4.2.1) [tested on iPhone OS 3.1.3]
-- iPhone 3GS (iPhoneOS 3.0 to iOS 6.1.6)
-- iPhone 4 (iOS 4.0 - iOS 6.1.3)
+- iPhone 3GS (iPhoneOS 3.0 to iOS 4.x)
+- iPhone 4 (iOS 4.x)
 
 The **iOS 6 build** should run on the following Apple devices, but currently untested:
 - iPhone 3GS (iOS 6.0 to 6.1.6)
 - iPhone 4 (iOS 4.0 to 7.1.2) [tested on iOS 7.0]
 - Any future iPhone running an iOS version lower than iOS 11, because iOS 11 dropped 32-bit app support
+
+An iOS 5 build will probably be compiled in the future, but there are no guarantees, mostly because I lack
+a device that actually runs iOS 5.
 
 ## Building
 
