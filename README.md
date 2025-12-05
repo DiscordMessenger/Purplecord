@@ -20,7 +20,12 @@ The name was chosen because the original iPhone was known during development as 
 client runs on iOS 3, and iOS 3.1.3 is the last version that will run on the original iPhone, the name "Purplecord"
 was chosen.
 
-## Planned features
+## Active Issues
+
+Currently the icons still aren't proper. (for some reason iOS 7 uses the prerendered iOS 6 and older version of the app icon)
+Need to figure this out.
+
+## Planned Features
 
 Purplecord is currently not a full featured client.  The following features will be implemented in the following rough order:
 
