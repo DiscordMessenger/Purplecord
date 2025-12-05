@@ -502,9 +502,14 @@ float CompareFuzzy(const std::string& item, const char* query)
 	return res;
 }
 
+constexpr float Version(float major, float minor, float build)
+{
+	return major + minor / 10 + build / 1000;
+}
+
 float GetAppVersion()
 {
-	return 0.90f;
+	return Version(0, 1, 0);
 }
 
 // C/C++ macro memes
@@ -514,9 +519,9 @@ float GetAppVersion()
 const char* GetAppVersionString()
 {
 #ifdef GIT_COMMIT_HASH
-	return "V0.90 [Nightly " STRINGIFY(GIT_COMMIT_HASH) "]";
+	return "v0.1.0 [Nightly " STRINGIFY(GIT_COMMIT_HASH) "]";
 #else
-	return "V0.90";
+	return "v0.1.0";
 #endif
 }
 
