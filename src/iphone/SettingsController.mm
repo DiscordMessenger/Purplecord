@@ -51,7 +51,7 @@
 		case 2:
 			return 1; // From Links doesn't do anything yet.
 		case 3:
-			return 3;
+			return 2;
 	}
 	return 0;
 }
@@ -260,13 +260,9 @@
 			{
 				case 0:
 					*isButton = YES;
-					*selector = @selector(resetToDefault);
-					return @"Reset Settings to Defaults";
-				case 1:
-					*isButton = YES;
 					*selector = @selector(purgeCache);
 					return @"Purge Cache";
-				case 2:
+				case 1:
 					*isButton = YES;
 					*selector = @selector(logOut);
 					return @"Log Out";
