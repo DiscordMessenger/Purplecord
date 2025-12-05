@@ -291,13 +291,13 @@
 	if (isButton)
 	{
 		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
-		cell.textLabel.textAlignment = UITextAlignmentCenter;
+		cell.textLabel.textAlignment = UI_TEXT_ALIGNMENT_CENTER;
 		cell.accessoryView = nil;
 	}
 	else if (hasSwitch)
 	{
 		cell.selectionStyle = UITableViewCellSelectionStyleNone;
-		cell.textLabel.textAlignment = UITextAlignmentLeft;
+		cell.textLabel.textAlignment = UI_TEXT_ALIGNMENT_LEFT;
 		UISwitch* toggle = [[[UISwitch alloc] initWithFrame:CGRectZero] autorelease];
 		
 		if (sel) {
@@ -310,7 +310,7 @@
 	else
 	{
 		cell.selectionStyle = UITableViewCellSelectionStyleNone;
-		cell.textLabel.textAlignment = UITextAlignmentLeft;
+		cell.textLabel.textAlignment = UI_TEXT_ALIGNMENT_LEFT;
 		cell.accessoryView = nil;
 	}
 	

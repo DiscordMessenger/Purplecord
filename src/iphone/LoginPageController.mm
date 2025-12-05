@@ -57,7 +57,7 @@ void CreateDiscordInstanceIfNeeded();
 	UITextField* textField = [[UITextField alloc] initWithFrame: CGRectMake(20, 140, width - 40, 30)];
 	textField.placeholder = @"Token...";
 	textField.font = [UIFont systemFontOfSize:16];
-	textField.backgroundColor = [UIColorScheme getBackgroundColor];
+	textField.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	textField.borderStyle = UITextBorderStyleRoundedRect;
 	
 	tokenTextField = textField;

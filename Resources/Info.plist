@@ -4,39 +4,29 @@
 <dict>
 	<key>CFBundleExecutable</key>
 	<string>Purplecord</string>
+	<key>CFBundleIconFile</key>
+	<string>icon-classic.png</string>
 	<key>CFBundleIconFiles</key>
 	<array>
-		<string>AppIcon57x57</string>
+		<!-- iOS 6 iPhone (home) [59x60] -->
+		<string>icon.png</string>
+		<string>icon@2x.png</string>
+		<!-- iOS 6 iPad (home) [74x76] -->
+		<string>icon-72.png</string>
+		<string>icon-72@2x.png</string>
+		<!-- iOS 6 iPhone (spotlight) [29x29] -->
+		<string>icon-small.png</string>
+		<string>icon-small@2x.png</string>
+		<!-- iOS 6 iPad (spotlight) [50x50] -->
+		<string>icon-small-50.png</string>
+		<string>icon-small-50@2x.png</string>
+		<!-- iOS 7 iPhone (home) [60x60] -->
+		<string>icon-60</string>
+		<!-- iOS 7 iPad (home) [76x76] -->
+		<string>icon-76</string>
+		<!-- iOS 7 (spotlight) [40x40] -->
+		<string>icon-40</string>
 	</array>
-	<key>CFBundleIcons</key>
-	<dict>
-		<key>CFBundlePrimaryIcon</key>
-		<dict>
-			<key>CFBundleIconFiles</key>
-			<array>
-				<string>AppIcon29x29</string>
-				<string>AppIcon40x40</string>
-				<string>AppIcon57x57</string>
-				<string>AppIcon60x60</string>
-			</array>
-		</dict>
-	</dict>
-	<key>CFBundleIcons~ipad</key>
-	<dict>
-		<key>CFBundlePrimaryIcon</key>
-		<dict>
-			<key>CFBundleIconFiles</key>
-			<array>
-				<string>AppIcon29x29</string>
-				<string>AppIcon40x40</string>
-				<string>AppIcon57x57</string>
-				<string>AppIcon60x60</string>
-				<string>AppIcon50x50</string>
-				<string>AppIcon72x72</string>
-				<string>AppIcon76x76</string>
-			</array>
-		</dict>
-	</dict>
 	<key>CFBundleIdentifier</key>
 	<string>com.iprogramincpp.purplecord</string>
 	<key>CFBundleInfoDictionaryVersion</key>

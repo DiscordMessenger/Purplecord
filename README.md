@@ -227,3 +227,8 @@ and type `make package install`.  You will need to respring if you haven't insta
 ### License
 
 This project is licensed under the MIT license.
+
+### Credits
+
+- [Electimon](https://yzu.moe) for compiling libc++ for iOS 3 and 6.
+- [Sebaastian de With](https://blog.cocoia.com/2010/iphone-4-icon-psd-file/) for the iPhone, iPhone 4 and iPad icon template.

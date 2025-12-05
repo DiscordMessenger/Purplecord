@@ -61,7 +61,11 @@ UIImage* LoadedImage::ToUIImage()
 		colorSpace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast);
 
 	CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
+#ifdef IPHONE_OS_3
 	UIImage *image = [UIImage imageWithCGImage:cgImage];
+#else
+	UIImage* image = [UIImage imageWithCGImage:cgImage scale:[[UIScreen mainScreen] scale] orientation:UIImageOrientationUp];
+#endif
 
 	CGImageRelease(cgImage);
 	CGContextRelease(ctx);
