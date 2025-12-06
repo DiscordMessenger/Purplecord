@@ -14,6 +14,10 @@ This can log in (which takes about 30 seconds on my iPhone 3G over Wi-Fi), view 
 and send simple messages. But it is not fully featured yet! And also, it's really slow and
 drains your battery fast, so probably not very practical either.
 
+## Discord Server
+
+Join our Discord server here: https://discord.gg/mdvQSxp4Jk
+
 ## Name Choice
 
 The name was chosen because the original iPhone was known during development as "Project Purple". Since this
