@@ -509,7 +509,7 @@ constexpr float Version(float major, float minor, float build)
 
 float GetAppVersion()
 {
-	return Version(0, 1, 0);
+	return Version(0, 1, 1);
 }
 
 // C/C++ macro memes
