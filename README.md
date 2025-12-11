@@ -24,6 +24,8 @@ The name was chosen because the original iPhone was known during development as 
 client runs on iOS 3, and iOS 3.1.3 is the last version that will run on the original iPhone, the name "Purplecord"
 was chosen.
 
+Note that earlier versions may be supported in the future.
+
 ## Notice
 
 Do not expect this project to be actively maintained, for the following reasons:
@@ -60,7 +62,7 @@ Voice chat is **not** planned and will **never** be implemented in this client. 
 
 Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on iOS 3 and 6!
 
-**NOTE**: Replacing "ios3" with "ios6", "iPhoneOS3.0.sdk" with "iPhoneOS6.0.sdk" and "iOS 3" with "iOS 6" in the
+**NOTE**: Replacing "ios3" with "ios6", "iPhoneOS3.1.3.sdk" with "iPhoneOS6.0.sdk" and "iOS 3" with "iOS 6" in the
 following build guide should work.  However, you must pass `BUILD_FOR_IOS3=no` to this project's makefile to build
 for iOS 6 and later (ARMv7).  AArch64 compilation is currently not supported because I don't have a 64-bit iPhone.
 
@@ -68,23 +70,21 @@ The iOS 3 build was tested on iPhone 3G running iPhone OS 3.1.3.
 The iOS 6 build was tested on iPhone 4 running iOS 7.0.
 
 The **iOS 3 build** should run on the following Apple devices, but currently untested:
-- iPhone (iPhone OS 3.0 to 3.1.3)
-- iPhone 3G (iPhone OS 3.0 to 4.2.1) [tested on iPhone OS 3.1.3]
-- iPhone 3GS (iPhoneOS 3.0 to iOS 4.x)
-- iPhone 4 (iOS 4.x)
+- iPhone (iPhone OS 3.1.3)
+- iPhone 3G (iPhone OS 3.1.3 to 4.2.1) [tested on iPhone OS 3.1.3]
+- iPhone 3GS (iPhoneOS 3.1.3 to iOS 6.x)
+- iPhone 4 (iOS 4.x-7.x)
+- Any future iPhone below iOS 8.0 [untested]
 
 The **iOS 6 build** should run on the following Apple devices, but currently untested:
 - iPhone 3GS (iOS 6.0 to 6.1.6)
 - iPhone 4 (iOS 4.0 to 7.1.2) [tested on iOS 7.0]
 - Any future iPhone running an iOS version lower than iOS 11, because iOS 11 dropped 32-bit app support
 
-An iOS 5 build will probably be compiled in the future, but there are no guarantees, mostly because I lack
-a device that actually runs iOS 5.
-
 ## Building
 
 You must have [Theos](https://theos.dev/docs/installation) installed.  You cannot use any of the
-SDKs Theos provides, so you must find the iPhoneOS 3.0 SDK to build.
+SDKs Theos provides, so you must find the iPhoneOS 3.1.3 (for armv7, iOS 6.0) SDK to build.
 
 Also, building has only been tested on Linux, but it might work on Mac OS too.
 
@@ -110,11 +110,17 @@ linking should be done with the linker from Theos.  A temporary fix in `$THEOS/m
 +#TARGET_CXX = $(TARGET_CXX)
 ```
 
-### Fetching the iPhoneOS 3.0 SDK
+### Fetching the iPhoneOS 3.1.3 SDK
 
-Download this archive:
+Download this archive: https://github.com/qianjigui/iOS-sdks/blob/master/iPhoneOS3.1.3.sdk.tbz2
 
-Then extract its contents to `$THEOS/sdks/iPhoneOS3.0.sdk`.
+Then extract its contents to `$THEOS/sdks/iPhoneOS3.1.3.sdk`:
+
+```
+tar xjf iPhoneOS3.1.3.sdk.tbz2
+```
+
+(NOTE: for armv7, download the iOS 6.0 SDK instead: https://github.com/qianjigui/iOS-sdks/tree/master/iPhoneOS6.0.sdk
 
 ### Installing libc++
 

@@ -13,12 +13,12 @@ INSTALL_TARGET_PROCESSES = Purplecord
 
 # This decides what toolchains and includes to use.
 ifeq ($(BUILD_FOR_IOS3), yes)
-	TARGET := iphone:clang:3.0:3.0
+	TARGET := iphone:clang:3.1.3:3.1.3
 	ARCHS = armv6
 	EXTRA_INCLUDES = \
 		-DIPHONE_OS_3 \
+		-DBOOST_REGEX_USE_C_LOCALE \
 		-stdlib=libc++ \
-		-I$(THEOS)/sdks/iPhoneOS3.0.sdk/usr/include/c++/4.2.1/$(ARCHS)-apple-darwin9 \
 		-I$(THEOS)/libcxx-hack/usr/include \
 		-I$(THEOS)/libcxx-hack/usr/include/c++/v1
 	EXTRA_LDFLAGS = \
