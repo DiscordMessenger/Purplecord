@@ -67,7 +67,7 @@ following build guide should work.  However, you must pass `BUILD_FOR_IOS3=no` t
 for iOS 6 and later (ARMv7).  AArch64 compilation is currently not supported because I don't have a 64-bit iPhone.
 
 The iOS 3 build was tested on iPhone 3G running iPhone OS 3.1.3.
-The iOS 6 build was tested on iPhone 4 running iOS 7.0.
+The iOS 6 build was tested on iPhone 4 running iOS 7.0, and iPhone 3GS running iOS 6.1.6.
 
 The **iOS 3 build** should run on the following Apple devices, but currently untested:
 - iPhone (iPhone OS 3.1.3)
