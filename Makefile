@@ -27,10 +27,10 @@ ifeq ($(BUILD_FOR_IOS3), yes)
 		-lc++abi
 	BUILD_PATH = build-ios3
 else
-	TARGET := iphone:clang:6.0:6.0
+	TARGET := iphone:clang:5.0:5.0
 	ARCHS = armv7
 	EXTRA_INCLUDES = \
-		-DIPHONE_OS_6 \
+		-DIPHONE_OS_5 \
 		-I$(THEOS)/libcxx-hack-ios6/dest/iphoneos-armv7/libcxx/usr/include \
 		-I$(THEOS)/libcxx-hack-ios6/dest/iphoneos-armv7/libcxx/usr/include/c++/v1
 	EXTRA_LDFLAGS = \

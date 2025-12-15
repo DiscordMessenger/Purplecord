@@ -1,14 +1,14 @@
 #import <UIKit/UIKit.h>
 
 // Not sure why they changed this.
-#ifdef IPHONE_OS_3
+#if defined IPHONE_OS_3 || defined IPHONE_OS_5
 
 #define UI_LINE_BREAK_MODE_WORD_WRAP UILineBreakModeWordWrap
 #define UI_LINE_BREAK_MODE_CLIP      UILineBreakModeClip
 #define UI_TEXT_ALIGNMENT_CENTER     UITextAlignmentCenter
 #define UI_TEXT_ALIGNMENT_LEFT       UITextAlignmentLeft
 
-#else
+#else // IPHONE_OS_6
 
 #define UI_LINE_BREAK_MODE_WORD_WRAP NSLineBreakByWordWrapping
 #define UI_LINE_BREAK_MODE_CLIP      NSLineBreakByClipping
