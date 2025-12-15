@@ -172,7 +172,7 @@
 	NSFileManager* fm = [NSFileManager defaultManager];
 	NSString* path = [NSString stringWithUTF8String:directory.c_str()];
 	NSError* error = nil;
-	NSArray* contents = [[fm contentsOfDirectoryAtPath:path error:&error] autorelease];
+	NSArray* contents = [fm contentsOfDirectoryAtPath:path error:&error];
 	if (!contents) {
 		[hud performSelector:@selector(hide) withObject:nil];
 		[hud release];

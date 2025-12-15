@@ -1,5 +1,5 @@
 # Makefile for Purplecord
-BUILD_FOR_IOS3 ?= yes
+BUILD_FOR_IOS3 ?= no
 
 # It is not recommended to build with debug mode.
 # However, for development purposes, FINALPACKAGE is 0 by default.
