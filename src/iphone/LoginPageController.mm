@@ -30,12 +30,28 @@ void CreateDiscordInstanceIfNeeded();
 	UIBarButtonItem* logInButton;
 	UILabel* label;
 	UILabel* bottomLabel;
+	UIButton* tokenShowHideButton;
 	bool loggingIn;
+	bool shouldLogInAgain;
 }
 
 @end
 
 @implementation LoginPageController
+
+- (instancetype)init
+{
+	self = [super init];
+	shouldLogInAgain = YES;
+	return self;
+}
+
+- (instancetype)initWithReconnectFlag:(BOOL)flag
+{
+	self = [super init];
+	shouldLogInAgain = flag;
+	return self;
+}
 
 - (void)loadView
 {
@@ -98,6 +114,17 @@ void CreateDiscordInstanceIfNeeded();
 	];
 	self.navigationItem.rightBarButtonItem = logInButton;
 	
+	// And another button to show and hide the token input
+	CGRect showButtonFrame = CGRectMake(0, 0, 20, 20);
+	tokenShowHideButton = [UIButton buttonWithType:UIButtonTypeCustom];
+	tokenShowHideButton.frame = showButtonFrame;
+	[tokenShowHideButton retain]; // so we can release it in dealloc and keep a reference to it
+	[tokenShowHideButton addTarget:self action:@selector(toggleTokenVisibility:) forControlEvents:UIControlEventTouchUpInside];
+	[tokenShowHideButton setBackgroundImage:[UIImage imageNamed:@"hideEye.png"] forState:UIControlStateNormal];
+	[tokenShowHideButton setBackgroundImage:[UIImage imageNamed:@"hideEyeP.png"] forState:UIControlStateHighlighted];
+	tokenTextField.rightView = tokenShowHideButton;
+	tokenTextField.rightViewMode = UITextFieldViewModeAlways;
+	
 	// Are we logged in?
 	std::string token = GetLocalSettings()->GetToken();
 	if (!token.empty())
@@ -110,12 +137,39 @@ void CreateDiscordInstanceIfNeeded();
 		textField.secureTextEntry = YES;
 	}
 	
+	[self updateTokenShowHideButton];
 	[self.view addSubview:textField];
 	[self.view addSubview:label];
 	[self.view addSubview:bottomLabel];
+	[self.view addSubview:tokenShowHideButton];
 
-	if (!GetLocalSettings()->GetToken().empty())
+	if (!GetLocalSettings()->GetToken().empty() && shouldLogInAgain) {
 		[self logIn];
+	}
+	
+	shouldLogInAgain = true;
+}
+
+- (void)updateTokenShowHideButton
+{
+	NSString *fn1, *fn2;
+	if (tokenTextField.secureTextEntry) {
+		fn1 = @"showEye.png";
+		fn2 = @"showEyeP.png";
+	}
+	else {
+		fn1 = @"hideEye.png";
+		fn2 = @"hideEyeP.png";
+	}
+	
+	[tokenShowHideButton setBackgroundImage:[UIImage imageNamed:fn1] forState:UIControlStateNormal];
+	[tokenShowHideButton setBackgroundImage:[UIImage imageNamed:fn2] forState:UIControlStateHighlighted];
+}
+
+- (void)toggleTokenVisibility:(UIButton*)button
+{
+	tokenTextField.secureTextEntry = !tokenTextField.secureTextEntry;
+	[self updateTokenShowHideButton];
 }
 
 - (void)sendToGuildList
@@ -222,6 +276,7 @@ void CreateDiscordInstanceIfNeeded();
 	[bottomLabel release];
 	[logInButton release];
 	[tokenTextField release];
+	[tokenShowHideButton release];
 	[super dealloc];
 }
 

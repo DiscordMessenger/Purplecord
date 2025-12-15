@@ -11,6 +11,23 @@
 #include "Frontend_iOS.h"
 #include "../discord/DiscordInstance.hpp"
 
+bool ShouldLogInAgain(int code)
+{
+	switch (code)
+	{
+		case 4003: // Not Authenticated
+		case 4004: // Authentication Failed
+		case 4005: // Already Authenticated
+		case 4008: // Rate Limited
+		case 4012: // Invalid API Version
+		case 4013: // Invalid Intents
+		case 4014: // Disallowed Intents
+			return false;
+	}
+	
+	return true;
+}
+
 NetworkController* g_pNetworkController;
 NetworkController* GetNetworkController() {
 	return g_pNetworkController;
@@ -19,12 +36,14 @@ NetworkController* GetNetworkController() {
 @implementation NetworkController {
 	
 	NSTimer* heartbeatTimer;
+	BOOL shouldLogInAgain;
 	
 }
 
 - (instancetype) init
 {
 	g_pNetworkController = self;
+	shouldLogInAgain = true;
 	return self;
 }
 
@@ -116,10 +135,22 @@ NetworkController* GetNetworkController() {
 {
 	WebsocketFailParams* parms = (WebsocketFailParams*) [websocketFailNSValue pointerValue];
 	
+	shouldLogInAgain = ShouldLogInAgain(parms->errorCode);
+	
+	char buffer[512];
+	snprintf(
+		buffer,
+		sizeof buffer,
+		"You have been disconnected. %s\n\nError code: %d",
+		shouldLogInAgain ? "Purplecord will attempt to reconnect." : "You will most likely need to fix/retype your token.",
+		parms->errorCode
+	);
+	NSString* nsString = [NSString stringWithUTF8String:buffer];
+	
 	UIAlertView *alert = [
 		[UIAlertView alloc]
 		initWithTitle:@"Disconnected"
-		message:@"You have been disconnected. Purplecord will attempt to reconnect."
+		message:nsString
 		delegate:self
 		cancelButtonTitle:@"OK"
 		otherButtonTitles:nil
@@ -131,7 +162,7 @@ NetworkController* GetNetworkController() {
 
 - (void)sendToLoginPrompt
 {
-	LoginPageController* controller = [[LoginPageController alloc] init];
+	LoginPageController* controller = [[LoginPageController alloc] initWithReconnectFlag:shouldLogInAgain];
 	controller.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	
 	AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;

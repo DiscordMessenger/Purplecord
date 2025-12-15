@@ -89,7 +89,7 @@ void WebsocketClient_curl::WSConnection::Connect()
 void WebsocketClient_curl::WSConnection::Disconnect(int code)
 {
 	m_mutex.lock();
-	short payload = (short) code;
+	short payload = (short) htons(code);
 
 	size_t sent = 0;
 	CURLcode rc = curl_ws_send(m_easy, &payload, sizeof payload, &sent, 1024, CURLWS_CLOSE);
@@ -221,6 +221,13 @@ void WebsocketClient_curl::WSConnection::ReceiveThread2()
 			m_bIsOpen = false;
 			GetFrontend()->OnWebsocketFail(m_id, rc, "Connection has been closed", false, false);
 			break;
+		}
+		
+		if (meta->flags & CURLWS_CLOSE)
+		{
+			short code = ntohs(*(uint16_t*)buffer);
+			m_bIsOpen = false;
+			GetFrontend()->OnWebsocketFail(m_id, code, "Connection has been closed from the server with error code " + std::to_string(code), false, false);
 		}
 
 		if (bytesRead > 0)
