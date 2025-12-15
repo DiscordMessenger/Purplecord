@@ -509,7 +509,7 @@ constexpr float Version(float major, float minor, float build)
 
 float GetAppVersion()
 {
-	return Version(0, 1, 1);
+	return Version(0, 1, 2);
 }
 
 // C/C++ macro memes
@@ -519,9 +519,9 @@ float GetAppVersion()
 const char* GetAppVersionString()
 {
 #ifdef GIT_COMMIT_HASH
-	return "v0.1.0 [Nightly " STRINGIFY(GIT_COMMIT_HASH) "]";
+	return "v0.1.2 [Nightly " STRINGIFY(GIT_COMMIT_HASH) "]";
 #else
-	return "v0.1.0";
+	return "v0.1.2";
 #endif
 }
 

@@ -44,11 +44,15 @@ void CreateDiscordInstanceIfNeeded();
 	self->loggingIn = false;
 	
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
-	
 	UIView *mainView = [[UIView alloc] initWithFrame:screenBounds];
 	mainView.backgroundColor = [UIColorScheme getBackgroundColor]; 
 	self.view = mainView;
 	[mainView release];
+}
+
+- (void)viewDidLoad
+{
+	CGRect screenBounds = self.view.bounds;
 	
 	self.title = @"Purplecord";
 	
@@ -59,6 +63,7 @@ void CreateDiscordInstanceIfNeeded();
 	textField.font = [UIFont systemFontOfSize:16];
 	textField.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	textField.borderStyle = UITextBorderStyleRoundedRect;
+	textField.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	
 	tokenTextField = textField;
 	
@@ -71,6 +76,7 @@ void CreateDiscordInstanceIfNeeded();
 	label.numberOfLines = 0;
 	label.lineBreakMode = UI_LINE_BREAK_MODE_WORD_WRAP;
 	label.font = [UIFont systemFontOfSize:15];
+	label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	
 	bottomLabel = [[UILabel alloc] initWithFrame:CGRectMake(21, 240, width - 40, 80)];
 	bottomLabel.text = @"";
@@ -80,6 +86,7 @@ void CreateDiscordInstanceIfNeeded();
 	bottomLabel.numberOfLines = 0;
 	bottomLabel.lineBreakMode = UI_LINE_BREAK_MODE_WORD_WRAP;
 	bottomLabel.font = [UIFont systemFontOfSize:15];
+	bottomLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	
 	// And a button
 	logInButton = [
@@ -106,10 +113,7 @@ void CreateDiscordInstanceIfNeeded();
 	[self.view addSubview:textField];
 	[self.view addSubview:label];
 	[self.view addSubview:bottomLabel];
-}
 
-- (void)viewDidLoad
-{
 	if (!GetLocalSettings()->GetToken().empty())
 		[self logIn];
 }
@@ -186,6 +190,7 @@ void CreateDiscordInstanceIfNeeded();
 		initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray
 	];
 	spinner.center = self.view.center;
+	spinner.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 	[self.view addSubview:spinner];
 	[spinner startAnimating];
 	[spinner release];
