@@ -289,14 +289,13 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 {
 	[super viewDidLoad];
 	
-	self.view.frame = self.parentViewController.view.bounds;
 	self.view.autoresizingMask =
 		UIViewAutoresizingFlexibleWidth |
 		UIViewAutoresizingFlexibleHeight;
 	
 	CGFloat bottomBarHeight = BOTTOM_BAR_HEIGHT;
 	
-	CGRect frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - bottomBarHeight);
+	CGRect frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height - bottomBarHeight);
 	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
 	tableView.dataSource = self;
 	tableView.delegate = self;
@@ -315,7 +314,7 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	inputView = [[MessageInputView alloc] initWithFrame:CGRectZero];
 	inputView.delegate = self;
 	inputView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
-	inputView.frame = CGRectMake(0, self.view.frame.size.height - bottomBarHeight, self.view.frame.size.width, bottomBarHeight);
+	inputView.frame = CGRectMake(0, self.view.bounds.size.height - bottomBarHeight, self.view.bounds.size.width, bottomBarHeight);
 	
 	[self.view addSubview:inputView];
 }

@@ -40,7 +40,7 @@ GuildListController* GetGuildListController() {
 		screenBounds.size.height - statusBarHeight - navBarHeight
 	);
 	
-	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
+	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleGrouped];
 	tableView.dataSource = self;
 	tableView.delegate = self;
 	tableView.backgroundColor = [UIColorScheme getTextBackgroundColor];
