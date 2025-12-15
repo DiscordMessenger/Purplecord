@@ -2,6 +2,8 @@
 
 @implementation NewNavigationController
 
+#ifndef IPHONE_OS_3
+
 - (BOOL)shouldAutorotate {
 	return YES;
 }
@@ -16,5 +18,6 @@
 	}
 }
 
+#endif
 
 @end
