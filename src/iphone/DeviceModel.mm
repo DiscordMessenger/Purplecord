@@ -28,5 +28,9 @@ bool IsSlowIDevice()
 
 bool IsIPad()
 {
+#ifdef IPHONE_OS_3
 	return BeginsWith(GetIDeviceModel(), "iPad");
+#else
+	return UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
+#endif
 }

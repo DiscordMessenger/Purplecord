@@ -1037,7 +1037,14 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	
 	actionSheet.cancelButtonIndex = [actionSheet numberOfButtons] - 1;
 	
-	[actionSheet showInView:self.view];
+	if (IsIPad()) {
+		CGRect rectInView = [cell convertRect:cell.bounds toView:self.view];
+		[actionSheet showFromRect:rectInView inView:self.view animated:YES];
+	}
+	else {
+		[actionSheet showInView:self.view];
+	}
+	
 	[actionSheet release];
 	
 	m_tableIndexPath = [indexPath retain];

@@ -128,6 +128,7 @@ GuildListController* GetGuildListController() {
 		cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0, 0, tv.bounds.size.width, 44) reuseIdentifier:cellId];
 	
 	cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+	cell.backgroundColor = [UIColorScheme getTextBackgroundColor];
 	cell.textLabel.textColor = [UIColorScheme getTextColor];
 	cell.text = guildNameNS;
 	
