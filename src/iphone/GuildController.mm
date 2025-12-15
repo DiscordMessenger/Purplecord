@@ -124,6 +124,33 @@ GuildController* GetGuildController() {
 	return self;
 }
 
+- (void)viewDidLoad
+{
+	[super viewDidLoad];
+	
+	self.view.backgroundColor = [UIColorScheme getBackgroundColor];
+	self.view.autoresizingMask =
+		UIViewAutoresizingFlexibleWidth |
+		UIViewAutoresizingFlexibleHeight;
+	
+	CGRect screenBounds = [[UIScreen mainScreen] bounds];
+	
+	// create a tableview that spans the entire screen minus the header
+	CGFloat statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
+	CGFloat navBarHeight = self.navigationController.navigationBar.frame.size.height;
+	
+	CGRect frame = self.view.bounds;
+	
+	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleGrouped];
+	tableView.dataSource = self;
+	tableView.delegate = self;
+	tableView.backgroundColor = [UIColorScheme getBackgroundColor];
+	tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	[self.view addSubview:tableView];
+	
+	GetDiscordInstance()->OnSelectGuild(guildID);
+}
+
 - (void)exitIfYouDontExist
 {
 	if (!GetDiscordInstance()->GetGuild(guildID))
@@ -134,33 +161,19 @@ GuildController* GetGuildController() {
 	}
 }
 
+- (void)loadView
+{
+	// create a view filling the entire screen boundaries
+	CGRect screenBounds = [[UIScreen mainScreen] bounds];
+	UIView *mainView = [[UIView alloc] initWithFrame:screenBounds];
+	mainView.backgroundColor = [UIColorScheme getBackgroundColor];
+	self.view = mainView;
+	[mainView release];
+}
+
 - (void)viewWillAppear:(BOOL)animated
 {
 	[super viewWillAppear:animated];
-	CGRect screenBounds = [[UIScreen mainScreen] bounds];
-	
-	// create a view filling the entire screen boundaries
-	UIView *mainView = [[UIView alloc] initWithFrame:screenBounds];
-	self.view = mainView;
-	[mainView release];
-	
-	// create a tableview that spans the entire screen minus the header
-	CGFloat statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
-	CGFloat navBarHeight = self.navigationController.navigationBar.frame.size.height;
-	
-	CGRect frame = CGRectMake(
-		0, 0,
-		screenBounds.size.width,
-		screenBounds.size.height - statusBarHeight - navBarHeight
-	);
-	
-	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleGrouped];
-	tableView.dataSource = self;
-	tableView.delegate = self;
-	tableView.backgroundColor = [UIColorScheme getBackgroundColor];
-	[self.view addSubview:tableView];
-	
-	GetDiscordInstance()->OnSelectGuild(guildID);
 	
 	[self updateChannelList];
 }
@@ -363,6 +376,7 @@ GuildController* GetGuildController() {
 	
 	ChannelController *channelVC = [[ChannelController alloc] initWithChannelID:channelID andGuildID:guildID];
 	channelVC.view.backgroundColor = [UIColorScheme getTextBackgroundColor];
+	channelVC.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	
 	[self.navigationController pushViewController:channelVC animated:YES];
 	[channelVC release];

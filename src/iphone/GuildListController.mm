@@ -1,6 +1,7 @@
 #import "GuildListController.h"
 #import "GuildController.h"
 #import "SettingsController.h"
+#import "NewNavigationController.h"
 #import "UIColorScheme.h"
 #import "AvatarCache.h"
 #include "HTTPClient_curl.h"
@@ -43,6 +44,7 @@ GuildListController* GetGuildListController() {
 	tableView.dataSource = self;
 	tableView.delegate = self;
 	tableView.backgroundColor = [UIColorScheme getTextBackgroundColor];
+	tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	[self.view addSubview:tableView];
 	
 	[self refreshGuilds];
@@ -71,6 +73,11 @@ GuildListController* GetGuildListController() {
 	[super viewDidLoad];
 	
 	self.title = @"Purplecord";
+	
+	self.view.frame = self.parentViewController.view.bounds;
+	self.view.autoresizingMask =
+		UIViewAutoresizingFlexibleWidth |
+		UIViewAutoresizingFlexibleHeight;
 	
 	UIBarButtonItem* settingsButton = [
 		[UIBarButtonItem alloc]
@@ -161,8 +168,6 @@ void TestFunction();
 		return;
 	
 	GuildController *guildVC = [[GuildController alloc] initWithGuildID:guildId];
-	guildVC.view.backgroundColor = [UIColorScheme getBackgroundColor];
-
 	[self.navigationController pushViewController:guildVC animated:YES];
 	[guildVC release];
 }

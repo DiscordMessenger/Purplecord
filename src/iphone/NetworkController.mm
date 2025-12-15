@@ -132,6 +132,7 @@ NetworkController* GetNetworkController() {
 - (void)sendToLoginPrompt
 {
 	LoginPageController* controller = [[LoginPageController alloc] init];
+	controller.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	
 	AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
 	UINavigationController *navController = appDelegate.navController;

@@ -150,6 +150,7 @@ Purplecord_FILES = \
 	src/iphone/MessageCell.mm \
 	src/iphone/MessageInputView.mm \
 	src/iphone/UIColorScheme.mm \
+	src/iphone/NewNavigationController.mm \
 	src/iphone/ImageLoader.mm \
 	src/iphone/AvatarCache.mm
 

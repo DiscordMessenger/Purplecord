@@ -23,7 +23,12 @@
 	window = [[UIWindow alloc] initWithFrame:screenBounds];
 
 	mainVC = [[LoginPageController alloc] init];
-	navController = [[UINavigationController alloc] initWithRootViewController:mainVC];
+	navController = [[NewNavigationController alloc] initWithRootViewController:mainVC];
+	
+	navController.view.frame = window.bounds;
+	navController.view.autoresizingMask =
+		UIViewAutoresizingFlexibleWidth |
+		UIViewAutoresizingFlexibleHeight;
 	
 	if ([UIColorScheme useDarkMode])
 	{
@@ -31,7 +36,12 @@
 		[UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackOpaque;
 	}
 	
+#ifdef IPHONE_OS_3
 	[window addSubview:navController.view];
+#else
+	window.rootViewController = navController;
+#endif
+
 	[window makeKeyAndVisible];
 
 	return YES;

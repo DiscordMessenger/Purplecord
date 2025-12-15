@@ -1,12 +1,13 @@
 #import <UIKit/UIKit.h>
+#import "NewNavigationController.h"
 
 @class GuildListController;
 
 @interface AppDelegate : NSObject <UIApplicationDelegate> {
 	UIWindow *window;
-	UINavigationController *navController;
+	NewNavigationController *navController;
 }
 
-@property (nonatomic, retain) UINavigationController *navController;
+@property (nonatomic, retain) NewNavigationController *navController;
 
 @end

@@ -275,15 +275,24 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	[picker release];
 }
 
-- (void)viewWillAppear:(BOOL)animated
+- (void)loadView
 {
-	[super viewWillAppear:animated];
-	
+	// create a view filling the entire screen boundaries
 	CGRect screenBounds = [[UIScreen mainScreen] bounds];
 	UIView *mainView = [[UIView alloc] initWithFrame:screenBounds];
 	mainView.backgroundColor = [UIColorScheme getBackgroundColor];
 	self.view = mainView;
 	[mainView release];
+}
+
+- (void)viewDidLoad
+{
+	[super viewDidLoad];
+	
+	self.view.frame = self.parentViewController.view.bounds;
+	self.view.autoresizingMask =
+		UIViewAutoresizingFlexibleWidth |
+		UIViewAutoresizingFlexibleHeight;
 	
 	CGFloat bottomBarHeight = BOTTOM_BAR_HEIGHT;
 	
@@ -294,6 +303,7 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	tableView.backgroundColor = [UIColorScheme getBackgroundColor];
 	tableView.opaque = YES;
 	tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+	tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	[self.view addSubview:tableView];
 	
 	self.title = [NSString stringWithUTF8String:pChannel->GetFullName().c_str()];
@@ -308,6 +318,11 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	inputView.frame = CGRectMake(0, self.view.frame.size.height - bottomBarHeight, self.view.frame.size.width, bottomBarHeight);
 	
 	[self.view addSubview:inputView];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+	[super viewWillAppear:animated];
 	
 	// let us know when the keyboard shows up
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];

@@ -117,6 +117,7 @@ void CreateDiscordInstanceIfNeeded();
 - (void)sendToGuildList
 {
 	GuildListController* controller = [[GuildListController alloc] init];
+	controller.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	
 	AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
 	UINavigationController *navController = appDelegate.navController;
