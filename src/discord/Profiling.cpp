@@ -45,7 +45,7 @@ void BeginProfiling(const char* what)
 	}
 	
 	if (g_profilingStackIndex >= MAX_PROFILES) {
-		FPRINTF_TWICE(stderr, profilingFile, "BeginProfiling: profiling stack over flow");
+		FPRINTF_TWICE(stderr, profilingFile, "%s: profiling stack over flow at %p (this function at %p)\n", __func__, __builtin_return_address(0), &BeginProfiling);
 		return;
 	}
 	
@@ -62,7 +62,7 @@ void BeginProfiling(const char* what)
 void EndProfiling()
 {
 	if (g_profilingStackIndex <= 0) {
-		FPRINTF_TWICE(stderr, profilingFile, "EndProfiling: profiling stack under flow");
+		FPRINTF_TWICE(stderr, profilingFile, "%s: profiling stack under flow at %p (this function at %p)\n", __func__, __builtin_return_address(0), &BeginProfiling);
 		return;
 	}
 	

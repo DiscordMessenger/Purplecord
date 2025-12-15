@@ -2,7 +2,8 @@
 #import "MessageCell.h"
 #import "UIColorScheme.h"
 #import "AvatarCache.h"
-#include "UIProportions.h"
+#import "UIProportions.h"
+#import "DeviceModel.h"
 #include "../discord/DiscordInstance.hpp"
 
 #define MAX_MESSAGE_SIZE 2000
@@ -127,6 +128,10 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	MessageItemPtr m_contextMenuMessage;
 	
 	bool m_bAcknowledgeNow;
+	
+#ifndef IPHONE_OS_3
+	UIPopoverController* popoverController;
+#endif
 }
 @end
 
@@ -204,8 +209,13 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo
 {
+#ifndef IPHONE_OS_3
+	[popoverController dismissPopoverAnimated:YES];
+	popoverController = nil;
+#else
 	[self dismissModalViewControllerAnimated:YES];
-	
+#endif
+
 	// If the image is smaller than this screen's resolution, then upload it as a PNG.
 	// Else, upload it as a JPG.
 	NSData* imageData = nil;
@@ -258,10 +268,15 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
 {
+#ifndef IPHONE_OS_3
+	[popoverController dismissPopoverAnimated:YES];
+	popoverController = nil;
+#else
 	[self dismissModalViewControllerAnimated:YES];
+#endif
 }
 
-- (void)messageInputView:(MessageInputView *)inputView didAttachFile:(void *)unused
+- (void)messageInputView:(MessageInputView *)theInputView didAttachFile:(void *)unused
 {
 	if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary])
 		return;
@@ -271,7 +286,21 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	picker.delegate = self;
 	picker.allowsEditing = NO;
 
+#ifndef IPHONE_OS_3
+	if (IsIPad())
+	{
+		UIPopoverController *popover = [[UIPopoverController alloc] initWithContentViewController:picker];
+		popoverController = popover;
+		
+        [popoverController presentPopoverFromRect:theInputView.bounds inView:theInputView permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+	}
+	else
+	{
+		[self presentModalViewController:picker animated:YES];
+	}
+#else
 	[self presentModalViewController:picker animated:YES];
+#endif
 	[picker release];
 }
 
@@ -1089,6 +1118,7 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	g_pChannelController = nullptr;
 	[tableView release];
 	[inputView release];
+	[popoverController release];
 	[super dealloc];
 }
 

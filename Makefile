@@ -152,7 +152,8 @@ Purplecord_FILES = \
 	src/iphone/UIColorScheme.mm \
 	src/iphone/NewNavigationController.mm \
 	src/iphone/ImageLoader.mm \
-	src/iphone/AvatarCache.mm
+	src/iphone/AvatarCache.mm \
+	src/iphone/DeviceModel.mm
 
 Purplecord_FRAMEWORKS = UIKit CoreGraphics
 Purplecord_CFLAGS = -fno-objc-arc $(INCLUDES) $(CPPHACKS) $(WARNINGDISABLES) $(SWITCHES)
