@@ -35,6 +35,24 @@
 	return self;
 }
 
+- (void)viewDidLoad
+{
+	[super viewDidLoad];
+	
+#ifndef IPHONE_OS_3
+	UIBarButtonItem* doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(closeSettings)];
+	self.navigationItem.leftBarButtonItem = doneButton;
+	[doneButton release];
+#endif
+}
+
+#ifndef IPHONE_OS_3
+- (void)closeSettings
+{
+	[self dismissModalViewControllerAnimated:YES];
+}
+#endif
+
 - (NSInteger)numberOfSectionsInTableView:(UITableView*)tv
 {
 	return 4;
@@ -51,7 +69,7 @@
 		case 2:
 			return 1; // From Links doesn't do anything yet.
 		case 3:
-			return 2;
+			return 3;
 	}
 	return 0;
 }
@@ -144,6 +162,27 @@
 		[GetNetworkController() sendToLoginPrompt];
 		return;
 	}
+}
+
+- (void)about
+{
+	std::string aboutString("Purplecord ");
+	aboutString += GetAppVersionString();
+	aboutString += "\n\nCopyright © 2025 iProgramInCpp. Licensed under the MIT license.";
+	
+	NSString* nsString = [NSString stringWithUTF8String:aboutString.c_str()];
+	
+	UIAlertView *alert = [
+		[UIAlertView alloc]
+		initWithTitle:@"About Purplecord"
+		message:nsString
+		delegate:nil
+		cancelButtonTitle:@"OK"
+		otherButtonTitles:nil
+	];
+	
+	[alert show];
+	[alert release];
 }
 
 - (void)purgeCache
@@ -266,6 +305,10 @@
 					*isButton = YES;
 					*selector = @selector(logOut);
 					return @"Log Out";
+				case 2:
+					*isButton = YES;
+					*selector = @selector(about);
+					return @"About";
 			}
 		}
 	}
@@ -328,6 +371,11 @@
 	
 	[tableView deselectRowAtIndexPath:indexPath animated:NO];
 	[self performSelector:sel];
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+	return YES;
 }
 
 @end

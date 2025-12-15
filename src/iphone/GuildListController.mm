@@ -87,12 +87,18 @@ GuildListController* GetGuildListController() {
 	[settingsButton release];
 }
 
-void TestFunction();
-
 - (void)onClickedSettingsButton
 {
 	SettingsController *settings = [[[SettingsController alloc] init] autorelease];
+	
+#ifndef IPHONE_OS_3
+	UINavigationController *nav = [[[UINavigationController alloc] initWithRootViewController:settings] autorelease];
+	nav.modalPresentationStyle = UIModalPresentationFormSheet;
+	nav.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+	[self presentModalViewController:nav animated:YES];
+#else
 	[self.navigationController pushViewController:settings animated:YES];
+#endif
 }
 
 - (NSInteger)tableView:(UITableView*)tv numberOfRowsInSection:(NSInteger)section
