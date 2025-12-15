@@ -34,16 +34,12 @@ GuildListController* GetGuildListController() {
 	CGFloat statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
 	CGFloat navBarHeight = self.navigationController.navigationBar.frame.size.height;
 	
-	CGRect frame = CGRectMake(
-		0, 0,
-		screenBounds.size.width,
-		screenBounds.size.height - statusBarHeight - navBarHeight
-	);
+	CGRect frame = self.view.bounds;
 	
 	tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleGrouped];
 	tableView.dataSource = self;
 	tableView.delegate = self;
-	tableView.backgroundColor = [UIColorScheme getTextBackgroundColor];
+	tableView.backgroundColor = [UIColorScheme getBackgroundColor];
 	tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	[self.view addSubview:tableView];
 	
