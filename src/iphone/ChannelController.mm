@@ -1042,6 +1042,27 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 #else
 	if (IsIPad()) {
 		CGRect rectInView = [cell convertRect:cell.bounds toView:self.view];
+		
+		CGFloat gapUp = rectInView.origin.y;
+		CGFloat gapDown = self.view.bounds.size.height - rectInView.origin.y - rectInView.size.height;
+		
+		if (gapUp > gapDown) {
+			rectInView = CGRectMake(
+				rectInView.origin.x,
+				rectInView.origin.y,
+				rectInView.size.width,
+				std::min(5.f, rectInView.size.height)
+			);
+		}
+		else {
+			rectInView = CGRectMake(
+				rectInView.origin.x,
+				std::max(0.f, rectInView.origin.y + rectInView.size.height - 5),
+				rectInView.size.width,
+				std::min(5.f, rectInView.size.height)
+			);
+		}
+		
 		[actionSheet showFromRect:rectInView inView:self.view animated:YES];
 	}
 	else {
