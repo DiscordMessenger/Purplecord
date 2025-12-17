@@ -1037,6 +1037,9 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	
 	actionSheet.cancelButtonIndex = [actionSheet numberOfButtons] - 1;
 	
+#ifdef IPHONE_OS_3
+	[actionSheet showInView:self.view];
+#else
 	if (IsIPad()) {
 		CGRect rectInView = [cell convertRect:cell.bounds toView:self.view];
 		[actionSheet showFromRect:rectInView inView:self.view animated:YES];
@@ -1044,6 +1047,7 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	else {
 		[actionSheet showInView:self.view];
 	}
+#endif
 	
 	[actionSheet release];
 	
@@ -1125,7 +1129,9 @@ void MessageItem::UpdateDetails(Snowflake guildID)
 	g_pChannelController = nullptr;
 	[tableView release];
 	[inputView release];
+#ifndef IPHONE_OS_3
 	[popoverController release];
+#endif
 	[super dealloc];
 }
 
