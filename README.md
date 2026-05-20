@@ -60,14 +60,14 @@ Voice chat is **not** planned and will **never** be implemented in this client. 
 
 ## Attributions
 
-Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on iOS 3 and 6!
+Thanks to [Electimon](https://yzu.moe) for helping me out with getting C++11 support on iOS 3 and 5/6!
 
 **NOTE**: Replacing "ios3" with "ios6", "iPhoneOS3.1.3.sdk" with "iPhoneOS6.0.sdk" and "iOS 3" with "iOS 6" in the
 following build guide should work.  However, you must pass `BUILD_FOR_IOS3=no` to this project's makefile to build
-for iOS 6 and later (ARMv7).  AArch64 compilation is currently not supported because I don't have a 64-bit iPhone.
+for iOS 5 and later (ARMv7).  AArch64 compilation is currently not supported because I don't have a 64-bit iPhone.
 
 The iOS 3 build was tested on iPhone 3G running iPhone OS 3.1.3.
-The iOS 6 build was tested on iPhone 4 running iOS 7.0, and iPhone 3GS running iOS 6.1.6.
+The iOS 5/6 build was tested on iPhone 4 running iOS 7.0, iPhone 3GS running iOS 6.1.6, and iPad 1 running iOS 5.1.1.
 
 The **iOS 3 build** should run on the following Apple devices, but currently untested:
 - iPhone (iPhone OS 3.1.3)
@@ -76,15 +76,21 @@ The **iOS 3 build** should run on the following Apple devices, but currently unt
 - iPhone 4 (iOS 4.x-7.x)
 - Any future iPhone below iOS 8.0 [untested]
 
-The **iOS 6 build** should run on the following Apple devices, but currently untested:
-- iPhone 3GS (iOS 6.0 to 6.1.6)
+The **iOS 5/6 build** should run on the following Apple devices, but currently untested:
+- iPhone 3GS (iOS 5.0 to 6.1.6)
 - iPhone 4 (iOS 4.0 to 7.1.2) [tested on iOS 7.0]
+- iPad 1 (iOS 5.0 to 5.1.1)
 - Any future iPhone running an iOS version lower than iOS 11, because iOS 11 dropped 32-bit app support
 
 ## Building
 
+<!-- I will really need to update this building section... -->
+
 You must have [Theos](https://theos.dev/docs/installation) installed.  You cannot use any of the
-SDKs Theos provides, so you must find the iPhoneOS 3.1.3 (for armv7, iOS 6.0) SDK to build.
+SDKs Theos provides, so you must find the iPhoneOS 3.1.3 (for armv7, iOS 5.0) SDK to build.
+
+ARMv7: Despite what the ios6 name suggests, the build works on iOS 5 too. Compile libcurl, mbedtls, and libwebp
+with iOS 6.0 SDK (maybe I'll try 5.0 later), and compile Purplecord with the iOS 5.0 SDK.
 
 Also, building has only been tested on Linux, but it might work on Mac OS too.
 
@@ -120,7 +126,7 @@ Then extract its contents to `$THEOS/sdks/iPhoneOS3.1.3.sdk`:
 tar xjf iPhoneOS3.1.3.sdk.tbz2
 ```
 
-(NOTE: for armv7, download the iOS 6.0 SDK instead: https://github.com/qianjigui/iOS-sdks/tree/master/iPhoneOS6.0.sdk
+(NOTE: for armv7, download the iOS 5.0 and 6.0 SDKs instead: https://github.com/qianjigui/iOS-sdks/tree/master/iPhoneOS5.0.sdk, https://github.com/qianjigui/iOS-sdks/tree/master/iPhoneOS6.0.sdk)
 
 ### Installing libc++
 
