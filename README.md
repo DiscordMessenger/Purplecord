@@ -165,7 +165,7 @@ tar xf curl-7.88.1.tar.gz
 cd curl-7.88.1
 ```
 
-Open `lib/vtls/mbed.tls` and move this line:
+Open `lib/vtls/mbedtls.c` and move this line:
 ```c
   mbedtls_ssl_conf_rng(&backend->config, mbedtls_ctr_drbg_random,
                        &backend->ctr_drbg);
@@ -216,7 +216,7 @@ PURPLECORD_LIBCURL_PATH=[your curl checkout path]
 
 ### Building Libwebp
 
-TODO: More Tutorial
+Check out https://github.com/DiscordMessenger/libwebp.git, then run the following commands:
 
 ```
 mkdir build-ios3 && cd build-ios3
