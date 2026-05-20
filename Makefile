@@ -43,9 +43,9 @@ endif
 
 # These paths are for iProgramInCpp's use and probably will not work on your end.
 # Make sure to export your replacements for these as environment variables.
-PURPLECORD_MBEDTLS_PATH ?= /mnt/c/DiscordMessenger/mbedtls-apple
-PURPLECORD_LIBCURL_PATH ?= /mnt/c/DiscordMessenger/libcurl-apple
-PURPLECORD_LIBWEBP_PATH ?= /mnt/c/DiscordMessenger/libwebp
+#PURPLECORD_MBEDTLS_PATH ?= /mnt/c/DiscordMessenger/mbedtls-apple
+#PURPLECORD_LIBCURL_PATH ?= /mnt/c/DiscordMessenger/libcurl-apple
+#PURPLECORD_LIBWEBP_PATH ?= /mnt/c/DiscordMessenger/libwebp
 
 ifeq ($(FINALPACKAGE),1)
 	DEBUGSW = -DNDEBUG
