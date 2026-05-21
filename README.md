@@ -112,8 +112,8 @@ Basically the way this is supposed to work is, C/ObjC/C++ files will use your sy
 linking should be done with the linker from Theos.  A temporary fix in `$THEOS/makefiles/instance/rules.mk`:
 
 ```diff
--TARGET_CXX = $(TARGET_CXX)
-+#TARGET_CXX = $(TARGET_CXX)
+-TARGET_LD = $(TARGET_CXX)
++#TARGET_LD = $(TARGET_CXX)
 ```
 
 ### Fetching the iPhoneOS 3.1.3 SDK
